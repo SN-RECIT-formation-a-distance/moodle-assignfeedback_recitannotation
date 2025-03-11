@@ -1,0 +1,8 @@
+{
+    "moodle-assignfeedback_recitannotation-button": {
+        "requires": [
+            "base",
+            "node"
+        ]
+    }
+}

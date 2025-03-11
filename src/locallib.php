@@ -82,6 +82,10 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
      * @return bool true if elements were added to the form
      */
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {        
+        global $PAGE;
+
+        $group = [];
+
         $submission = $this->assignment->get_user_submission($userid, false);
 
         if ($grade) {
@@ -89,32 +93,27 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         }
 
         // Check first for data from last form submission in case grading validation failed.
-        $data->assignfeedbackcannotation = '';
-        $data->assignfeedbackannotationformat = FORMAT_HTML;
-        if (!empty($data->assignfeedbackrecitannotation_editor['text'])) {
-            $data->assignfeedbackrecitannotation = $data->assignfeedbackrecitannotation_editor['text'];
-        } 
-        else if ($feedbackannotation && !empty($feedbackcomments->annotation)) {
-            $data->assignfeedbackrecitannotation = $feedbackannotation->annotation;
+        $content = '';
+        if ($feedbackannotation && !empty($feedbackcomments->annotation)) {
+            $content = $feedbackannotation->annotation;
         } 
         else {
             // No feedback given yet - maybe we need to copy the text from the submission?
             if ($submission) {
-                $data->assignfeedbackrecitannotation = $this->get_submission_text($submission);
+                $content = $this->get_submission_text($submission);
             } 
         }
 
-        file_prepare_standard_editor(
-            $data,
-            'assignfeedbackrecitannotation',
-            $this->get_editor_options(),
-            $this->assignment->get_context(),
-            ASSIGNFEEDBACK_RECITANNOTATION_COMPONENT,
-            ASSIGNFEEDBACK_RECITANNOTATION_FILEAREA,
-            $grade->id
-        );
+        $html = "<div>";
+        $html .= "<div id='assignfeedbackrecitannotation_content'>$content</div>";
+        $html .= "<button class='btn btn-primary' id='btn-annotation-tool'>Annotate</button>";
+        $html .= "</div>";
+        $group[] = $mform->createElement('static', 'assignfeedbackrecitannotation_btnannotation', '', $html);
+        
+        $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array());
 
-        $mform->addElement('editor', 'assignfeedbackrecitannotation_editor', $this->get_name(), null, $this->get_editor_options());
+        $mform->addGroup($group, 'assignfeedbackrecitannotation_group', $this->get_name(), '', false, array('class' => 'has-popout'));
+        
 
         return true;
     }
