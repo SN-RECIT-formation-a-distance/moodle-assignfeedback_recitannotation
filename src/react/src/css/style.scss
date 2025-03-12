@@ -1,6 +1,44 @@
-/**
- * BOOTSTRAP OVERRIDE
- */
+.main-view{
+    .highlighted-text {
+        position: relative;
+    }
+    
+    .highlighter-traitement {
+        background-color: #FFFF00;
+    }
+
+    .highlighter-organisation {
+        background-color: #00FF00;
+    }
+
+    .highlighter-style {
+        background-color: #00FFFF;
+    }
+
+    .highlighter-orthographe {
+        background-color: #FF00FF;
+    }
+
+     /* Floating button */
+    .btn-annotate{ position: absolute;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        display: none;        /* Hidden by default */
+        z-index: 1000;        /* Ensure it's on top */
+    }
+    .col-md-4.fixed {
+        position: sticky;
+        top: 20px;
+        /* Ajustez cette valeur selon vos besoins */
+        height: calc(100vh - 20px);
+        /* Ajustez cette valeur selon vos besoins */
+        overflow-y: auto;
+        /* Permet le défilement si le contenu est trop long */
+    }
+}
 
 
 /**********************************************************

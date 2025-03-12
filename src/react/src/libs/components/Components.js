@@ -28,6 +28,8 @@ import "./css/components.scss";
 
 export * from './Feedback';
 export * from './Loading';
+export * from './ComboBoxPlus';
+export * from './ToggleButtons';
 
 export default class Components{
     static version = 1.0;
