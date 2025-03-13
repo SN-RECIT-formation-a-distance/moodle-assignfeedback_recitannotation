@@ -30,6 +30,7 @@ export * from './Feedback';
 export * from './Loading';
 export * from './ComboBoxPlus';
 export * from './ToggleButtons';
+export * from './InputTextArea';
 
 export default class Components{
     static version = 1.0;

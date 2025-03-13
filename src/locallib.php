@@ -106,7 +106,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
 
         $html = "<div>";
         $html .= "<div id='assignfeedbackrecitannotation_content'>$content</div>";
-        $html .= "<button class='btn btn-primary' id='btn-annotation-tool'>Annotate</button>";
+        $html .= "<button class='btn btn-primary' id='btn-annotation-tool'><i class='fa fa-comments'></i> Annotate</button>";
         $html .= "</div>";
         $group[] = $mform->createElement('static', 'assignfeedbackrecitannotation_btnannotation', '', $html);
         

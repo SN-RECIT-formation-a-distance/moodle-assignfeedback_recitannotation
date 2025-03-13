@@ -1,11 +1,17 @@
 
 import React, { Component } from 'react';
-import { Button, ButtonGroup, Col, Form, Modal, Row, Table } from 'react-bootstrap';
+import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
 import { ToggleButtons } from '../libs/components/ToggleButtons';
+import { faComment} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { InputTextArea } from '../libs/components/InputTextArea';
 
 export class MainView extends Component {
     static defaultProps = {
     };
+
+    static currentRange = null;
+    static selectedElement = null;
 
     constructor(props) {
         super(props);
@@ -13,8 +19,9 @@ export class MainView extends Component {
         this.onMouseUp = this.onMouseUp.bind(this);
         this.positionFloatingButton = this.positionFloatingButton.bind(this);
         this.onClick = this.onClick.bind(this);
+        this.onDbClick = this.onDbClick.bind(this);
         this.onClose = this.onClose.bind(this);
-
+ 
         this.state = {
             submissionText: "",  
             showModalAnnotate: false         
@@ -31,8 +38,6 @@ export class MainView extends Component {
 
         this.refSubmissionText = React.createRef();
         this.refBtnAnnotate = React.createRef();
-        this.currentRange = null;
-        this.selectedElement = null;
     }
 
     componentDidMount(){
@@ -46,7 +51,9 @@ export class MainView extends Component {
                     <Col md={8}>
                         <h2>Production de l'élève</h2>
                         <div ref={this.refSubmissionText} onMouseUp={this.onMouseUp} className='p-3' dangerouslySetInnerHTML={{__html: this.state.submissionText}}></div>
-                        <Button size='sm' className='btn-annotate' style={{display: 'none'}} ref={this.refBtnAnnotate} onClick={this.onClick}>Annoter</Button>
+                        <Button size='sm' className='btn-annotate' style={{display: 'none'}} ref={this.refBtnAnnotate} onClick={this.onClick}>
+                            <FontAwesomeIcon icon={faComment}/>{` Annoter`}
+                        </Button>
                     </Col>
                     <Col md={4} className='fixed'>
                         <h2>Évaluation</h2>
@@ -80,7 +87,7 @@ export class MainView extends Component {
                             <Form.Control name="generalFeedback" placeholder="Ajouter une rétroaction générale à l'élève..." as="textarea" rows={5} />
                         </Form.Group>
                     </Col>
-                    {this.state.showModalAnnotate && <ModalAnnotate data={this.currentRange} onClose={this.onClose} />}
+                    {this.state.showModalAnnotate && <ModalAnnotate onClose={this.onClose} onDbClick={this.onDbClick} />}
                 </Row>
             </div>;
 
@@ -90,29 +97,42 @@ export class MainView extends Component {
     onMouseUp(event){
         const selection = window.getSelection();
         if (selection.rangeCount > 0 && selection.toString().length > 0) {
-            this.currentRange = selection.getRangeAt(0);
-            this.positionFloatingButton(this.currentRange);
+            MainView.currentRange = selection.getRangeAt(0);
+            this.positionFloatingButton(MainView.currentRange);
         } else {
-            this.currentRange = null;
+            MainView.currentRange = null;
             this.positionFloatingButton(null); // Hide button
         }
     }
 
     onClick(event){
-        if (this.currentRange) {
+        if (MainView.currentRange) {
             this.setState({showModalAnnotate: true});// Open modal for a new comment
         }
     }
 
-    onClose(){
+    onClose(refresh){
         this.positionFloatingButton(null);
         this.setState({showModalAnnotate: false});
+
+        MainView.currentRange = null;
+        MainView.selectedElement = null;
+        
+        if(refresh){
+            this.initTooltips();
+        }
+    }
+
+    initTooltips() {
+        $('[data-toggle="tooltip"]').tooltip({
+            trigger: 'hover',
+            placement: 'auto' // Ajout de la position automatique
+        }); 
     }
 
     onDbClick(event){
-        console.log(event.target, event.currentTarget)
         event.preventDefault(); // Empêche d'autres actions de double-clic
-        this.selectedElement = event.target; // 'this' est l'élément sur lequel le clic-droit a été fait
+        MainView.selectedElement = event.target; // 'this' est l'élément sur lequel le clic-droit a été fait
         this.setState({showModalAnnotate: true});
     }
 
@@ -139,7 +159,6 @@ export class MainView extends Component {
 
 class ModalAnnotate extends Component{
     static defaultProps = {        
-        data: null,
         onClose: null,
         onDbClick: null
     };
@@ -147,10 +166,13 @@ class ModalAnnotate extends Component{
     constructor(props){
         super(props);
 
+        this.onClose = this.onClose.bind(this);
         this.onDataChange = this.onDataChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
 
-        this.state = {data: {criterion: "traitement", comment: ""}};
+        this.originalData = {data: {criterion: "traitement", comment: ""}, isNewNote: true};
+        this.state = {};
+        Object.assign(this.state, this.originalData);
 
         this.criteriaList = [
             {value: 'traitement', text: 'Traitement'},
@@ -161,10 +183,15 @@ class ModalAnnotate extends Component{
     }
 
     componentDidMount(){
-        /*console.log(this.props.selectedElement.dataset, this.props.selectedElement.dataset.criterion)
-        if(this.props.selectedElement.dataset.criterion !== null){
-            this.setState({data: {criterion: this.props.selectedElement.dataset.title, comment: this.props.selectedElement.dataset.comment}})
-        }*/
+        if(MainView.selectedElement && MainView.selectedElement.dataset.criterion !== null){
+            this.setState({
+                data: {
+                    criterion: MainView.selectedElement.dataset.criterion, 
+                    comment: MainView.selectedElement.dataset.comment
+                },
+                isNewNote: false
+            })
+        }
     }
 
     render(){
@@ -177,24 +204,27 @@ class ModalAnnotate extends Component{
             </Form.Group>
             <Form.Group >
                 <Form.Label>{"Commentaire"}</Form.Label>
-                <Form.Control name="comment" as="textarea" rows={4} />
+                <InputTextArea name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
             </Form.Group>
         </Form>;
 
         let main = 
-            <Modal show={true} onHide={this.props.onClose} size="md" backdrop='static' tabIndex="-1">
+            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
                     <Modal.Title>Ajouter/Modifier un Commentaire</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>{body}</Modal.Body>
                 <Modal.Footer>
-                    <ButtonGroup className='d-flex justify-space-between'>
-                        <Button style={{flex: 0}} variant='danger'  onClick={this.props.onClose}>Supprimer</Button>
-                        <div>
-                            <Button style={{flex: 0}} variant='secondary'  onClick={this.props.onClose}>Annuler</Button>
-                            <Button style={{flex: 0}} variant='success' onClick={this.onSubmit}>Enregistrer</Button>
-                        </div>
-                    </ButtonGroup>
+                    <ButtonToolbar className='justify-content-between w-100'>
+                        <ButtonGroup >
+                            <Button variant='danger'  onClick={() => this.onClose(true)}>Supprimer</Button>
+                        </ButtonGroup>
+                        <ButtonGroup >
+                            <Button variant='secondary'  onClick={() => this.onClose(false)}>Annuler</Button>
+                            <Button  variant='success' onClick={this.onSubmit}>Enregistrer</Button>
+                        </ButtonGroup>
+                    </ButtonToolbar>
+                    
                 </Modal.Footer>
             </Modal>;
  
@@ -202,39 +232,44 @@ class ModalAnnotate extends Component{
     }
 
     onDataChange(event){
-        let data = this.state;
+        let data = this.state.data;
         data[event.target.name] = event.target.value;
-        this.setState(data);
+        this.setState({data: data});
     }
 
     onSubmit(event){
         event.preventDefault();
         event.stopPropagation();
               
-        let isNewComment = true; //(this.props.data === null);
+        let el = null;
+        if (this.state.isNewNote) {
+            el = document.createElement('span');
+            el.dataset.toggle = "tooltip";
 
-        if (isNewComment) {
-            const span = document.createElement('span');
-            span.className = 'highlighted-text highlighter-' + this.state.data.criterion;
-            span.dataset.comment = this.state.data.comment;
-            span.dataset.toggle = "tooltip";
-            span.dataset.placement = "auto";
-            span.dataset.criterion = this.state.data.criterion;
-            span.title = this.state.data.comment;
-            span.id = this.state.data.criterion + Date.now();
-            span.addEventListener('dblclick', this.props.onDbClick);  // Gérer le double-clic sur le texte surligné
-
-            this.props.data.surroundContents(span);
-            // $(span).tooltip(); // Initialiser le tooltip pour le nouvel élément
-            this.props.onClose();
+            try {
+                MainView.currentRange.surroundContents(el);
+                el.addEventListener('dblclick', this.props.onDbClick);  // Gérer le double-clic sur le texte surligné
+            }catch (error) {
+                console.error("Erreur lors de l'application du surlignage :", error);
+                this.onClose(false);
+            }
         }else {
-            // Modifier un commentaire existant
-            this.props.selectedElement.dataset.comment = this.state.data.comment;
-            this.props.selectedElement.dataset.criterion = this.state.data.criterion;
-            this.props.selectedElement.title = this.props.selectedElement.dataset.comment;
-            // Mettre à jour la classe CSS en fonction du nouveau critère
-            this.props.selectedElement.className = 'highlighted-text highlighter-' + this.state.data.criterion;
-            this.props.onClose();
+            el = MainView.selectedElement;
         }
+
+        el.setAttribute('title', this.state.data.comment);
+        el.dataset.criterion = this.state.data.criterion;
+        el.dataset.comment = this.state.data.comment;
+        el.dataset.originalTitle = this.state.data.comment;
+        el.className = 'highlighted-text highlighter-' + this.state.data.criterion;
+
+        this.onClose(true);
+    }
+
+    onClose(refresh){
+        let data = {};
+        Object.assign(data, this.originalData);
+        this.setState({data: data});
+        this.props.onClose(true);
     }
 }
