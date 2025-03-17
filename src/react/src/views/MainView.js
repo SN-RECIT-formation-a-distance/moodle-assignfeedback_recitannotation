@@ -1,10 +1,10 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import { ToggleButtons } from '../libs/components/ToggleButtons';
 import { faComment} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
+import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
 
 export class MainView extends Component {
     static defaultProps = {
@@ -21,20 +21,53 @@ export class MainView extends Component {
         this.onClick = this.onClick.bind(this);
         this.onDbClick = this.onDbClick.bind(this);
         this.onClose = this.onClose.bind(this);
+        this.updateCounters = this.updateCounters.bind(this);
  
         this.state = {
             submissionText: "",  
-            showModalAnnotate: false         
+            showModalAnnotate: false,
+            evaluationData: [    
+                {
+                    criterion: {id: 'highlighter-traitement', text: 'Traitement', color: "#FFFF00", backgroundColor: "#FFFFE0"},
+                    level: '',
+                    count: 0
+                },
+                {
+                    criterion:  {id: 'highlighter-organisation', text: 'Organisation', color: "#00FF00", backgroundColor: "#E0FFE0"},
+                    level: '',
+                    count: 0
+                },
+                {
+                    criterion:  {id: 'highlighter-style', text: 'Style/Syntaxe', color: "#00FFFF", backgroundColor: "#E0FFFF"},
+                    level: '',
+                    count: 0
+                },
+                {
+                    criterion:  {id: 'highlighter-orthographe', text: 'Orthographe', color: "#FF00FF", backgroundColor: "#FFE0FF"},
+                    level: '',
+                    count: 0
+                },
+            ],
+            dropdownList: {
+                levelListOptions: [
+                    {label: 'A', value: 'A'},
+                    {label: 'B', value: 'B'},
+                    {label: 'C', value: 'C'},
+                    {label: 'D', value: 'D'},
+                    {label: 'E', value: 'E'}
+                ]
+            }       
         };
 
-        this.criteriaList = [
+       /* this.criteriaList = [
             {text: 'Traitement', color: "#FFFF00", backgroundColor: "#FFFFE0"},
             {text: 'Organisation', color: "#00FF00", backgroundColor: "#E0FFE0"},
             {text: 'Style/Syntaxe', color: "#00FFFF", backgroundColor: "#E0FFFF"},
             {text: 'Orthographe', color: "#FF00FF", backgroundColor: "#FFE0FF"},
-        ];
+        ];*/
 
-        this.levelList = ['A', 'B', 'C', 'D', 'E'];
+        //this.levelList = ['A', 'B', 'C', 'D', 'E'];
+        
 
         this.refSubmissionText = React.createRef();
         this.refBtnAnnotate = React.createRef();
@@ -45,6 +78,7 @@ export class MainView extends Component {
     }
 
     render() {
+        console.log(this.state.evaluationData)
         let main =
             <div className="container">
                 <Row className='p-3 main-view'>
@@ -61,21 +95,19 @@ export class MainView extends Component {
                             <thead>
                                 <tr>
                                 <th>Critère</th>
-                                {this.levelList.map((item, index) => {
-                                    return <th key={index}>{item}</th>;
-                                })}
+                                <th>Niveau</th>
                                 <th>Erreurs</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {this.criteriaList.map((item, index) => {
+                                {this.state.evaluationData.map((item, index) => {
                                     let row = 
-                                        <tr key={index} style={{backgroundColor: item.backgroundColor}}>
-                                            <td style={{backgroundColor: item.color}}>{item.text}</td>
-                                            {this.levelList.map((item2, index2) => {
-                                                return <td key={index2} ><input type="radio" name={item.text} value={item2}/></td>;
-                                            })}
-                                            <td>0</td>
+                                        <tr key={index} style={{backgroundColor: item.criterion.backgroundColor}}>
+                                            <td style={{backgroundColor: item.criterion.color}}>{item.criterion.text}</td>
+                                            <td>
+                                                <ComboBoxPlus placeholder={""} name={'level'} value={item.level} options={this.state.dropdownList.levelListOptions} onChange={(event) => this.onDataChange(event, index)} />
+                                            </td>
+                                            <td>{item.count}</td>
                                         </tr>;
                                     return row;
                                 })}
@@ -120,8 +152,19 @@ export class MainView extends Component {
         
         if(refresh){
             this.initTooltips();
+            this.updateCounters();
         }
     }
+
+    updateCounters(){
+        let data = this.state.evaluationData;
+        for(let item of data){
+            let elements = window.document.querySelectorAll(`.${item.criterion.id}`);
+            item.count = elements.length;
+        }
+
+        this.setState({evaluationData: data});
+    }   
 
     initTooltips() {
         $('[data-toggle="tooltip"]').tooltip({
@@ -154,6 +197,12 @@ export class MainView extends Component {
             addCommentBtn.style.display = 'none';
         }
     }
+
+    onDataChange(event, index){
+        let data = this.state.evaluationData;
+        data[index][event.target.name] = event.target.value;
+        this.setState({evaluationData: data});
+    }
 }
 
 
@@ -166,6 +215,7 @@ class ModalAnnotate extends Component{
     constructor(props){
         super(props);
 
+        this.onDelete = this.onDelete.bind(this);
         this.onClose = this.onClose.bind(this);
         this.onDataChange = this.onDataChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
@@ -217,7 +267,7 @@ class ModalAnnotate extends Component{
                 <Modal.Footer>
                     <ButtonToolbar className='justify-content-between w-100'>
                         <ButtonGroup >
-                            <Button variant='danger'  onClick={() => this.onClose(true)}>Supprimer</Button>
+                            <Button variant='danger'  onClick={() => this.onDelete(true)}>Supprimer</Button>
                         </ButtonGroup>
                         <ButtonGroup >
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>Annuler</Button>
@@ -237,6 +287,19 @@ class ModalAnnotate extends Component{
         this.setState({data: data});
     }
 
+    onDelete(){
+        if (MainView.selectedElement) {
+            const critereClass = Array.from(MainView.selectedElement.classList).find(className => className.startsWith('highlighter-'));
+            if (critereClass) {
+                // Remove the highlighted span and return its text content
+                const textContent = MainView.selectedElement.textContent;
+                MainView.selectedElement.outerHTML = textContent;
+            }
+        }
+
+        this.onClose(true);
+    }
+
     onSubmit(event){
         event.preventDefault();
         event.stopPropagation();
@@ -248,10 +311,14 @@ class ModalAnnotate extends Component{
 
             try {
                 MainView.currentRange.surroundContents(el);
+               // el.appendChild(MainView.currentRange.extractContents());
+               // MainView.currentRange.insertNode(el);
+
                 el.addEventListener('dblclick', this.props.onDbClick);  // Gérer le double-clic sur le texte surligné
             }catch (error) {
-                console.error("Erreur lors de l'application du surlignage :", error);
-                this.onClose(false);
+                let msg ="Erreur lors de l'application du surlignage: il y a des nœuds partiellement sélectionnés.";
+                alert(msg);
+                console.log(msg, error);
             }
         }else {
             el = MainView.selectedElement;
