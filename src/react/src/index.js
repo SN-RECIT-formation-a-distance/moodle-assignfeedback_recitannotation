@@ -29,8 +29,6 @@ class App extends Component {
     componentDidMount(){
         $glVars.feedback.addObserver("App", this.onFeedback);
         window.document.title = window.name + ' - v' + Options.appVersion();
-
-        this.setState({submissionText: window.IWrapper.getContent()});
     }
 
     componentWillUnmount(){
@@ -59,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function(e){
     let domContainer = document.getElementById('recitannotation_placeholder');
     if (domContainer && domContainer.childNodes.length === 0){
         const root = createRoot(domContainer);
-        let signedUser = {userId: domContainer.getAttribute('data-user-id')};
-        root.render(<App signedUser={signedUser} />);
+        root.render(<App />);
     }
 }, false);

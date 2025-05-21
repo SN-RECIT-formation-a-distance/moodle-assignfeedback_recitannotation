@@ -47,4 +47,22 @@ export class AppWebApi extends WebApi
             }
         }
     }
+
+    getAnnotation(assignment, userid, onSuccess){
+        let data = {assignment: assignment, userid: userid, service: "getAnnotation"};
+        this.post(this.gateway, data, onSuccess);
+    } 
+
+    saveAnnotation(data, onSuccess){
+        let that = this;
+        let onSuccessTmp = function(result){     
+            onSuccess(result);
+            if(result.success){
+                that.notifyObservers('saveAnnotation');
+            }
+        };
+
+        let options = {data: data, service: "saveAnnotation"};
+        this.post(this.gateway, options, onSuccessTmp, null, true);
+    }
 };

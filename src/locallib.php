@@ -22,8 +22,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(dirname(__FILE__).'/classes/PersistCtrl.php');
+
 define('ASSIGNFEEDBACK_RECITANNOTATION_FILEAREA', 'feedback');
 define('ASSIGNFEEDBACK_RECITANNOTATION_COMPONENT', 'assignfeedback_recitannotation');
+
 /**
  * @package assignfeedback_recitannotation
  * @copyright 2025 RECIT
@@ -82,72 +85,24 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
      * @return bool true if elements were added to the form
      */
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {        
-        global $PAGE;
+        global $PAGE, $DB, $USER;
 
-        $group = [];
+        $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
 
-        $submission = $this->assignment->get_user_submission($userid, false);
-
-        if ($grade) {
-            $feedbackannotation = $this->get_feedback_annotation($grade->id);
-        }
-
-        // Check first for data from last form submission in case grading validation failed.
-        $content = '';
-        if ($feedbackannotation && !empty($feedbackcomments->annotation)) {
-            $content = $feedbackannotation->annotation;
-        } 
-        else {
-            // No feedback given yet - maybe we need to copy the text from the submission?
-            if ($submission) {
-                $content = $this->get_submission_text($submission);
-            } 
-        }
-
+        $data = $persistCtrl->getAnnotation($grade->assignment, $userid);
+        
         $html = "<div>";
-        $html .= "<div id='assignfeedbackrecitannotation_content'>$content</div>";
+        $html .= "<div id='assignfeedbackrecitannotation_content'>{$data->annotation}</div>";
         $html .= "<button class='btn btn-primary' id='btn-annotation-tool'><i class='fa fa-comments'></i> Annotate</button>";
         $html .= "</div>";
         $group[] = $mform->createElement('static', 'assignfeedbackrecitannotation_btnannotation', '', $html);
         
-        $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array());
+        $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array($grade->assignment, $data->submission, $userid));
 
         $mform->addGroup($group, 'assignfeedbackrecitannotation_group', $this->get_name(), '', false, array('class' => 'has-popout'));
         
 
         return true;
-    }
-
-    private function get_submission_text($submission){
-        $text = '';
-
-        foreach ($this->assignment->get_submission_plugins() as $plugin) {
-            $fields = $plugin->get_editor_fields();
-            if ($plugin->is_enabled() && $plugin->is_visible() && !$plugin->is_empty($submission) && !empty($fields)) {
-                foreach ($fields as $key => $description) {
-                    $rawtext = clean_text($plugin->get_editor_text($key, $submission->id));
-                    $text .= $rawtext;
-                }
-            }
-        }
-
-        return $text;
-    }
-    /**
-     * File format options.
-     *
-     * @return array
-     */
-    private function get_editor_options() {
-        global $COURSE;
-
-        return [
-            'subdirs' => 1,
-            'maxbytes' => $COURSE->maxbytes,
-            'accepted_types' => '*',
-            'context' => $this->assignment->get_context(),
-            'maxfiles' => EDITOR_UNLIMITED_FILES
-        ];
     }
 
     /**

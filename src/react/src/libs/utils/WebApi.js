@@ -1,25 +1,3 @@
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
-/**
- * RÉCIT Dashboard 
- * 
- * @package   local_recitdashboard
- * @copyright 2019 RÉCIT 
- * @license   {@link http://www.gnu.org/licenses/gpl-3.0.html} GNU GPL v3 or later
- */
 export class HttpRequest
 {
     static contentType = {
@@ -98,10 +76,8 @@ export class HttpRequest
     }
 
     onLoad(event){
-        let statusList = [200, 500];
-
         if (event.target.readyState === 4) {
-            if (statusList.includes(event.target.status)) {
+            if (event.target.status === 200) {
                 let result = null;
         
                 try{               
@@ -158,24 +134,23 @@ export class WebApi
         this.onComplete = this.onComplete.bind(this);
     }
     
-    onError(jqXHR, textStatus) {
+    onError = function (jqXHR, textStatus) {
         alert("Error on server communication ("+ textStatus +").\n\nSee console for more details");
         console.log(jqXHR);
     };
     
-    post(url, data, callbackSuccess, callbackError, showFeedback, contentType, responseType){
+    post(url, data, callbackSuccess, callbackError, showFeedback){
         showFeedback = (typeof showFeedback === 'undefined' ? true : showFeedback);
-        contentType = (typeof contentType === 'undefined' ?  HttpRequest.contentType.json : contentType);
-        responseType = (typeof responseType === 'undefined' ?  HttpRequest.responseType.json : responseType);
         
         if(showFeedback){
             this.showLoadingFeedback();
         }
         
         callbackError = callbackError || this.onError;
+        data.sesskey = window.IWrapper.sesskey();
         data = JSON.stringify(data);
 
-        this.http.send("post", url, data, callbackSuccess, callbackError, this.onComplete, contentType, responseType);
+        this.http.send("post", url, data, callbackSuccess, callbackError, this.onComplete, HttpRequest.contentType.json, HttpRequest.responseType.json);
     }
 
     onComplete(){

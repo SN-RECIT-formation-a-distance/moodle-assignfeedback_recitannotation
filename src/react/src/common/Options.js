@@ -30,7 +30,7 @@ export class Options
     }
 
     static getGateway(){
-        return `${window.IWrapper.wwwroot}/mod/assign/feedback/recitannotation/classes/WebApi.php`;
+        return `${window.IWrapper.wwwroot()}/mod/assign/feedback/recitannotation/classes/WebApi.php`;
     }
     
 }

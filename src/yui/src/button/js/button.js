@@ -20,9 +20,20 @@
  */
 M.assignfeedback_recitannotation = M.assignfeedback_recitannotation || {};
 M.assignfeedback_recitannotation.recitannotation = {
-    globalVars: {popup: null},
+    globalVars: {
+        popup: null,
+        contextData: {
+            assignment: 0,
+            submission: 0,
+            userid: 0
+        }
+    },
 
-    init: function() {
+    init: function(assignment, submission, userid) {
+        this.globalVars.contextData.assignment = parseInt(assignment, 10);
+        this.globalVars.contextData.submission = parseInt(submission, 10);
+        this.globalVars.contextData.userid = parseInt(userid, 10);
+
         let btn = window.document.getElementById('btn-annotation-tool');
         btn.addEventListener('click', this.openAnnotateTool.bind(this));
     },
@@ -41,20 +52,22 @@ M.assignfeedback_recitannotation.recitannotation = {
         this.globalVars.popup = window.open(url,'RÉCIT Annotation',`width=${screen.availWidth},height=${screen.availHeight},scrollbars=1,menubar=0`);
 
         this.globalVars.popup.IWrapper = {};
-
         
+        this.globalVars.popup.IWrapper.sesskey = function(){
+            return window.M.cfg.sesskey;
+        }
+
         this.globalVars.popup.IWrapper.wwwroot = function(){
             return window.M.cfg.wwwroot;
         }
 
-        this.globalVars.popup.IWrapper.getContent = function(){
-            let el = window.document.getElementById('assignfeedbackrecitannotation_content');
-            return (el ? el.innerHTML : "");
+        this.globalVars.popup.IWrapper.getContextData = function(){
+            return that.globalVars.contextData;
         }
 
-        this.globalVars.popup.IWrapper.setContent = function(htmlStr){
-            console.log("set content", htmlStr);
+        this.globalVars.popup.IWrapper.update = function(){
             that.globalVars.popup.close();
-        };
+            window.location.reload();
+        }
     }
 };

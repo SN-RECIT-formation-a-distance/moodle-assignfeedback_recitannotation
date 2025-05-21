@@ -29,4 +29,7 @@ export const $glVars = {
     webApi: new AppWebApi(),
     urlParams: {},
     context: {},
+    i18n: {
+        appName: "RÉCIT Annotation"
+    }
 }

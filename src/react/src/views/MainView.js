@@ -5,6 +5,7 @@ import { faComment} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
+import { $glVars } from '../common/common';
 
 export class MainView extends Component {
     static defaultProps = {
@@ -22,10 +23,13 @@ export class MainView extends Component {
         this.onDbClick = this.onDbClick.bind(this);
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
+        this.saveAndClose = this.saveAndClose.bind(this);
+        this.onDataChange = this.onDataChange.bind(this);
  
         this.state = {
             submissionText: "",  
             showModalAnnotate: false,
+            data: null,
             evaluationData: [    
                 {
                     criterion: {id: 'highlighter-traitement', text: 'Traitement', color: "#FFFF00", backgroundColor: "#FFFFE0"},
@@ -59,32 +63,39 @@ export class MainView extends Component {
             }       
         };
 
-       /* this.criteriaList = [
-            {text: 'Traitement', color: "#FFFF00", backgroundColor: "#FFFFE0"},
-            {text: 'Organisation', color: "#00FF00", backgroundColor: "#E0FFE0"},
-            {text: 'Style/Syntaxe', color: "#00FFFF", backgroundColor: "#E0FFFF"},
-            {text: 'Orthographe', color: "#FF00FF", backgroundColor: "#FFE0FF"},
-        ];*/
-
-        //this.levelList = ['A', 'B', 'C', 'D', 'E'];
-        
-
-        this.refSubmissionText = React.createRef();
+        this.refAnnotation = React.createRef();
         this.refBtnAnnotate = React.createRef();
     }
 
     componentDidMount(){
-        this.setState({submissionText: window.IWrapper.getContent()});
+        this.getData();
+    }
+
+    getData(){
+        let that = this;
+
+         let callback = function(result){
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                return;
+            }
+            that.setState({data: result.data});         
+        }
+        
+        let contextData = window.IWrapper.getContextData();
+        $glVars.webApi.getAnnotation(contextData.assignment, contextData.userid, callback);
     }
 
     render() {
+        if(this.state.data === null){ return null;}
+
         console.log(this.state.evaluationData)
         let main =
             <div className="container">
                 <Row className='p-3 main-view'>
                     <Col md={8}>
                         <h2>Production de l'élève</h2>
-                        <div ref={this.refSubmissionText} onMouseUp={this.onMouseUp} className='p-3' dangerouslySetInnerHTML={{__html: this.state.submissionText}}></div>
+                        <div ref={this.refAnnotation} onMouseUp={this.onMouseUp} className='p-3' dangerouslySetInnerHTML={{__html: this.state.data.annotation}}></div>
                         <Button size='sm' className='btn-annotate' style={{display: 'none'}} ref={this.refBtnAnnotate} onClick={this.onClick}>
                             <FontAwesomeIcon icon={faComment}/>{` Annoter`}
                         </Button>
@@ -94,9 +105,8 @@ export class MainView extends Component {
                         <Table striped bordered size='sm'>
                             <thead>
                                 <tr>
-                                <th>Critère</th>
-                                <th>Niveau</th>
-                                <th>Erreurs</th>
+                                    <th>Critère</th>
+                                    <th>Occurrences</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -104,9 +114,6 @@ export class MainView extends Component {
                                     let row = 
                                         <tr key={index} style={{backgroundColor: item.criterion.backgroundColor}}>
                                             <td style={{backgroundColor: item.criterion.color}}>{item.criterion.text}</td>
-                                            <td>
-                                                <ComboBoxPlus placeholder={""} name={'level'} value={item.level} options={this.state.dropdownList.levelListOptions} onChange={(event) => this.onDataChange(event, index)} />
-                                            </td>
                                             <td>{item.count}</td>
                                         </tr>;
                                     return row;
@@ -116,8 +123,12 @@ export class MainView extends Component {
                         
                         <Form.Group>
                             <Form.Label>Rétroaction générale:</Form.Label>
-                            <Form.Control name="generalFeedback" placeholder="Ajouter une rétroaction générale à l'élève..." as="textarea" rows={5} />
+                            <Form.Control name="generalfeedback" value={this.state.data.generalfeedback} placeholder="Ajouter une rétroaction générale à l'élève..." as="textarea" rows={5} onChange={this.onDataChange}/>
                         </Form.Group>
+
+                        <ButtonGroup>
+                            <Button variant='success' onClick={this.saveAndClose}>Enregistrer et fermer</Button>
+                        </ButtonGroup>
                     </Col>
                     {this.state.showModalAnnotate && <ModalAnnotate onClose={this.onClose} onDbClick={this.onDbClick} />}
                 </Row>
@@ -188,7 +199,7 @@ export class MainView extends Component {
             // Adjust the positioning here to move the button further away
 
             //get position of eleve-text
-            const eleveTextRect = this.refSubmissionText.current.getBoundingClientRect();
+            const eleveTextRect = this.refAnnotation.current.getBoundingClientRect();
             
             addCommentBtn.style.top = (rect.bottom + window.scrollY - eleveTextRect.top + 10) + 'px'; // Below the selection
             addCommentBtn.style.left = (rect.right + window.scrollX - eleveTextRect.left + 10) + 'px'; // A bit to the right
@@ -198,10 +209,28 @@ export class MainView extends Component {
         }
     }
 
-    onDataChange(event, index){
-        let data = this.state.evaluationData;
-        data[index][event.target.name] = event.target.value;
-        this.setState({evaluationData: data});
+    onDataChange(event){
+        let data = this.state.data;
+        data[event.target.name] = event.target.value;
+        this.setState({data: data});
+    }
+
+    saveAndClose(){
+        let that = this;
+        let callback = function(result){
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                return;
+            }
+            else{
+                window.IWrapper.update();
+            }
+        }
+        
+        let data = {};
+        Object.assign(data, this.state.data);
+        data.annotation = this.refAnnotation.current.innerHTML;
+        $glVars.webApi.saveAnnotation(data, callback);
     }
 }
 
