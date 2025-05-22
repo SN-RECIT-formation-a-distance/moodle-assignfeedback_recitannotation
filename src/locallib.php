@@ -60,21 +60,21 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
      *
      * @return array - An array of fileareas (keys) and descriptions (values)
      */
-    public function get_file_areas() {
+    /*public function get_file_areas() {
         return array(ASSIGNFEEDBACK_RECITANNOTATION_FILEAREA=>$this->get_name());
-    }
+    }*/
 
     /**
      * Return a description of external params suitable for uploading an feedback comment from a webservice.
      *
      * @return \core_external\external_description|null
      */
-    public function get_external_parameters() {
+    /*public function get_external_parameters() {
         $editorparams = array('text' => new external_value(PARAM_RAW, 'The text for this feedback.'),
                               'format' => new external_value(PARAM_INT, 'The format for this feedback'));
         $editorstructure = new external_single_structure($editorparams, 'Editor structure', VALUE_OPTIONAL);
         return array('assignfeedbackrecitannotation_editor' => $editorstructure);
-    }
+    }*/
 
     /**
      * Get form elements for the grading page
@@ -92,7 +92,16 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $data = $persistCtrl->getAnnotation($grade->assignment, $userid);
         
         $html = "<div>";
-        $html .= "<div id='assignfeedbackrecitannotation_content'>{$data->annotation}</div>";
+        
+        $html .= "<div class='mb-3'>{$data->annotation}</div>";
+        
+        if(strlen($data->generalfeedback) > 0){
+            $html .= "<div class='mb-3'>";
+            $html .= "<b>Rétroaction générale:</b>";
+            $html .= "<p>{$data->generalfeedback}</p>";
+            $html .= "</div>";
+        }
+        
         $html .= "<button class='btn btn-primary' id='btn-annotation-tool'><i class='fa fa-comments'></i> Annotate</button>";
         $html .= "</div>";
         $group[] = $mform->createElement('static', 'assignfeedbackrecitannotation_btnannotation', '', $html);
@@ -105,6 +114,97 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         return true;
     }
 
+    /**
+     * Display the comment in the feedback table.
+     *
+     * @param stdClass $grade
+     * @param bool $showviewlink Set to true to show a link to view the full feedback
+     * @return string
+     */
+    public function view_summary(stdClass $grade, & $showviewlink) {
+        global $DB, $USER;
+       
+        $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
+        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
+
+        if(($data->id == 0) && (strlen($data->generalfeedback) == 0)){
+            return "";
+        }
+
+        $showviewlink = true;
+
+        $html = "<div>";
+        $html .= "<b>Rétroaction générale:</b>";
+        $html .= "<p>{$data->generalfeedback}</p>";
+        $html .= "</div>";
+
+        return $html;
+    }
+
+    /**
+     * Display the comment in the feedback table.
+     *
+     * @param stdClass $grade
+     * @return string
+     */
+    public function view(stdClass $grade) {
+        global $DB, $USER;
+
+        $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
+        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
+
+        $html = "<div>";
+
+        $html .= "<div class='mb-3'>$data->annotation</div>";
+        
+        if(strlen($data->generalfeedback) > 0){
+            $html .= "<div class='mb-3'>";
+            $html .= "<b>Rétroaction générale:</b>";
+            $html .= "<p>{$data->generalfeedback}</p>";
+            $html .= "</div>";
+        }
+        
+        $html .= "</div>";
+
+        return $html;
+    }
+
+    /**
+     * Saving the comment content into database.
+     *
+     * @param stdClass $grade
+     * @param stdClass $data
+     * @return bool
+     */
+    public function save(stdClass $grade, stdClass $data) {
+        return true;
+    }
+
+     /**
+     * Has the comment feedback been modified?
+     *
+     * @param stdClass $grade The grade object.
+     * @param stdClass $data Data from the form submission.
+     * @return boolean True if the comment feedback has been modified, else false.
+     */
+    public function is_feedback_modified(stdClass $grade, stdClass $data) {
+        return true;
+    }
+
+    /**
+     * Returns true if there are no feedback comments for the given grade.
+     *
+     * @param stdClass $grade
+     * @return bool
+     */
+    public function is_empty(stdClass $grade) {
+        global $DB, $USER;
+       
+        $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
+        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
+
+        return ($data->id == 0);
+    }
     /**
      * The assignment has been deleted - cleanup.
      *

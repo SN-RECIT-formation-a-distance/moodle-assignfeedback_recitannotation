@@ -68,8 +68,11 @@ M.assignfeedback_recitannotation.recitannotation = {
         }
 
         this.globalVars.popup.IWrapper.update = function(){
-            that.globalVars.popup.close();
             window.location.reload();
+        }
+
+        this.globalVars.popup.IWrapper.closeModal = function(){
+            that.globalVars.popup.close();
         }
     }
 };

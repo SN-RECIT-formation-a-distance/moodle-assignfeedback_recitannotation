@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import { faComment} from '@fortawesome/free-solid-svg-icons';
+import { faComment, faSave} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
@@ -126,9 +126,11 @@ export class MainView extends Component {
                             <Form.Control name="generalfeedback" value={this.state.data.generalfeedback} placeholder="Ajouter une rétroaction générale à l'élève..." as="textarea" rows={5} onChange={this.onDataChange}/>
                         </Form.Group>
 
-                        <ButtonGroup>
-                            <Button variant='success' onClick={this.saveAndClose}>Enregistrer et fermer</Button>
-                        </ButtonGroup>
+                        <ButtonGroup className='w-100'>
+                            <Button variant='success' onClick={this.saveAndClose}>
+                                <FontAwesomeIcon icon={faSave}/>{` Enregistrer et fermer`}
+                            </Button>
+                        </ButtonGroup> 
                     </Col>
                     {this.state.showModalAnnotate && <ModalAnnotate onClose={this.onClose} onDbClick={this.onDbClick} />}
                 </Row>
@@ -216,7 +218,6 @@ export class MainView extends Component {
     }
 
     saveAndClose(){
-        let that = this;
         let callback = function(result){
             if(!result.success){
                 $glVars.feedback.showError($glVars.i18n.appName, result.msg);
@@ -224,12 +225,14 @@ export class MainView extends Component {
             }
             else{
                 window.IWrapper.update();
+               // window.IWrapper.closeModal();
             }
         }
         
         let data = {};
         Object.assign(data, this.state.data);
         data.annotation = this.refAnnotation.current.innerHTML;
+        console.log(data.annotation)
         $glVars.webApi.saveAnnotation(data, callback);
     }
 }
@@ -318,8 +321,7 @@ class ModalAnnotate extends Component{
 
     onDelete(){
         if (MainView.selectedElement) {
-            const critereClass = Array.from(MainView.selectedElement.classList).find(className => className.startsWith('highlighter-'));
-            if (critereClass) {
+            if (MainView.selectedElement.dataset.criterion.length > 0) {
                 // Remove the highlighted span and return its text content
                 const textContent = MainView.selectedElement.textContent;
                 MainView.selectedElement.outerHTML = textContent;
@@ -357,7 +359,7 @@ class ModalAnnotate extends Component{
         el.dataset.criterion = this.state.data.criterion;
         el.dataset.comment = this.state.data.comment;
         el.dataset.originalTitle = this.state.data.comment;
-        el.className = 'highlighted-text highlighter-' + this.state.data.criterion;
+        el.style.backgroundColor = '#ffd966';
 
         this.onClose(true);
     }

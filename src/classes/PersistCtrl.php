@@ -97,7 +97,7 @@ class PersistCtrl extends MoodlePersistCtrl
     }
 
      public function getAnnotation($assignmentId, $userId){
-        $query = "select ". $this->sql_uniqueid() ." uniqueid, t1.id, 
+        $query = "select ". $this->sql_uniqueid() ." uniqueid, coalesce(t1.id, 0) id, 
         coalesce(t1.submission, t2.id) as submission, t1.ownerid, coalesce(t1.annotation, t3.onlinetext) as annotation,
         coalesce(t1.generalfeedback, '') as generalfeedback, t1.lastupdate
         from {assign_submission} t2
@@ -108,9 +108,10 @@ class PersistCtrl extends MoodlePersistCtrl
         $rst = $this->getRecordsSQL($query, [$assignmentId, $userId]);
 
         $rst = array_pop($rst);
+
         $result = RecitAnnotation::create($rst);
 
-        if($rst->id > 0){
+        if($result->id == 0){
             $result->annotation = strip_tags($result->annotation, ['<br>', '<p>']);
         }
         
@@ -152,6 +153,11 @@ class RecitAnnotation{
 
     public static function create($dbData){
         $result = new RecitAnnotation();
+
+        if($dbData == null){
+            return $result;
+        }
+        
         $result->id = intval($dbData->id);
         $result->submission = intval($dbData->submission);
         $result->ownerid = intval($dbData->ownerid);
