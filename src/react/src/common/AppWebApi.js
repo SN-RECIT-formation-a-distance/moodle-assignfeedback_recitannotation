@@ -48,8 +48,8 @@ export class AppWebApi extends WebApi
         }
     }
 
-    getAnnotation(assignment, userid, onSuccess){
-        let data = {assignment: assignment, userid: userid, service: "getAnnotation"};
+    getAnnotationFormKit(assignment, userid, onSuccess){
+        let data = {assignment: assignment, userid: userid, service: "getAnnotationFormKit"};
         this.post(this.gateway, data, onSuccess);
     } 
 

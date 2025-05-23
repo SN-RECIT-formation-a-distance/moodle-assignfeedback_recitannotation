@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
 import { $glVars } from '../common/common';
+import { JsNx } from '../libs/utils/Utils';
 
 export class MainView extends Component {
     static defaultProps = {
@@ -25,42 +26,14 @@ export class MainView extends Component {
         this.updateCounters = this.updateCounters.bind(this);
         this.saveAndClose = this.saveAndClose.bind(this);
         this.onDataChange = this.onDataChange.bind(this);
+        this.getData = this.getData.bind(this);
+        this.afterGetData = this.afterGetData.bind(this);
  
         this.state = {
-            submissionText: "",  
             showModalAnnotate: false,
             data: null,
-            evaluationData: [    
-                {
-                    criterion: {id: 'highlighter-traitement', text: 'Traitement', color: "#FFFF00", backgroundColor: "#FFFFE0"},
-                    level: '',
-                    count: 0
-                },
-                {
-                    criterion:  {id: 'highlighter-organisation', text: 'Organisation', color: "#00FF00", backgroundColor: "#E0FFE0"},
-                    level: '',
-                    count: 0
-                },
-                {
-                    criterion:  {id: 'highlighter-style', text: 'Style/Syntaxe', color: "#00FFFF", backgroundColor: "#E0FFFF"},
-                    level: '',
-                    count: 0
-                },
-                {
-                    criterion:  {id: 'highlighter-orthographe', text: 'Orthographe', color: "#FF00FF", backgroundColor: "#FFE0FF"},
-                    level: '',
-                    count: 0
-                },
-            ],
-            dropdownList: {
-                levelListOptions: [
-                    {label: 'A', value: 'A'},
-                    {label: 'B', value: 'B'},
-                    {label: 'C', value: 'C'},
-                    {label: 'D', value: 'D'},
-                    {label: 'E', value: 'E'}
-                ]
-            }       
+            counter: {},
+            dropdownList: null
         };
 
         this.refAnnotation = React.createRef();
@@ -79,17 +52,32 @@ export class MainView extends Component {
                 $glVars.feedback.showError($glVars.i18n.appName, result.msg);
                 return;
             }
-            that.setState({data: result.data});         
+            let dropdownList = {
+                criteriaList: result.data.criteriaList,
+                commentList: result.data.commentList
+            }
+            that.setState({data: result.data.data, dropdownList: dropdownList}, () => {
+                that.afterGetData();
+            });         
         }
         
         let contextData = window.IWrapper.getContextData();
-        $glVars.webApi.getAnnotation(contextData.assignment, contextData.userid, callback);
+        $glVars.webApi.getAnnotationFormKit(contextData.assignment, contextData.userid, callback);
+    }
+
+    afterGetData(){
+        this.updateCounters();
+        
+        // Gérer le double-clic sur le texte surligné
+        let elements = this.refAnnotation.current.querySelectorAll(`[data-criterion]`);
+        for(let el of elements){
+            el.addEventListener('dblclick', this.onDbClick);  
+        }
     }
 
     render() {
         if(this.state.data === null){ return null;}
 
-        console.log(this.state.evaluationData)
         let main =
             <div className="container">
                 <Row className='p-3 main-view'>
@@ -110,11 +98,11 @@ export class MainView extends Component {
                                 </tr>
                             </thead>
                             <tbody>
-                                {this.state.evaluationData.map((item, index) => {
+                                {this.state.dropdownList.criteriaList.map((item, index) => {
                                     let row = 
-                                        <tr key={index} style={{backgroundColor: item.criterion.backgroundColor}}>
-                                            <td style={{backgroundColor: item.criterion.color}}>{item.criterion.text}</td>
-                                            <td>{item.count}</td>
+                                        <tr key={index}>
+                                            <td style={{backgroundColor: item.backgroundcolor}}>{item.description}</td>
+                                            <td>{(this.state.counter.hasOwnProperty(item.name) ? this.state.counter[item.name] : 0)}</td>
                                         </tr>;
                                     return row;
                                 })}
@@ -132,7 +120,8 @@ export class MainView extends Component {
                             </Button>
                         </ButtonGroup> 
                     </Col>
-                    {this.state.showModalAnnotate && <ModalAnnotate onClose={this.onClose} onDbClick={this.onDbClick} />}
+                    {this.state.showModalAnnotate && <ModalAnnotate onClose={this.onClose} onDbClick={this.onDbClick} 
+                                criteriaList={this.state.dropdownList.criteriaList} commentList={this.state.dropdownList.commentList}/>}
                 </Row>
             </div>;
 
@@ -170,13 +159,14 @@ export class MainView extends Component {
     }
 
     updateCounters(){
-        let data = this.state.evaluationData;
-        for(let item of data){
-            let elements = window.document.querySelectorAll(`.${item.criterion.id}`);
-            item.count = elements.length;
+        let counter = this.state.counter;
+        
+        for(let item of this.state.dropdownList.criteriaList){
+            let elements = window.document.querySelectorAll(`[data-criterion="${item.name}"]`);
+            counter[item.name] = elements.length;
         }
 
-        this.setState({evaluationData: data});
+        this.setState({counter: counter});
     }   
 
     initTooltips() {
@@ -225,23 +215,23 @@ export class MainView extends Component {
             }
             else{
                 window.IWrapper.update();
-               // window.IWrapper.closeModal();
+                window.IWrapper.closeModal();
             }
-        }
+        } 
         
         let data = {};
         Object.assign(data, this.state.data);
         data.annotation = this.refAnnotation.current.innerHTML;
-        console.log(data.annotation)
         $glVars.webApi.saveAnnotation(data, callback);
     }
 }
 
-
 class ModalAnnotate extends Component{
     static defaultProps = {        
         onClose: null,
-        onDbClick: null
+        onDbClick: null,
+        criteriaList: [],
+        commentList: []
     };
 
     constructor(props){
@@ -252,16 +242,21 @@ class ModalAnnotate extends Component{
         this.onDataChange = this.onDataChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
 
-        this.originalData = {data: {criterion: "traitement", comment: ""}, isNewNote: true};
-        this.state = {};
-        Object.assign(this.state, this.originalData);
+        this.state = {
+            data: {},
+            dropdownList: {
+                criteriaList: []
+            },
+            isNewNote: true
+        };
 
-        this.criteriaList = [
-            {value: 'traitement', text: 'Traitement'},
-            {value: 'organisation', text: 'Organisation'},
-            {value: 'style', text: 'Style/Syntaxe'},
-            {value: 'orthographe', text: 'Orthographe'},
-        ]
+        this.originalData = {criterion: "", comment: "", search: null};
+        
+        Object.assign(this.state.data, this.originalData);
+
+        for(let item of props.criteriaList){
+            this.state.dropdownList.criteriaList.push({value: item.name, text: item.description});
+        }
     }
 
     componentDidMount(){
@@ -277,16 +272,25 @@ class ModalAnnotate extends Component{
     }
 
     render(){
+        let commentList = [];
+
+        for(let item of this.props.commentList){
+            if(item.name === this.state.data.criterion){
+                commentList.push({value: item.comment, label: item.comment});
+            }
+        }
+
         let body = 
         <Form onSubmit={this.onSubmit}>
             <Form.Group className='mb-3' >
-                <Form.Label>{"Conserver les collaborateurs"}</Form.Label>
+                <Form.Label>{"Critère"}</Form.Label>
                 <ToggleButtons name="criterion" type="radio" value={[this.state.data.criterion]} onClick={this.onDataChange} 
-                            options={this.criteriaList}/>
+                            options={this.state.dropdownList.criteriaList}/>
             </Form.Group>
             <Form.Group >
                 <Form.Label>{"Commentaire"}</Form.Label>
-                <InputTextArea name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
+                <ComboBoxPlus  placeholder={"Cherchez un commentaire..."} name="commentSearch" value={this.state.data.search} options={commentList} onChange={this.onDataChange} />
+                <InputTextArea className="mt-1" name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
             </Form.Group>
         </Form>;
 
@@ -315,7 +319,15 @@ class ModalAnnotate extends Component{
 
     onDataChange(event){
         let data = this.state.data;
-        data[event.target.name] = event.target.value;
+
+        if(event.target.name === 'commentSearch'){
+            data.comment += event.target.value;
+            data.search = null;
+        }
+        else{
+            data[event.target.name] = event.target.value;
+        }
+        
         this.setState({data: data});
     }
 
@@ -335,6 +347,15 @@ class ModalAnnotate extends Component{
         event.preventDefault();
         event.stopPropagation();
               
+        if(this.state.data.criterion.length === 0){
+            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'Critère' avant de continuer.", 3);
+            return;
+        }
+        else if(this.state.data.comment.length === 0){
+            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'Commentaire' avant de continuer.", 3);
+            return;
+        }
+
         let el = null;
         if (this.state.isNewNote) {
             el = document.createElement('span');
@@ -359,7 +380,7 @@ class ModalAnnotate extends Component{
         el.dataset.criterion = this.state.data.criterion;
         el.dataset.comment = this.state.data.comment;
         el.dataset.originalTitle = this.state.data.comment;
-        el.style.backgroundColor = '#ffd966';
+        el.style.backgroundColor = JsNx.getItem(this.props.criteriaList, 'name', this.state.data.criterion, null).backgroundcolor;
 
         this.onClose(true);
     }
@@ -367,7 +388,7 @@ class ModalAnnotate extends Component{
     onClose(refresh){
         let data = {};
         Object.assign(data, this.originalData);
-        this.setState({data: data});
+        this.setState({data: data, isNewNote: true});
         this.props.onClose(true);
     }
 }

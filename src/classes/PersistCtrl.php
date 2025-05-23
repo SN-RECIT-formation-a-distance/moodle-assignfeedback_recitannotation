@@ -96,7 +96,7 @@ class PersistCtrl extends MoodlePersistCtrl
         return $isTeacher;
     }
 
-     public function getAnnotation($assignmentId, $userId){
+    public function getAnnotation($assignmentId, $userId){
         $query = "select ". $this->sql_uniqueid() ." uniqueid, coalesce(t1.id, 0) id, 
         coalesce(t1.submission, t2.id) as submission, t1.ownerid, coalesce(t1.annotation, t3.onlinetext) as annotation,
         coalesce(t1.generalfeedback, '') as generalfeedback, t1.lastupdate
@@ -140,6 +140,25 @@ class PersistCtrl extends MoodlePersistCtrl
         catch(\Exception $ex){
             throw $ex;
         }
+    }
+
+    public function getCriteriaList(){
+        $query = "select * from {assignfeedback_recitannot_crit} order by description asc";
+
+        $result = $this->getRecordsSQL($query);
+
+        return $result;
+    }
+
+    public function getCommentList(){
+        $query = "SELECT t1.id, t2.name, t1.comment 
+                    FROM {assignfeedback_recitannot_comment} as t1
+                    inner join {assignfeedback_recitannot_crit} as t2 on t1.criterionid = t2.id
+                    order by name, comment";
+
+        $result = $this->getRecordsSQL($query);
+
+        return $result;
     }
 }
 

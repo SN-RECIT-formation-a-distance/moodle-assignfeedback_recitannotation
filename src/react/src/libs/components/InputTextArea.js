@@ -31,7 +31,8 @@ export class InputTextArea extends Component {
         placeholder: "",
         onChange: null,
         disabled: false,
-        rows: 4
+        rows: 4,
+        className: ""
     };
 
     constructor(props){
@@ -41,7 +42,7 @@ export class InputTextArea extends Component {
     }
     
     render() {       
-        let main = <FormControl name={this.props.name} as="textarea" 
+        let main = <FormControl name={this.props.name} as="textarea" className={this.props.className}
                     value={this.props.value} placeholder={this.props.placeholder} onChange={this.onChange} 
                     disabled={this.props.disabled} rows={this.props.rows}/>
         return (main);

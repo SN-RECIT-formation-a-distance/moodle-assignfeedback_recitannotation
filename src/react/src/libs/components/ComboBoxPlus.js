@@ -32,15 +32,21 @@ export class ComboBoxPlus extends Component {
         }
 
         let main = 
-            <Select {...spreadAttr} onChange={this.onChange} defaultValue={this.props.value} placeholder={this.props.placeholder}>
+            <Select isClearable {...spreadAttr} onChange={this.onChange} defaultValue={this.props.value} placeholder={this.props.placeholder}>
             </Select>;            
         return (main);
     }   
     
     onChange(event){
-        let value = event.value || "";
-        let text = event.label;
+        let value = "";
+        let text = "";
+        if(event !== null){
+            value = event.value;
+            text = event.label;
+        }   
+        
         this.setState({value:value});
+        
         if (this.props.multiple){
             value = event;
         }

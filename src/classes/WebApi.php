@@ -26,6 +26,7 @@ require_once dirname(__FILE__).'/recitcommon/WebApi.php';
 require_once dirname(__FILE__).'/PersistCtrl.php';
 
 use Exception;
+use stdClass;
 
 class WebApi extends MoodleApi
 {
@@ -55,14 +56,18 @@ class WebApi extends MoodleApi
         }
     }
     
-    public function getAnnotation($request){
+    public function getAnnotationFormKit($request){
         try{
            // $this->canUserAccess('a');
 
             $assignment = clean_param($request['assignment'], PARAM_INT);
             $userid = clean_param($request['userid'], PARAM_INT);
 
-            $result = $this->ctrl->getAnnotation($assignment, $userid);
+            $result = new stdClass();
+            $result->data = $this->ctrl->getAnnotation($assignment, $userid);
+            $result->criteriaList = $this->ctrl->getCriteriaList();
+            $result->levelList = array("A", "B", "C", "D", "E");
+            $result->commentList = $this->ctrl->getCommentList();
             $this->prepareJson($result);
             return new WebApiResult(true, $result);
         }
