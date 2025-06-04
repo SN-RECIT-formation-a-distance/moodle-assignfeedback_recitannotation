@@ -21,6 +21,7 @@
  */
 
 $string['pluginname'] = 'RÉCIT Annotation feedback';
+$string['pluginname2'] = 'Text Annotation';
 $string['default'] = 'Enabled by default';
 $string['default_help'] = 'If set, this feedback method will be enabled by default for all new assignments.';
 $string['enabled'] = 'File feedback';

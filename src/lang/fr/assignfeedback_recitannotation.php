@@ -1,3 +1,4 @@
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,26 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   assignfeedback_recitannotation
- * @copyright 2025 RÉCIT 
+ * @package assignfeedback_recitannotation
+ * @copyright 2025 RECIT
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-export * from "./Options";
 
-export const $glVars = {
-    signedUser: {userId: 0, roles: []},
-    feedback: null,
-    webApi: null,
-    urlParams: {},
-    moodleData: {
-        assignment: 0,
-        submission: 0,
-        userid: 0,
-        sesskey: "",
-        wwwroot: ""
-    },
-    i18n: {
-        appName: "RÉCIT Annotation",
-        msgactioncompleted: "L'action a été complétée avec succès"
-    }
-}
+$string['pluginname'] = 'RÉCIT rétroaction par annotation';
+$string['pluginname2'] = 'Annotation de texte';
+$string['default'] = 'Activé par défaut';
+$string['default_help'] = 'Si cette option est définie, cette méthode de rétroaction sera activée par défaut pour toutes les nouvelles affectations.';
+$string['enabled'] = 'Rétroaction par annotation';
+$string['enabled_help'] = 'Si cette option est activée, l\'enseignant pourra annoter les devoirs des élèves.';

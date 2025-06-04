@@ -99,7 +99,7 @@ class PersistCtrl extends MoodlePersistCtrl
     public function getAnnotation($assignmentId, $userId){
         $query = "select ". $this->sql_uniqueid() ." uniqueid, coalesce(t1.id, 0) id, 
         coalesce(t1.submission, t2.id) as submission, t1.ownerid, coalesce(t1.annotation, t3.onlinetext) as annotation,
-        coalesce(t1.generalfeedback, '') as generalfeedback, t1.lastupdate
+        coalesce(t1.occurrences, '') as occurrences, t1.lastupdate
         from {assign_submission} t2
         inner join {assignsubmission_onlinetext} t3 on t2.id = t3.submission 
         left join {assignfeedback_recitannotation} t1 on t2.id = t1.submission
@@ -124,7 +124,7 @@ class PersistCtrl extends MoodlePersistCtrl
             $record->submission = $data->submission;
             $record->ownerid = $this->signedUser->id;
             $record->annotation = $data->annotation;
-            $record->generalfeedback = $data->generalfeedback;
+            $record->occurrences = json_encode($data->occurrences);
             $record->lastupdate = time();
 
             if($data->id == 0){
@@ -167,7 +167,7 @@ class RecitAnnotation{
     public $submission = 0;
     public $ownerid = 0;
     public $annotation = "";
-    public $generalfeedback = "";
+    public $occurrences = "";
     public $lastupdate = 0;
 
     public static function create($dbData){
@@ -181,7 +181,7 @@ class RecitAnnotation{
         $result->submission = intval($dbData->submission);
         $result->ownerid = intval($dbData->ownerid);
         $result->annotation = $dbData->annotation; 
-        $result->generalfeedback = $dbData->generalfeedback;
+        $result->occurrences = $dbData->occurrences; 
         $result->lastupdate = intval($dbData->lastupdate);
         return $result;
     }

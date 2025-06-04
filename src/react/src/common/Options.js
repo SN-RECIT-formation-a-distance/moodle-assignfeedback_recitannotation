@@ -19,6 +19,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 import packageJson from "../../package.json";
+import { $glVars } from "./common";
 
 export class Options
 {
@@ -30,7 +31,7 @@ export class Options
     }
 
     static getGateway(){
-        return `${window.IWrapper.wwwroot()}/mod/assign/feedback/recitannotation/classes/WebApi.php`;
+        return `${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/WebApi.php`;
     }
     
 }

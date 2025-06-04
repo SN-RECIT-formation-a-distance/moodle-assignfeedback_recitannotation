@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 import { createRoot } from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';  
+// import 'bootstrap/dist/css/bootstrap.min.css';  not necessary because the theme already has Bootstrap
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {VisualFeedback, Loading} from "./libs/components/Components";
+import {VisualFeedback, Loading, FeedbackCtrl} from "./libs/components/Components";
 import "./css/style.scss";
 import { Options } from './common/Options';
 import { $glVars } from './common/common';
 import Utils from './libs/utils/Utils';
 import { MainView } from './views/MainView';
+import { AppWebApi } from './common/AppWebApi';
 
 class App extends Component {
     static defaultProps = {
-        signedUser: null,
     };
 
     constructor(props) {
@@ -20,15 +20,15 @@ class App extends Component {
 
         this.onFeedback = this.onFeedback.bind(this);
 
-        $glVars.signedUser = this.props.signedUser;
+        //$glVars.signedUser = this.props.signedUser;
         $glVars.urlParams = Utils.getUrlVars();
 
-        this.state = {submissionText: ""};
+        this.state = {};
     }
 
     componentDidMount(){
         $glVars.feedback.addObserver("App", this.onFeedback);
-        window.document.title = window.name + ' - v' + Options.appVersion();
+        window.document.title += ' | v' + Options.appVersion();
     }
 
     componentWillUnmount(){
@@ -53,10 +53,13 @@ class App extends Component {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function(e){     
-    let domContainer = document.getElementById('recitannotation_placeholder');
-    if (domContainer && domContainer.childNodes.length === 0){
-        const root = createRoot(domContainer);
-        root.render(<App />);
-    }
-}, false);
+window.loadRecitAnnotationReactApp = function(moodleData){  
+    Object.assign($glVars.moodleData, moodleData);
+    $glVars.webApi = new AppWebApi();
+    $glVars.feedback = new FeedbackCtrl();
+
+    const domContainer = document.getElementById('recitannotation_appreact_placeholder');
+    const root = createRoot(domContainer);
+    root.render(<App />);
+    return root;
+};

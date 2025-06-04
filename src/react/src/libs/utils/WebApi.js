@@ -124,8 +124,9 @@ export class HttpRequest
 
 export class WebApi
 {
-    constructor(gateway){
+    constructor(gateway, sesskey){
         this.gateway = gateway;
+        this.sesskey = sesskey;
         this.http = new HttpRequest();
         this.domVisualFeedback = null;
 
@@ -147,7 +148,7 @@ export class WebApi
         }
         
         callbackError = callbackError || this.onError;
-        data.sesskey = window.IWrapper.sesskey();
+        data.sesskey = this.sesskey;
         data = JSON.stringify(data);
 
         this.http.send("post", url, data, callbackSuccess, callbackError, this.onComplete, HttpRequest.contentType.json, HttpRequest.responseType.json);

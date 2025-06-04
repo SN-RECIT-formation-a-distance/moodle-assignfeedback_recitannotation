@@ -20,57 +20,34 @@
  */
 M.assignfeedback_recitannotation = M.assignfeedback_recitannotation || {};
 M.assignfeedback_recitannotation.recitannotation = {
-    globalVars: {
-        popup: null,
-        contextData: {
-            assignment: 0,
-            submission: 0,
-            userid: 0
-        }
+    moodleData: {
+        assignment: 0,
+        submission: 0,
+        userid: 0,
+        sesskey: window.M.cfg.sesskey,
+        wwwroot: window.M.cfg.wwwroot,
     },
 
     init: function(assignment, submission, userid) {
-        this.globalVars.contextData.assignment = parseInt(assignment, 10);
-        this.globalVars.contextData.submission = parseInt(submission, 10);
-        this.globalVars.contextData.userid = parseInt(userid, 10);
+        this.moodleData.assignment = parseInt(assignment, 10);
+        this.moodleData.submission = parseInt(submission, 10);
+        this.moodleData.userid = parseInt(userid, 10);
 
-        let btn = window.document.getElementById('btn-annotation-tool');
-        btn.addEventListener('click', this.openAnnotateTool.bind(this));
+        var style = document.createElement("link");
+        style.setAttribute('href', M.cfg.wwwroot + "/mod/assign/feedback/recitannotation/react/build/index.css");
+        style.setAttribute('rel', "stylesheet");
+        document.getElementsByTagName('head')[0].appendChild(style);
+
+        var script = document.createElement('script');
+        var that = this;
+        script.onload = function(){
+            if (window.loadRecitAnnotationReactApp){
+                window.loadRecitAnnotationReactApp(that.moodleData);
+            }
+        }
+        script.setAttribute('src', M.cfg.wwwroot + "/mod/assign/feedback/recitannotation/react/build/index.js?1");
+        script.setAttribute('id', 'recitannotation');
+        script.setAttribute('type', 'text/javascript');
+        document.getElementsByTagName('head')[0].appendChild(script);
     },
-
-    openAnnotateTool: function(event) {
-        event.preventDefault();
-
-        // if the reference exists and the window is not closed so we can bring it to the front with the method focus() method without having to recreate the window
-        if(this.globalVars.popup !== null && !this.globalVars.popup.closed){
-            this.globalVars.popup.focus();
-            return;
-        }
-
-        let that = this;
-        let url = M.cfg.wwwroot + "/mod/assign/feedback/recitannotation/annotation_tool.php";
-        this.globalVars.popup = window.open(url,'RÉCIT Annotation',`width=${screen.availWidth},height=${screen.availHeight},scrollbars=1,menubar=0`);
-
-        this.globalVars.popup.IWrapper = {};
-        
-        this.globalVars.popup.IWrapper.sesskey = function(){
-            return window.M.cfg.sesskey;
-        }
-
-        this.globalVars.popup.IWrapper.wwwroot = function(){
-            return window.M.cfg.wwwroot;
-        }
-
-        this.globalVars.popup.IWrapper.getContextData = function(){
-            return that.globalVars.contextData;
-        }
-
-        this.globalVars.popup.IWrapper.update = function(){
-            window.location.reload();
-        }
-
-        this.globalVars.popup.IWrapper.closeModal = function(){
-            that.globalVars.popup.close();
-        }
-    }
 };

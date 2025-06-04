@@ -40,7 +40,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
      * @return string
      */
     public function get_name() {
-        return get_string('pluginname', 'assignfeedback_recitannotation');
+        return get_string('pluginname2', 'assignfeedback_recitannotation');
     }
 
      /**
@@ -91,7 +91,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
 
         $data = $persistCtrl->getAnnotation($grade->assignment, $userid);
         
-        $html = "<div>";
+        /*$html = "<div>";
         
         $html .= "<div class='mb-3'>{$data->annotation}</div>";
         
@@ -103,12 +103,13 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         }
         
         $html .= "<button class='btn btn-primary' id='btn-annotation-tool'><i class='fa fa-comments'></i> Annotate</button>";
-        $html .= "</div>";
-        $group[] = $mform->createElement('static', 'assignfeedbackrecitannotation_btnannotation', '', $html);
+        $html .= "</div>";*/
+        
+        $group[] = $mform->createElement('static', '', '', "<div id='recitannotation_appreact_placeholder' class='bg-white rounded'></div>");
         
         $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array($grade->assignment, $data->submission, $userid));
 
-        $mform->addGroup($group, 'assignfeedbackrecitannotation_group', $this->get_name(), '', false, array('class' => 'has-popout'));
+        $mform->addGroup($group, 'assignfeedbackrecitannotation_group', $this->get_name(), '', false, array('class' => 'has-popout invisible'));
         
 
         return true;
@@ -127,18 +128,13 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
         $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
 
-        if(($data->id == 0) && (strlen($data->generalfeedback) == 0)){
+        if($data->id == 0){
             return "";
         }
 
         $showviewlink = true;
 
-        $html = "<div>";
-        $html .= "<b>Rétroaction générale:</b>";
-        $html .= "<p>{$data->generalfeedback}</p>";
-        $html .= "</div>";
-
-        return $html;
+        return "Cliquez sur le + pour voir l’annotation";
     }
 
     /**
@@ -152,17 +148,37 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
 
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
         $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
+        $criteriaList = $persistCtrl->getCriteriaList();
 
-        $html = "<div>";
+        $html = "<div class='bg-white'>";
 
         $html .= "<div class='mb-3'>$data->annotation</div>";
-        
-        if(strlen($data->generalfeedback) > 0){
-            $html .= "<div class='mb-3'>";
-            $html .= "<b>Rétroaction générale:</b>";
-            $html .= "<p>{$data->generalfeedback}</p>";
-            $html .= "</div>";
+
+        $data->occurrences = json_decode($data->occurrences);
+        $html .= "<table class='w-50 table table-striped table-bordered bordered table-sm'>";
+        $html .= "<thead>";
+        $html .= "<tr>";
+        $html .= "<th>Critère</th>";
+        $html .= "<th>Nombre</th>";
+        $html .= "</tr>";            
+        $html .= "</thead>";
+        $html .= "<tbody>";       
+
+        foreach($criteriaList as $criterion){
+            $attr = $criterion->name;
+            if(!isset($data->occurrences->$attr)){
+                continue;
+            }
+
+            $html .= "<tr>";
+            $html .= "<td style='background-color: {$criterion->backgroundcolor} '>{$criterion->description}</td>";
+            $html .= "<td>". $data->occurrences->$attr."</td>";
+            $html .= "</tr>";    
         }
+        
+
+        $html .= "</tbody>";
+        $html .= "</table>";
         
         $html .= "</div>";
 

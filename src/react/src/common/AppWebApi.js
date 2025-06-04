@@ -19,12 +19,13 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 import {WebApi, JsNx} from '../libs/utils/Utils';
+import { $glVars } from './common';
 import { Options } from './Options';
 
 export class AppWebApi extends WebApi
 {    
     constructor(){
-        super(Options.getGateway());
+        super(Options.getGateway(), $glVars.moodleData.sesskey);
                 
         this.http.useCORS = true;
         this.sid = 0;

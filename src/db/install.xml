@@ -10,7 +10,7 @@
         <FIELD NAME="submission" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="ownerid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="annotation" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The annotation text"/>
-        <FIELD NAME="generalfeedback" TYPE="text" NOTNULL="false" SEQUENCE="false" />
+        <FIELD NAME="occurrences" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT=""/>
         <FIELD NAME="lastupdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

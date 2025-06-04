@@ -1,12 +1,14 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import { faComment, faSave} from '@fortawesome/free-solid-svg-icons';
+import { faCog, faComment, faSave, faTimes, faTrash} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
 import { $glVars } from '../common/common';
 import { JsNx } from '../libs/utils/Utils';
+import $ from 'jquery';
+import 'bootstrap/dist/js/bootstrap.bundle.min'; // includes tooltip
 
 export class MainView extends Component {
     static defaultProps = {
@@ -24,13 +26,15 @@ export class MainView extends Component {
         this.onDbClick = this.onDbClick.bind(this);
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
-        this.saveAndClose = this.saveAndClose.bind(this);
+        this.save = this.save.bind(this);
         this.onDataChange = this.onDataChange.bind(this);
         this.getData = this.getData.bind(this);
         this.afterGetData = this.afterGetData.bind(this);
+        this.onSettings = this.onSettings.bind(this);
  
         this.state = {
             showModalAnnotate: false,
+            showModalSettings: false,
             data: null,
             counter: {},
             dropdownList: null
@@ -41,7 +45,24 @@ export class MainView extends Component {
     }
 
     componentDidMount(){
+        this.integrateAppReactWithMoodle();
         this.getData();
+    }
+
+    integrateAppReactWithMoodle(){
+        let panelGrade = window.document.querySelector("[data-region='grade-panel']");
+        let recitAnnotation = window.document.getElementById("recitannotation_appreact_placeholder");    
+        this.refRecitAnnotationValue = window.document.querySelector("[name='recitannotation_value']");    
+
+        if(recitAnnotation.isEqualNode(panelGrade.firstChild)){
+            return;
+        }
+        
+        panelGrade.insertBefore(recitAnnotation, panelGrade.firstChild);
+        recitAnnotation.style.display = "block";
+        panelGrade.style.display = 'grid';
+        panelGrade.style.gridTemplateColumns = "calc(70% - 1rem) calc(30% - 1rem)";
+        panelGrade.style.gap = "1rem";
     }
 
     getData(){
@@ -61,8 +82,7 @@ export class MainView extends Component {
             });         
         }
         
-        let contextData = window.IWrapper.getContextData();
-        $glVars.webApi.getAnnotationFormKit(contextData.assignment, contextData.userid, callback);
+        $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.userid, callback);
     }
 
     afterGetData(){
@@ -82,19 +102,25 @@ export class MainView extends Component {
             <div className="container">
                 <Row className='p-3 main-view'>
                     <Col md={8}>
-                        <h2>Production de l'élève</h2>
+                        <div className='h5'>Production de l'élève</div>
                         <div ref={this.refAnnotation} onMouseUp={this.onMouseUp} className='p-3' dangerouslySetInnerHTML={{__html: this.state.data.annotation}}></div>
                         <Button size='sm' className='btn-annotate' style={{display: 'none'}} ref={this.refBtnAnnotate} onClick={this.onClick}>
                             <FontAwesomeIcon icon={faComment}/>{` Annoter`}
                         </Button>
                     </Col>
                     <Col md={4} className='fixed'>
-                        <h2>Évaluation</h2>
+                        <div className='d-flex align-items-baseline'>
+                            <span className='h5'>Occurrences</span>
+                            <Button size='sm' variant='link' className='ml-1' onClick={this.onSettings}>
+                                <FontAwesomeIcon icon={faCog}/>
+                            </Button>
+                        </div>
+
                         <Table striped bordered size='sm'>
                             <thead>
                                 <tr>
                                     <th>Critère</th>
-                                    <th>Occurrences</th>
+                                    <th>Nombre</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -108,20 +134,11 @@ export class MainView extends Component {
                                 })}
                             </tbody>
                         </Table>
-                        
-                        <Form.Group>
-                            <Form.Label>Rétroaction générale:</Form.Label>
-                            <Form.Control name="generalfeedback" value={this.state.data.generalfeedback} placeholder="Ajouter une rétroaction générale à l'élève..." as="textarea" rows={5} onChange={this.onDataChange}/>
-                        </Form.Group>
-
-                        <ButtonGroup className='w-100'>
-                            <Button variant='success' onClick={this.saveAndClose}>
-                                <FontAwesomeIcon icon={faSave}/>{` Enregistrer et fermer`}
-                            </Button>
-                        </ButtonGroup> 
                     </Col>
                     {this.state.showModalAnnotate && <ModalAnnotate onClose={this.onClose} onDbClick={this.onDbClick} 
                                 criteriaList={this.state.dropdownList.criteriaList} commentList={this.state.dropdownList.commentList}/>}
+
+                    {this.state.showModalSettings && <ModalSettings criteriaList={this.state.dropdownList.criteriaList} commentList={this.state.dropdownList.commentList}/>}
                 </Row>
             </div>;
 
@@ -155,6 +172,7 @@ export class MainView extends Component {
         if(refresh){
             this.initTooltips();
             this.updateCounters();
+            this.save();
         }
     }
 
@@ -207,22 +225,29 @@ export class MainView extends Component {
         this.setState({data: data});
     }
 
-    saveAndClose(){
+    save(){
         let callback = function(result){
             if(!result.success){
                 $glVars.feedback.showError($glVars.i18n.appName, result.msg);
                 return;
             }
             else{
-                window.IWrapper.update();
-                window.IWrapper.closeModal();
+                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 2);
+                return;
             }
         } 
         
         let data = {};
         Object.assign(data, this.state.data);
         data.annotation = this.refAnnotation.current.innerHTML;
+        data.occurrences = {}; // force new object
+        Object.assign(data.occurrences, this.state.counter);
+
         $glVars.webApi.saveAnnotation(data, callback);
+    }
+
+    onSettings(){
+        this.setState({showModalSettings: true});
     }
 }
 
@@ -303,11 +328,17 @@ class ModalAnnotate extends Component{
                 <Modal.Footer>
                     <ButtonToolbar className='justify-content-between w-100'>
                         <ButtonGroup >
-                            <Button variant='danger'  onClick={() => this.onDelete(true)}>Supprimer</Button>
+                            <Button variant='danger'  onClick={() => this.onDelete(true)}>
+                                 <FontAwesomeIcon icon={faTrash}/>{' Supprimer'}
+                                </Button>
                         </ButtonGroup>
                         <ButtonGroup >
-                            <Button variant='secondary'  onClick={() => this.onClose(false)}>Annuler</Button>
-                            <Button  variant='success' onClick={this.onSubmit}>Enregistrer</Button>
+                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
+                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                            </Button>
+                            <Button  variant='success' onClick={this.onSubmit}>
+                                <FontAwesomeIcon icon={faSave}/>{' Enregistrer'}
+                            </Button>
                         </ButtonGroup>
                     </ButtonToolbar>
                     
@@ -379,6 +410,7 @@ class ModalAnnotate extends Component{
         el.setAttribute('title', this.state.data.comment);
         el.dataset.criterion = this.state.data.criterion;
         el.dataset.comment = this.state.data.comment;
+        el.dataset.placement = 'auto';
         el.dataset.originalTitle = this.state.data.comment;
         el.style.backgroundColor = JsNx.getItem(this.props.criteriaList, 'name', this.state.data.criterion, null).backgroundcolor;
 
@@ -389,6 +421,60 @@ class ModalAnnotate extends Component{
         let data = {};
         Object.assign(data, this.originalData);
         this.setState({data: data, isNewNote: true});
-        this.props.onClose(true);
+        this.props.onClose(refresh);
+    }
+}
+
+
+class ModalSettings extends Component{
+    static defaultProps = {        
+        onClose: null,
+        criteriaList: [],
+        commentList: []
+    };
+
+    constructor(props){
+        super(props);
+
+        this.state = {};
+    }
+
+    render(){
+        let commentList = [];
+
+        for(let item of this.props.commentList){
+            if(item.name === this.state.data.criterion){
+                commentList.push({value: item.comment, label: item.comment});
+            }
+        }
+
+        let body = "aaa";
+
+        let main = 
+            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
+                <Modal.Header closeButton>
+                    <Modal.Title>Configurer les critères</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{body}</Modal.Body>
+                <Modal.Footer>
+                    <ButtonToolbar>
+                        <ButtonGroup >
+                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
+                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                            </Button>
+                            <Button  variant='success' onClick={this.onSubmit}>
+                                <FontAwesomeIcon icon={faSave}/>{' Enregistrer'}
+                            </Button>
+                        </ButtonGroup>
+                    </ButtonToolbar>
+                    
+                </Modal.Footer>
+            </Modal>;
+ 
+        return main;
+    }
+
+    onClose(refresh){
+       
     }
 }
