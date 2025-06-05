@@ -123,7 +123,7 @@ abstract class AWebApi
         }
 
         $serviceWanted = clean_param($this->request['service'], PARAM_TEXT);
-		$result = $this->$serviceWanted($this->request);	
+        $result = $this->$serviceWanted($this->request);	
 
         $this->lastResult = $result;
     }

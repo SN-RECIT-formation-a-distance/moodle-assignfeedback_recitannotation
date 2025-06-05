@@ -9,6 +9,7 @@ export class ComboBoxPlus extends Component {
         disabled: false,
         multiple: false,
         required: false,
+        isClearable: false,
         data: {},
         size: 1,
         placeholder: "",
@@ -21,18 +22,34 @@ export class ComboBoxPlus extends Component {
         super(props);
         
         this.onChange = this.onChange.bind(this);
-        this.state = {value: this.props.value};
     }
     
     render() { 
+        let options = this.props.options;
+
+        let selectedItem = null;
+        let value = this.props.value || "";
+        for (let o of options){
+            //o.label = o.text;
+            if (o.value.toString() === value.toString()){
+                selectedItem = o;
+            }
+        }
         //  spread attributes <div {...this.props}>    
-        let spreadAttr = {required: this.props.required, disabled: this.props.disabled, size: this.props.size, style: this.props.style, options: this.props.options};
+        let spreadAttr = {
+            required: this.props.required, 
+            isDisabled: this.props.disabled, 
+            isClearable: this.props.isClearable,
+            size: this.props.size, 
+            style: this.props.style, 
+            options: options
+        };
         if (this.props.multiple){
             spreadAttr.isMulti = true;
         }
 
         let main = 
-            <Select isClearable {...spreadAttr} onChange={this.onChange} defaultValue={this.props.value} placeholder={this.props.placeholder}>
+            <Select {...spreadAttr} onChange={this.onChange} value={selectedItem} placeholder={this.props.placeholder}>
             </Select>;            
         return (main);
     }   
@@ -51,6 +68,6 @@ export class ComboBoxPlus extends Component {
             value = event;
         }
 
-        this.props.onChange({target:{name: this.props.name, value: value, text: text, data: this.props.data}});
+        this.props.onChange({target:{name: this.props.name, value: value, text: text, data: event.data}});
     }   
 }

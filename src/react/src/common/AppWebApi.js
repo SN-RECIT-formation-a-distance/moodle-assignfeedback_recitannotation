@@ -54,6 +54,29 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess);
     } 
 
+    getCriteriaList(assignment, onSuccess){
+        let data = {assignment: assignment, service: "getCriteriaList"};
+        this.post(this.gateway, data, onSuccess);
+    } 
+
+    deleteCriterion(id, onSuccess){
+        let data = {id: id, service: "deleteCriterion"};
+        this.post(this.gateway, data, onSuccess);
+    }
+
+    saveCriterion(data, onSuccess){
+        let that = this;
+        let onSuccessTmp = function(result){     
+            onSuccess(result);
+            if(result.success){
+                that.notifyObservers('saveCriterion');
+            }
+        };
+
+        let options = {data: data, service: "saveCriterion"};
+        this.post(this.gateway, options, onSuccessTmp, null, true);
+    }
+
     saveAnnotation(data, onSuccess){
         let that = this;
         let onSuccessTmp = function(result){     
@@ -64,6 +87,24 @@ export class AppWebApi extends WebApi
         };
 
         let options = {data: data, service: "saveAnnotation"};
+        this.post(this.gateway, options, onSuccessTmp, null, true);
+    }
+
+    deleteComment(id, onSuccess){
+        let data = {id: id, service: "deleteComment"};
+        this.post(this.gateway, data, onSuccess);
+    }
+
+    saveComment(data, onSuccess){
+        let that = this;
+        let onSuccessTmp = function(result){     
+            onSuccess(result);
+            if(result.success){
+                that.notifyObservers('saveComment');
+            }
+        };
+
+        let options = {data: data, service: "saveComment"};
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 };

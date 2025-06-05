@@ -142,23 +142,92 @@ class PersistCtrl extends MoodlePersistCtrl
         }
     }
 
-    public function getCriteriaList(){
-        $query = "select * from {assignfeedback_recitannot_crit} order by description asc";
+    public function saveCriterion($data){
+        try{	
+            $record = new stdClass();
+            $record->id = $data->id;
+            $record->assignment = $data->assignment;
+            $record->name = $data->name;
+            $record->description = $data->description;
+            $record->backgroundcolor = $data->backgroundcolor;
 
-        $result = $this->getRecordsSQL($query);
+            if($data->id == 0){
+                $this->mysqlConn->insert_record("assignfeedback_recitannot_crit", $record);
+            }
+            else{
+                $record->id = $data->id;
+                $this->mysqlConn->update_record("assignfeedback_recitannot_crit", $record);
+            }
+
+            return true;
+        }
+        catch(\Exception $ex){
+            throw $ex;
+        }
+    }
+
+    public function getCriteriaList($assignment){
+        $query = "select * from {assignfeedback_recitannot_crit} 
+                where assignment = ?
+                order by description asc";
+
+        $result = $this->getRecordsSQL($query, array($assignment));
 
         return $result;
     }
 
-    public function getCommentList(){
-        $query = "SELECT t1.id, t2.name, t1.comment 
+    public function deleteCriterion($id){
+        try{
+            $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['id' => $id]);
+            return true;
+        }
+        catch(Exception $ex){
+            throw $ex;
+        }
+    }
+
+    public function getCommentList($assignment){
+        $query = "SELECT t1.id, t1.criterionid, t2.name,  t2.description, t1.comment 
                     FROM {assignfeedback_recitannot_comment} as t1
                     inner join {assignfeedback_recitannot_crit} as t2 on t1.criterionid = t2.id
-                    order by name, comment";
+                    where t2.assignment = ?
+                    order by t2.description, comment";
 
-        $result = $this->getRecordsSQL($query);
+        $result = $this->getRecordsSQL($query, array($assignment));
 
         return $result;
+    }
+
+    public function deleteComment($id){
+        try{
+            $this->mysqlConn->delete_records("assignfeedback_recitannot_comment", ['id' => $id]);
+            return true;
+        }
+        catch(Exception $ex){
+            throw $ex;
+        }
+    }
+
+    public function saveComment($data){
+        try{	
+            $record = new stdClass();
+            $record->id = $data->id;
+            $record->criterionid = $data->criterionid;
+            $record->comment = $data->comment;
+
+            if($data->id == 0){
+                $this->mysqlConn->insert_record("assignfeedback_recitannot_comment", $record);
+            }
+            else{
+                $record->id = $data->id;
+                $this->mysqlConn->update_record("assignfeedback_recitannot_comment", $record);
+            }
+
+            return true;
+        }
+        catch(\Exception $ex){
+            throw $ex;
+        }
     }
 }
 

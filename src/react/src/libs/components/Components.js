@@ -14,10 +14,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * RÉCIT Dashboard 
  * 
- * @package   local_recitdashboard
- * @copyright 2019 RÉCIT 
+ * @package   assignfeedback_recitannotation
+ * @copyright 2025 RÉCIT 
  * @license   {@link http://www.gnu.org/licenses/gpl-3.0.html} GNU GPL v3 or later
  */
 //////////////////////////////////////////////////
@@ -31,6 +30,8 @@ export * from './Loading';
 export * from './ComboBoxPlus';
 export * from './ToggleButtons';
 export * from './InputTextArea';
+export * from './TextInput';
+export * from './InputColor';
 
 export default class Components{
     static version = 1.0;

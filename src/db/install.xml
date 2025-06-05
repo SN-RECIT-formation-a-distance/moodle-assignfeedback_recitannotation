@@ -23,12 +23,15 @@
     <TABLE NAME="assignfeedback_recitannot_crit" COMMENT="Stores the list of criteria">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="assignment" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" />
         <FIELD NAME="description" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" />
-        <FIELD NAME="color" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="backgroundcolor" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Unique id for this feedback value."/>
+        <KEY NAME="assignment" TYPE="foreign" FIELDS="assignment" REFTABLE="mdl_assign" REFFIELDS="id" />
+        <KEY NAME="name_unique" TYPE="unique" FIELDS="name" COMMENT="Unique name."/>
       </KEYS>
     </TABLE>
     <TABLE NAME="assignfeedback_recitannot_comment" COMMENT="Stores the list of comments by criteria">
@@ -38,7 +41,7 @@
         <FIELD NAME="comment" TYPE="char" LENGTH="500" NOTNULL="false" SEQUENCE="false" />
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Unique id for this feedback value."/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Unique id"/>
         <KEY NAME="criterionid" TYPE="foreign" FIELDS="criterionid" REFTABLE="assignfeedback_recitannot_crit" REFFIELDS="id" />
       </KEYS>
     </TABLE>

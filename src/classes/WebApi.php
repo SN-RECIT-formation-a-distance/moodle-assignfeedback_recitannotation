@@ -63,13 +63,55 @@ class WebApi extends MoodleApi
             $assignment = clean_param($request['assignment'], PARAM_INT);
             $userid = clean_param($request['userid'], PARAM_INT);
 
-            $result = new stdClass();
-            $result->data = $this->ctrl->getAnnotation($assignment, $userid);
-            $result->criteriaList = $this->ctrl->getCriteriaList();
-            $result->levelList = array("A", "B", "C", "D", "E");
-            $result->commentList = $this->ctrl->getCommentList();
+            $result = $this->ctrl->getAnnotation($assignment, $userid);
             $this->prepareJson($result);
             return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+    public function getCriteriaList($request){
+        try{
+           // $this->canUserAccess('a');
+
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $result = new stdClass();
+            $result->criteriaList = $this->ctrl->getCriteriaList($assignment);
+            $result->commentList = $this->ctrl->getCommentList($assignment);
+            $this->prepareJson($result);
+            return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+    public function saveCriterion($request){
+        try{
+           // $this->canUserAccess('a');
+
+            $data = json_decode(json_encode($request['data']), FALSE);
+
+            $result = $this->ctrl->saveCriterion($data);
+
+            return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+    public function deleteCriterion($request){
+        try{
+           // $this->canUserAccess('a');
+
+            $id = clean_param($request['id'], PARAM_INT);
+
+            $this->ctrl->deleteCriterion($id);
+            return new WebApiResult(true);
         }
         catch(Exception $ex){
             return new WebApiResult(false, false, $ex->GetMessage());
@@ -85,6 +127,35 @@ class WebApi extends MoodleApi
             $result = $this->ctrl->saveAnnotation($data);
 
             return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+    public function saveComment($request){
+        try{
+           // $this->canUserAccess('a');
+
+            $data = json_decode(json_encode($request['data']), FALSE);
+
+            $result = $this->ctrl->saveComment($data);
+
+            return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+    public function deleteComment($request){
+        try{
+           // $this->canUserAccess('a');
+
+            $id = clean_param($request['id'], PARAM_INT);
+
+            $this->ctrl->deleteComment($id);
+            return new WebApiResult(true);
         }
         catch(Exception $ex){
             return new WebApiResult(false, false, $ex->GetMessage());
