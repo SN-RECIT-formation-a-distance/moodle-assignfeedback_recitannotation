@@ -148,7 +148,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
 
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
         $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
-        $criteriaList = $persistCtrl->getCriteriaList();
+        $criteriaList = $persistCtrl->getCriteriaList($grade->assignment);
 
         $html = "<div class='bg-white'>";
 
