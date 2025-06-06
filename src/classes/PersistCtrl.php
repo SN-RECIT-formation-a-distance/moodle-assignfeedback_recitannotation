@@ -159,9 +159,10 @@ class PersistCtrl extends MoodlePersistCtrl
                 $ids[] = $item->id;
             }
 
-            list($in_sql, $params) = $DB->get_in_or_equal($ids);
-            
-            $DB->delete_records_select('assignfeedback_recitannot_comment', "id $in_sql", $params);
+            if(count($ids) > 0){
+                list($in_sql, $params) = $DB->get_in_or_equal($ids);
+                $DB->delete_records_select('assignfeedback_recitannot_comment', "id $in_sql", $params);
+            }
 
             // delete criterias
             $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['assignment' => $assignment]);
@@ -178,9 +179,10 @@ class PersistCtrl extends MoodlePersistCtrl
                 $ids[] = $item->id;
             }
 
-            list($in_sql, $params) = $DB->get_in_or_equal($ids);
-
-            $DB->delete_records_select('assignfeedback_recitannotation', "id $in_sql", $params);
+            if(count($ids) > 0){
+                list($in_sql, $params) = $DB->get_in_or_equal($ids);
+                $DB->delete_records_select('assignfeedback_recitannotation', "id $in_sql", $params);
+            }
             
             return true;
         }
