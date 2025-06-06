@@ -127,19 +127,74 @@ class PersistCtrl extends MoodlePersistCtrl
             $record->occurrences = json_encode($data->occurrences);
             $record->lastupdate = time();
 
+            $lastid = $data->id;
             if($data->id == 0){
-                $this->mysqlConn->insert_record("assignfeedback_recitannotation", $record);
+                $lastid = $this->mysqlConn->insert_record("assignfeedback_recitannotation", $record);
             }
             else{
                 $record->id = $data->id;
                 $this->mysqlConn->update_record("assignfeedback_recitannotation", $record);
             }
 
-            return true;
+            return $lastid;
         }
         catch(\Exception $ex){
             throw $ex;
         }
+    }
+
+    public function deletePluginData($assignment){
+        global $DB;
+
+        try{
+            // delete comments
+            $query = "select t1.id
+                from {assignfeedback_recitannot_comment} as t1
+                inner join {assignfeedback_recitannot_crit} as t2 on t1.criterionid = t2.id
+                where t2.assignment = ?";
+            $rst = $this->getRecordsSQL($query, [$assignment]);
+
+            $ids = array();
+            foreach($rst as $item){
+                $ids[] = $item->id;
+            }
+
+            list($in_sql, $params) = $DB->get_in_or_equal($ids);
+            
+            $DB->delete_records_select('assignfeedback_recitannot_comment', "id $in_sql", $params);
+
+            // delete criterias
+            $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['assignment' => $assignment]);
+
+            // delete annotations
+            $query = "select t1.id
+                    from {assign_submission} t2
+                    inner join {assignfeedback_recitannotation} t1 on t2.id = t1.submission
+                    where t2.assignment = ?";
+            $rst = $this->getRecordsSQL($query, [$assignment]);       
+
+            $ids = array();
+            foreach($rst as $item){
+                $ids[] = $item->id;
+            }
+
+            list($in_sql, $params) = $DB->get_in_or_equal($ids);
+
+            $DB->delete_records_select('assignfeedback_recitannotation', "id $in_sql", $params);
+            
+            return true;
+        }
+        catch(Exception $ex){
+            throw $ex;
+        }
+        /*$DB->delete_records('assignfeedback_recitannot_comment',
+                            array('criterionid'=>$this->assignment->get_instance()->id));
+
+        $DB->delete_records('assignfeedback_recitannot_crit',
+                            array('assignment'=>$this->assignment->get_instance()->id));
+                            
+        $DB->delete_records('assignfeedback_recitannotation',
+                            array('assignment'=>$this->assignment->get_instance()->id));*/
     }
 
     public function saveCriterion($data){
@@ -178,6 +233,15 @@ class PersistCtrl extends MoodlePersistCtrl
 
     public function deleteCriterion($id){
         try{
+            $query = "select * from {assignfeedback_recitannot_comment} 
+                where criterionid = ?";
+
+            $result = $this->getRecordsSQL($query, array($id));
+
+            if(count($result) > 0){
+                throw new Exception("Une contrainte de clé étrangère empêche la suppression afin de garantir l'intégrité des données. Veuillez d'abord supprimer ou modifier les éléments associés.");
+            }
+
             $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['id' => $id]);
             return true;
         }

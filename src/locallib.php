@@ -227,12 +227,10 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
      * @return bool
      */
     public function delete_instance() {
-        global $DB;
-        // Will throw exception on failure.
-        $DB->delete_records('assignfeedback_recitannotation',
-                            array('assignment'=>$this->assignment->get_instance()->id));
-
-        return true;
+        global $DB, $USER;
+       
+        $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
+        return $persistCtrl->deletePluginData($this->assignment->get_instance()->id);
     }
 
     /**

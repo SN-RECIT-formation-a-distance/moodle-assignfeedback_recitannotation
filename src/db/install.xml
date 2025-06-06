@@ -42,7 +42,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Unique id"/>
-        <KEY NAME="criterionid" TYPE="foreign" FIELDS="criterionid" REFTABLE="assignfeedback_recitannot_crit" REFFIELDS="id" />
+        <KEY NAME="fkcriterionid" TYPE="foreign" FIELDS="criterionid" REFTABLE="assignfeedback_recitannot_crit" REFFIELDS="id" />
       </KEYS>
     </TABLE>
   </TABLES>

@@ -26,5 +26,5 @@ $plugin->version   = 2025030500;
 $plugin->requires  = 2024071200.00; // Moodle 4.5.0
 $plugin->supported = [405, 405];
 $plugin->component = 'assignfeedback_recitannotation';
-$plugin->release = 'v1.0.0-alpha';
+$plugin->release = 'v1.0.1-beta';
 $plugin->maturity = MATURITY_ALPHA; // MATURITY_ALPHA, MATURITY_BETA, MATURITY_RC or MATURITY_STABLE

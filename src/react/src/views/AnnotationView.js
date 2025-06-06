@@ -127,7 +127,7 @@ export class AnnotationView extends Component {
                                 criteriaList={criteriaList} commentList={commentList}/>}
                 </Row>
             </div>;
-
+console.log(this.state.data);
         return (main);
     }
 
@@ -213,6 +213,7 @@ export class AnnotationView extends Component {
     }
 
     save(){
+        let that = this;
         let callback = function(result){
             if(!result.success){
                 $glVars.feedback.showError($glVars.i18n.appName, result.msg);
@@ -220,7 +221,10 @@ export class AnnotationView extends Component {
             }
             else{
                 $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 2);
-                return;
+                let data = that.state.data;
+                data.id = result.data;                
+                that.setState({data: data});
+                return; 
             }
         } 
         
@@ -361,7 +365,6 @@ class ModalAnnotateForm extends Component{
         event.preventDefault();
         event.stopPropagation();
            
-        console.log(this.state.data.criterion)
         if(this.state.data.criterion.length === 0){
             $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'Critère' avant de continuer.", 3);
             return;
