@@ -1,10 +1,10 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
-import { faArrowLeft,  faPencilAlt, faPlus, faSave, faTimes, faTrash} from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ComboBoxPlus, InputColor, InputTextArea} from '../libs/components/Components';
-import { $glVars } from '../common/common';
+import { $glVars, Options } from '../common/common';
 import { TextInput } from '../libs/components/TextInput';
 
 export class SettingsView extends Component{
@@ -70,7 +70,14 @@ class CriterionView extends Component{
 
         let main = 
             <>
-                <Button className='d-block ml-auto mb-4' onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{" Ajouter un nouveau item"}</Button>
+                <ButtonGroup className='d-block justify-content-end mb-4'>
+                    <Button  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{" Ajouter un nouveau item"}</Button>
+                    <a className='btn btn-primary' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
+                        <FontAwesomeIcon icon={faDownload}/>{" Télécharger la liste"}
+                    </a>
+                    <Button  onClick={this.onImport}><FontAwesomeIcon icon={faUpload}/>{" Importer des critères"}</Button>
+                </ButtonGroup>
+                
                 <Table striped bordered size='sm'>
                     <thead>
                         <tr>
@@ -139,6 +146,10 @@ class CriterionView extends Component{
         if(refresh){
             this.props.refresh();
         }
+    }
+
+    onImport(){
+
     }
 }
 

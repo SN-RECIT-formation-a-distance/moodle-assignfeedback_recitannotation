@@ -145,6 +145,7 @@ abstract class AWebApi
 				break;
 			case 'octet-stream':
 			case 'application/csv':
+            case 'application/xml':
 				$headers[] = sprintf("Content-type: %s", $webApiResult->contentType);
 				$headers[] = "Content-Description: File Transfer";
 				$headers[] = sprintf('Content-Disposition: attachment; filename="%s"', basename($webApiResult->data->filename));

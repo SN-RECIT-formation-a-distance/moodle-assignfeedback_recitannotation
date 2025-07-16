@@ -30,8 +30,14 @@ export class Options
         return this.appName() + " | v" + this.appVersion();
     }
 
-    static getGateway(){
-        return `${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/WebApi.php`;
+    static getGateway(addSesskey){
+        let result = `${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/WebApi.php`;
+
+        if(addSesskey){
+            result += `?sesskey=${M.cfg.sesskey}`;
+        }
+
+        return result;
     }
     
 }

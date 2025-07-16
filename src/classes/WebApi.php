@@ -161,6 +161,52 @@ class WebApi extends MoodleApi
             return new WebApiResult(false, false, $ex->GetMessage());
         }
     }
+
+    public function exportCriteriaList($request){
+        try{
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $criteriaList = $this->ctrl->getCriteriaList($assignment);
+            $commentList = $this->ctrl->getCommentList($assignment);
+
+            $doc = new \DOMDocument('1.0', 'UTF-8');
+            $doc->formatOutput = true;
+
+            $root = $doc->createElement('criteria');
+            $doc->appendChild($root);
+
+            foreach($criteriaList as $criterionData){
+                $criterion = $doc->createElement('criterion');
+                $criterion->appendChild($doc->createElement('name', $criterionData->name));
+                $criterion->appendChild($doc->createElement('description', $criterionData->description));
+                $criterion->appendChild($doc->createElement('backgroundcolor', $criterionData->backgroundcolor));
+                $root->appendChild($criterion);
+
+                $comments = $doc->createElement('comments');
+                $criterion->appendChild($comments);
+
+                foreach($commentList as $commentData){
+                    if($commentData->criterionid != $criterionData->id){
+                        continue;
+                    }
+                    $comment = $doc->createElement('comment');
+                    $comment->appendChild($doc->createElement('comment', $commentData->comment));
+                    $comments->appendChild($comment);
+                }
+                
+            }
+           
+            $file = new stdClass();
+            $file->filename = sys_get_temp_dir() . '/export-criteria-list-' . time() . '.xml';
+            $file->charset = 'UTF-8';
+            $doc->save($file->filename);
+
+            return new WebApiResult(true, $file, "", 'application/xml');
+        }
+        catch(Exception $ex){
+            throw $ex;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

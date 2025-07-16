@@ -64,6 +64,11 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess);
     }
 
+    exportCriteriaList(assignment, onSuccess){
+        let data = {assignment: assignment, service: "exportCriteriaList"};
+        this.post(this.gateway, data, onSuccess);
+    } 
+
     saveCriterion(data, onSuccess){
         let that = this;
         let onSuccessTmp = function(result){     
