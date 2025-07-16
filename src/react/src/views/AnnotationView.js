@@ -127,7 +127,7 @@ export class AnnotationView extends Component {
                                 criteriaList={criteriaList} commentList={commentList}/>}
                 </Row>
             </div>;
-console.log(this.state.data);
+
         return (main);
     }
 

@@ -278,7 +278,7 @@ class CommentsView extends Component{
             <Table striped bordered size='sm'>
                 <thead>
                     <tr>
-                        <th style={{width: 150}}>Critères</th>
+                        <th style={{width: 150}}>Critère</th>
                         <th>Commentaire</th>
                         <th style={{width: 70}}></th>
                     </tr>

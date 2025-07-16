@@ -31,7 +31,7 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Unique id for this feedback value."/>
         <KEY NAME="fkassignment" TYPE="foreign" FIELDS="assignment" REFTABLE="assign" REFFIELDS="id" />
-        <KEY NAME="nameunique" TYPE="unique" FIELDS="name" COMMENT="Unique name."/>
+        <KEY NAME="nameunique" TYPE="unique" FIELDS="name,assignment" COMMENT="Unique criterion name by assignment."/>
       </KEYS>
     </TABLE>
     <TABLE NAME="assignfeedback_recitannot_comment" COMMENT="Stores the list of comments by criteria">
