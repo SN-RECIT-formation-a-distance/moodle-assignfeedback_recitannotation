@@ -180,6 +180,7 @@ class WebApi extends MoodleApi
                 $criterion->appendChild($doc->createElement('name', $criterionData->name));
                 $criterion->appendChild($doc->createElement('description', $criterionData->description));
                 $criterion->appendChild($doc->createElement('backgroundcolor', $criterionData->backgroundcolor));
+                $criterion->appendChild($doc->createElement('sortorder', $criterionData->sortorder));
                 $root->appendChild($criterion);
 
                 $comments = $doc->createElement('comments');
@@ -208,7 +209,7 @@ class WebApi extends MoodleApi
         }
     }
 
-     public function importCriteriaList($request){
+    public function importCriteriaList($request){
         try{
             $data = json_decode(json_encode($request['data']), FALSE);
             
@@ -220,6 +221,20 @@ class WebApi extends MoodleApi
         }
     }
     
+    public function changeCriterionSortOrder($request){
+        try{
+           // $this->canUserAccess('a');
+
+            $id = clean_param($request['id'], PARAM_INT);
+            $direction = clean_param($request['direction'], PARAM_TEXT);
+
+            $result = $this->ctrl->changeCriterionSortOrder($id, $direction);
+            return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

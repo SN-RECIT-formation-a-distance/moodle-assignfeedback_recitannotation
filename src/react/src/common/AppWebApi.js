@@ -69,6 +69,11 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess); 
     }
 
+    changeCriterionSortOrder(id, direction, onSuccess){
+        let data = {id: id, direction: direction, service: "changeCriterionSortOrder"};
+        this.post(this.gateway, data, onSuccess); 
+    }
+
     saveCriterion(data, onSuccess){
         let that = this;
         let onSuccessTmp = function(result){     

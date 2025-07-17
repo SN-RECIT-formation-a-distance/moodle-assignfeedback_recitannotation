@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
-import { faArrowLeft,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowLeft,  faArrowUp,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ComboBoxPlus, InputColor, InputTextArea} from '../libs/components/Components';
 import { $glVars, Options } from '../common/common';
@@ -61,6 +61,7 @@ class CriterionView extends Component{
         this.onFileChange = this.onFileChange.bind(this);
         this.onSelectFile = this.onSelectFile.bind(this);
         this.onImport = this.onImport.bind(this);
+        this.changeCriterionSortOrder = this.changeCriterionSortOrder.bind(this);
 
         this.state = {
             showModal: false,
@@ -104,6 +105,8 @@ class CriterionView extends Component{
                                         <ButtonGroup>
                                             <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title='Modifier'/></Button>
                                             <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title='Supprimer'/></Button>
+                                            <Button disabled={item.sortorder.toString() === "1"} onClick={() => this.changeCriterionSortOrder(item.id, 'up')} size='sm'><FontAwesomeIcon icon={faArrowUp} title='Déplacement vers le haut'/></Button>
+                                            <Button disabled={criteriaList.length.toString() === item.sortorder.toString()} onClick={() => this.changeCriterionSortOrder(item.id, 'down')} size='sm'><FontAwesomeIcon icon={faArrowDown} title='Déplacement vers le bas'/></Button>
                                         </ButtonGroup>
                                     </td>
                                 </tr>
@@ -112,7 +115,7 @@ class CriterionView extends Component{
                     </tbody>
                 </Table>
 
-                {this.state.showModal && <ModalCriterionForm onClose={this.onClose} data={this.state.data} />}
+                {this.state.showModal && <ModalCriterionForm nbItems={criteriaList.length} onClose={this.onClose} data={this.state.data} />}
             </>;
 
         return main;
@@ -199,12 +202,28 @@ class CriterionView extends Component{
 
         $glVars.webApi.importCriteriaList(data, callback);
     }
+
+    changeCriterionSortOrder(id, direction){
+        let that = this;
+        let callback = function(result){
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+            }
+            else{
+                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                that.props.refresh();
+            }    
+        }
+
+        $glVars.webApi.changeCriterionSortOrder(id, direction, callback)
+    }
 }
 
 class ModalCriterionForm extends Component{
     static defaultProps = {        
         onClose: null,
-        data: null
+        data: null,
+        nbItems: 0
     };
 
     constructor(props){
@@ -220,7 +239,8 @@ class ModalCriterionForm extends Component{
                 assignment: $glVars.moodleData.assignment,
                 name: '',
                 description: '',
-                backgroundcolor: '#000'
+                backgroundcolor: '#000',
+                sortorder: props.nbItems + 1
             }
         };
 

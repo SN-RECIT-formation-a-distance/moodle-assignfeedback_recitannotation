@@ -206,6 +206,7 @@ class PersistCtrl extends MoodlePersistCtrl
             $record->name = $data->name;
             $record->description = $data->description;
             $record->backgroundcolor = $data->backgroundcolor;
+            $record->sortorder = $data->sortorder;
 
             if($data->id == 0){
                 if (!$this->mysqlConn->record_exists('assignfeedback_recitannot_crit', ['name' => $record->name, 'assignment' => $record->assignment])) {
@@ -228,7 +229,7 @@ class PersistCtrl extends MoodlePersistCtrl
     public function getCriteriaList($assignment){
         $query = "select * from {assignfeedback_recitannot_crit} 
                 where assignment = ?
-                order by description asc";
+                order by sortorder asc";
 
         $result = $this->getRecordsSQL($query, array($assignment));
 
@@ -246,7 +247,12 @@ class PersistCtrl extends MoodlePersistCtrl
                 throw new Exception("Une contrainte de clé étrangère empêche la suppression afin de garantir l'intégrité des données. Veuillez d'abord supprimer ou modifier les éléments associés.");
             }
 
+            $current = $this->mysqlConn->get_record('assignfeedback_recitannot_crit', ['id' => $id], '*', MUST_EXIST);
+
             $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['id' => $id]);
+           
+            $this->resequenceSortOrder($current->assignment);
+
             return true;
         }
         catch(Exception $ex){
@@ -321,6 +327,7 @@ class PersistCtrl extends MoodlePersistCtrl
                 $criterion->name = (string) $item->name;
                 $criterion->description = (string) $item->description;
                 $criterion->backgroundcolor = (string) $item->backgroundcolor;
+                $criterion->sortorder = (int) $item->sortorder;
                 
                 $criterion = $this->saveCriterion($criterion);
 
@@ -337,6 +344,46 @@ class PersistCtrl extends MoodlePersistCtrl
         }
          catch(Exception $ex){
             throw $ex;
+        }
+    }
+
+    public function changeCriterionSortOrder($id, $direction){
+        // 1. Get current item
+        $current = $this->mysqlConn->get_record('assignfeedback_recitannot_crit', ['id' => $id], '*', MUST_EXIST);
+
+        // 2. Determine target sortorder
+        $targetSort = ($direction === 'up') ? $current->sortorder - 1 : $current->sortorder + 1;
+
+        // 3. Get adjacent item
+        $adjacent = $this->mysqlConn->get_record('assignfeedback_recitannot_crit', 
+                [
+                    'sortorder' => $targetSort,
+                    'assignment' => $current->assignment
+                ]
+            );
+
+        if ($adjacent) {
+            // 4. Swap sortorders
+            $this->mysqlConn->update_record('assignfeedback_recitannot_crit', ['id' => $current->id, 'sortorder' => $adjacent->sortorder]);
+            $this->mysqlConn->update_record('assignfeedback_recitannot_crit', ['id' => $adjacent->id, 'sortorder' => $current->sortorder]);
+            return true;
+        } else {
+            // Can't move (e.g. already at top or bottom)
+            return false;
+        }
+    }
+
+    public function resequenceSortOrder($assignment) {
+        // Get items ordered by current sortorder
+        $items = $this->mysqlConn->get_records('assignfeedback_recitannot_crit', ['assignment' => $assignment], 'sortorder ASC');
+
+        $i = 1;
+        foreach ($items as $item) {
+            if ($item->sortorder != $i) {
+                $item->sortorder = $i;
+                $this->mysqlConn->update_record('assignfeedback_recitannot_crit', $item);
+            }
+            $i++;
         }
     }
 }
@@ -372,6 +419,7 @@ class TableCriterion{
     public $name = "";
     public $description = "";
     public $backgroundcolor = "";
+    public $sortorder = 0;
 }
 
 class TableComment{
