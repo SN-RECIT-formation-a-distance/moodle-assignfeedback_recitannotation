@@ -207,6 +207,19 @@ class WebApi extends MoodleApi
             throw $ex;
         }
     }
+
+     public function importCriteriaList($request){
+        try{
+            $data = json_decode(json_encode($request['data']), FALSE);
+            
+            $this->ctrl->importCriteriaList($data);
+            return new WebApiResult(true);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, null, $ex->GetMessage());
+        }
+    }
+    
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

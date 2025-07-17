@@ -201,22 +201,24 @@ class PersistCtrl extends MoodlePersistCtrl
 
     public function saveCriterion($data){
         try{	
-            $record = new stdClass();
-            $record->id = $data->id;
+            $record = new TableCriterion();
             $record->assignment = $data->assignment;
             $record->name = $data->name;
             $record->description = $data->description;
             $record->backgroundcolor = $data->backgroundcolor;
 
             if($data->id == 0){
-                $this->mysqlConn->insert_record("assignfeedback_recitannot_crit", $record);
+                if (!$this->mysqlConn->record_exists('assignfeedback_recitannot_crit', ['name' => $record->name, 'assignment' => $record->assignment])) {
+                    // returns inserted ID
+                    $record->id = $this->mysqlConn->insert_record("assignfeedback_recitannot_crit", $record, true);
+                }
             }
             else{
                 $record->id = $data->id;
                 $this->mysqlConn->update_record("assignfeedback_recitannot_crit", $record);
             }
 
-            return true;
+            return $record;
         }
         catch(\Exception $ex){
             throw $ex;
@@ -276,13 +278,15 @@ class PersistCtrl extends MoodlePersistCtrl
 
     public function saveComment($data){
         try{	
-            $record = new stdClass();
-            $record->id = $data->id;
+            $record = new TableComment();
             $record->criterionid = $data->criterionid;
             $record->comment = $data->comment;
 
             if($data->id == 0){
-                $this->mysqlConn->insert_record("assignfeedback_recitannot_comment", $record);
+                if (!$this->mysqlConn->record_exists('assignfeedback_recitannot_comment', ['criterionid' => $record->criterionid, 'comment' => $record->comment])) {
+                    $this->mysqlConn->insert_record("assignfeedback_recitannot_comment", $record);
+                }
+                
             }
             else{
                 $record->id = $data->id;
@@ -292,6 +296,46 @@ class PersistCtrl extends MoodlePersistCtrl
             return true;
         }
         catch(\Exception $ex){
+            throw $ex;
+        }
+    }
+
+    public function importCriteriaList($data){
+        try{
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string($data->fileContent);
+
+            if ($xml === false) {
+                $msg = "";
+                foreach(libxml_get_errors() as $error) {
+                    $msg .= "\t" . $error->message;
+                }
+
+                throw new Exception($msg);
+            }
+
+            // Loop through each criterion
+            foreach ($xml->criterion as $item) {
+                $criterion = new TableCriterion();
+                $criterion->assignment = (int) $data->assignment;
+                $criterion->name = (string) $item->name;
+                $criterion->description = (string) $item->description;
+                $criterion->backgroundcolor = (string) $item->backgroundcolor;
+                
+                $criterion = $this->saveCriterion($criterion);
+
+                // Handle comments
+                foreach ($item->comments->comment as $item2) {
+                    $comment = new TableComment();
+                    $comment->criterionid = $criterion->id;
+                    $comment->comment = (string) $item2->comment;
+                    $this->saveComment($comment);
+                }
+            }
+           
+            return true;
+        }
+         catch(Exception $ex){
             throw $ex;
         }
     }
@@ -320,4 +364,18 @@ class RecitAnnotation{
         $result->lastupdate = intval($dbData->lastupdate);
         return $result;
     }
+}
+
+class TableCriterion{
+    public $id = 0;
+    public $assignment = 0;
+    public $name = "";
+    public $description = "";
+    public $backgroundcolor = "";
+}
+
+class TableComment{
+    public $id = 0;
+    public $criterionid = 0;
+    public $comment = "";
 }

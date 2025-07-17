@@ -58,11 +58,17 @@ class CriterionView extends Component{
         this.onDelete = this.onDelete.bind(this);
         this.onEdit = this.onEdit.bind(this);
         this.onClose = this.onClose.bind(this);
+        this.onFileChange = this.onFileChange.bind(this);
+        this.onSelectFile = this.onSelectFile.bind(this);
+        this.onImport = this.onImport.bind(this);
 
         this.state = {
             showModal: false,
-            data: null
+            data: null,
+            importFile: {content: null, name: ""} 
         };
+
+        this.fileRef = React.createRef();
     }
 
     render(){
@@ -74,10 +80,10 @@ class CriterionView extends Component{
                     <Button  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{" Ajouter un nouveau item"}</Button>
                     <a className='btn btn-primary' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
                         <FontAwesomeIcon icon={faDownload}/>{" Télécharger la liste"}
-                    </a>
-                    <Button  onClick={this.onImport}><FontAwesomeIcon icon={faUpload}/>{" Importer des critères"}</Button>
+                    </a>                    
+                    <Button onClick={this.onSelectFile}><FontAwesomeIcon icon={faUpload}/>{" Importer des critères"}</Button>
                 </ButtonGroup>
-                
+                <input  ref={this.fileRef} type="file" accept=".xml"  className='invisible' onChange={this.onFileChange} />
                 <Table striped bordered size='sm'>
                     <thead>
                         <tr>
@@ -148,8 +154,50 @@ class CriterionView extends Component{
         }
     }
 
-    onImport(){
+    onFileChange(event){
+        let reader = new FileReader();
+        let file = event.target.files[0];
+        reader.readAsText(file, "UTF-8");
+        
+        let that = this;
+        reader.onloadend = () => {
+            let tmp = that.state.importFile;
+            tmp.content = reader.result;
+            tmp.name = file.name;
+            that.setState({importFile: tmp}, that.onImport);
+        };
 
+        reader.onerror = function () {
+            $glVars.feedback.showError($glVars.i18n.appName, reader.error);
+        };
+    };
+
+    onSelectFile(){
+        // Reset file input value to allow re-selecting the same file
+        this.fileRef.current.value = null;
+        this.fileRef.current.click();
+    }
+
+    onImport(){
+        let that = this;
+        let callback = function(result){
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                that.setState({importFile: {content: null, name: ""}}); 
+            }
+            else{
+                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                that.setState({importFile: {content: null, name: ""}}, that.props.refresh);
+            }    
+        }
+
+        let data = {
+            fileContent: this.state.importFile.content, 
+            filename: this.state.importFile.name, 
+            assignment: $glVars.moodleData.assignment
+        };   
+
+        $glVars.webApi.importCriteriaList(data, callback);
     }
 }
 
