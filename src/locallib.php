@@ -85,7 +85,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
      * @return bool true if elements were added to the form
      */
     public function get_form_elements_for_user($grade, MoodleQuickForm $mform, stdClass $data, $userid) {        
-        global $PAGE, $DB, $USER;
+        global $PAGE, $DB, $USER, $CFG;
 
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
 
@@ -107,7 +107,24 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         
         $group[] = $mform->createElement('static', '', '', "<div id='recitannotation_appreact_placeholder' class='bg-white rounded'></div>");
         
-        $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array($grade->assignment, $data->submission, $userid));
+       // $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array($grade->assignment, $data->submission, $userid));
+
+        $html = html_writer::script('', "{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.js");
+        $html .= "<link href='{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.css' rel='stylesheet'></link>";
+        
+        $html .= html_writer::script("
+            require(['recitannotation'], function () {
+                if (window.loadRecitAnnotationReactApp) {
+                    window.loadRecitAnnotationReactApp({
+                        assignment: " . json_encode($grade->assignment) . ",
+                        submission: " . json_encode($data->submission) . ",
+                        userid: " . json_encode($userid) . "
+                    });
+                }
+            });            
+        ");
+
+        $group[] = $mform->createElement('static', '', '', $html);
 
         $mform->addGroup($group, 'assignfeedbackrecitannotation_group', $this->get_name(), '', false, array('class' => 'has-popout invisible'));
         

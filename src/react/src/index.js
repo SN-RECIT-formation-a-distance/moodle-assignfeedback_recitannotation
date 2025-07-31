@@ -54,6 +54,8 @@ class App extends Component {
 }
 
 window.loadRecitAnnotationReactApp = function(moodleData){  
+    moodleData.sesskey = M.cfg.sesskey;
+    moodleData.wwwroot = M.cfg.wwwroot;
     Object.assign($glVars.moodleData, moodleData);
     $glVars.webApi = new AppWebApi();
     $glVars.feedback = new FeedbackCtrl();
