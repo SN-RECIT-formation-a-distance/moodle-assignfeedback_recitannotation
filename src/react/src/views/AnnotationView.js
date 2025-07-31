@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import { faCog, faComment, faSave, faTimes, faTrash} from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faChalkboard, faCog, faComment, faSave, faTimes, faTrash} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
@@ -25,7 +25,8 @@ export class AnnotationView extends Component {
 
         this.onMouseUp = this.onMouseUp.bind(this);
         this.positionFloatingButton = this.positionFloatingButton.bind(this);
-        this.onClick = this.onClick.bind(this);
+        this.onAnnotate = this.onAnnotate.bind(this);
+        this.onAskIA = this.onAskIA.bind(this);
         this.onDbClick = this.onDbClick.bind(this);
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
@@ -36,13 +37,14 @@ export class AnnotationView extends Component {
  
         this.state = {
             showModalAnnotate: false,
+            showModalAskIA: false,
             data: null,
             counter: {},
             updatedCounters: false
         };
 
         this.refAnnotation = React.createRef();
-        this.refBtnAnnotate = React.createRef();
+        this.refFloatingMenu = React.createRef();
     }
 
     componentDidMount(){
@@ -92,9 +94,16 @@ export class AnnotationView extends Component {
                     <Col md={8}>
                         <div className='h5'>Production de l'élève</div>
                         <div ref={this.refAnnotation} onMouseUp={this.onMouseUp} className='p-3' dangerouslySetInnerHTML={{__html: this.state.data.annotation}}></div>
-                        <Button size='sm' className='btn-annotate' style={{display: 'none'}} ref={this.refBtnAnnotate} onClick={this.onClick}>
-                            <FontAwesomeIcon icon={faComment}/>{` Annoter`}
-                        </Button>
+
+                        <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
+                            <Button size='sm' onClick={this.onAnnotate}>
+                                <FontAwesomeIcon icon={faComment}/>{` Annoter`}
+                            </Button>
+                            <Button size='sm' onClick={this.onAskIA}>
+                                <FontAwesomeIcon icon={faChalkboard}/>{` Demander à l'IA`}
+                            </Button>
+                        </ButtonGroup>
+                        
                     </Col>
                     <Col md={4} className='fixed'>
                         <div className='d-flex align-items-baseline'>
@@ -125,6 +134,8 @@ export class AnnotationView extends Component {
                     </Col>
                     {this.state.showModalAnnotate && <ModalAnnotateForm onClose={this.onClose} onDbClick={this.onDbClick} 
                                 criteriaList={criteriaList} commentList={commentList}/>}
+                    
+                    {this.state.showModalAskIA && <ModalAskIA onClose={this.onClose}/>}
                 </Row>
             </div>;
 
@@ -142,15 +153,21 @@ export class AnnotationView extends Component {
         }
     }
 
-    onClick(event){
+    onAnnotate(event){
         if (AnnotationView.currentRange) {
             this.setState({showModalAnnotate: true});// Open modal for a new comment
         }
     }
 
+    onAskIA(event){
+        if (AnnotationView.currentRange) {
+            this.setState({showModalAskIA: true});
+        }
+    }
+
     onClose(refresh){
         this.positionFloatingButton(null);
-        this.setState({showModalAnnotate: false});
+        this.setState({showModalAnnotate: false, showModalAskIA: false});
 
         AnnotationView.currentRange = null;
         AnnotationView.selectedElement = null;
@@ -189,7 +206,7 @@ export class AnnotationView extends Component {
 
     // Function to position and show the floating button
     positionFloatingButton(range) {
-        let addCommentBtn = this.refBtnAnnotate.current;
+        let floatingMenu = this.refFloatingMenu.current;
 
         if (range && range.toString().length > 0) { //Ensure that something is selected
             const rect = range.getBoundingClientRect();
@@ -198,11 +215,11 @@ export class AnnotationView extends Component {
             //get position of eleve-text
             const eleveTextRect = this.refAnnotation.current.getBoundingClientRect();
             
-            addCommentBtn.style.top = (rect.bottom + window.scrollY - eleveTextRect.top + 10) + 'px'; // Below the selection
-            addCommentBtn.style.left = (rect.right + window.scrollX - eleveTextRect.left + 10) + 'px'; // A bit to the right
-            addCommentBtn.style.display = 'block';
+            floatingMenu.style.top = (rect.bottom + window.scrollY - eleveTextRect.top + 10) + 'px'; // Below the selection
+            floatingMenu.style.left = (rect.right + window.scrollX - eleveTextRect.left + 10) + 'px'; // A bit to the right
+            floatingMenu.style.display = 'inline-flex';
         } else {
-            addCommentBtn.style.display = 'none';
+            floatingMenu.style.display = 'none';
         }
     }
 
@@ -408,6 +425,75 @@ class ModalAnnotateForm extends Component{
         let data = {};
         Object.assign(data, this.originalData);
         this.setState({data: data, isNewNote: true});
+        this.props.onClose(refresh);
+    }
+}
+
+class ModalAskIA extends Component{
+    static defaultProps = {        
+        onClose: null
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onClose = this.onClose.bind(this);
+        this.onDataChange = this.onDataChange.bind(this);
+        this.onSubmit = this.onSubmit.bind(this);
+
+        this.state = {
+            data: {
+                prompt: ""
+            },
+        };
+    }
+
+    render(){
+        let body = 
+        <Form onSubmit={this.onSubmit}>
+            <Form.Group >
+                <div className='p-2 text-muted bg-light rounded'>{window.getSelection().toString()}</div>
+                <InputTextArea placeholder="Poser une question" name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={5} />
+            </Form.Group>
+        </Form>;
+
+        let main = 
+            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
+                <Modal.Header closeButton>
+                    <Modal.Title>Demander à l'IA</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{body}</Modal.Body>
+                <Modal.Footer>
+                    <ButtonToolbar>
+                        <ButtonGroup >
+                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
+                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                            </Button>
+                            <Button  variant='success' onClick={this.onSubmit}>
+                                <FontAwesomeIcon icon={faArrowRight}/>{' Demander'}
+                            </Button>
+                        </ButtonGroup>
+                    </ButtonToolbar>
+                </Modal.Footer>
+            </Modal>;
+ 
+        return main;
+    }
+
+    onDataChange(event){
+        let data = this.state.data;
+        data[event.target.name] = event.target.value;
+        this.setState({data: data});
+    }
+
+    onSubmit(event){
+        event.preventDefault();
+        event.stopPropagation();
+           
+        //this.onClose(true);
+    }
+
+    onClose(refresh){
         this.props.onClose(refresh);
     }
 }

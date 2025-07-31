@@ -1,13 +1,15 @@
 .main-view{
      /* Floating button */
-    .btn-annotate{ position: absolute;
+    .floating-menu{ 
+        position: absolute;
         color: white;
         border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
         cursor: pointer;
-        display: none;        /* Hidden by default */
+        display: none;
         z-index: 1000;        /* Ensure it's on top */
+        button{
+            min-width: 140px;
+        }
     }
     .col-md-4.fixed {
         position: sticky;
