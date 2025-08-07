@@ -15,16 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package assignfeedback_recitannotation
- * @copyright 2025 RECIT
+ * @package   assignfeedback_recitannotation
+ * @copyright 2025 RÉCIT 
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace recitannotation;
+ 
+class Options
+{
+    static function getAiApiEndpoint(){ 
+        return get_config('assignfeedback_recitannotation', 'ai_api_endpoint');
+    }
 
-$plugin->version   = 2025030502;
-$plugin->requires  = 2023100912.00; // Moodle 4.3.0
-$plugin->supported = [403, 405];
-$plugin->component = 'assignfeedback_recitannotation';
-$plugin->release = 'v1.0.3-beta';
-$plugin->maturity = MATURITY_BETA; // MATURITY_ALPHA, MATURITY_BETA, MATURITY_RC or MATURITY_STABLE
+    static function getAiApiKey(){ 
+        return get_config('assignfeedback_recitannotation', 'ai_api_key');
+    }
+}

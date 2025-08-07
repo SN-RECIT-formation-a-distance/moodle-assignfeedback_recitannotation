@@ -490,7 +490,21 @@ class ModalAskIA extends Component{
         event.preventDefault();
         event.stopPropagation();
            
-        //this.onClose(true);
+        let that = this;
+        let callback = function(result){
+            console.log(result);
+
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                return;
+            }
+            else{
+                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                that.onClose(true);
+            }        
+        }
+        
+        $glVars.webApi.callAzureAI(this.state.data.prompt, callback);
     }
 
     onClose(refresh){

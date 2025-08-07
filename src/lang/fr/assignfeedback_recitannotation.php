@@ -26,3 +26,7 @@ $string['default'] = 'Activé par défaut';
 $string['default_help'] = 'Si cette option est définie, cette méthode de rétroaction sera activée par défaut pour toutes les nouvelles affectations.';
 $string['enabled'] = 'Rétroaction par annotation';
 $string['enabled_help'] = 'Si cette option est activée, l\'enseignant pourra annoter les devoirs des élèves.';
+$string['ai_api_endpoint'] = 'Point de terminaison API IA';
+$string['ai_api_endpoint_desc'] = 'URL complète de l’API d’intelligence artificielle à laquelle Moodle doit envoyer les requêtes.';
+$string['ai_api_key'] = 'Clé API IA';
+$string['ai_api_key_desc'] = 'Clé secrète d’authentification fournie par le service d’intelligence artificielle. Elle permet à Moodle d’accéder de manière sécurisée à l’API.';

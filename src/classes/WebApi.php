@@ -24,6 +24,7 @@ namespace recitannotation;
 require_once(dirname(__FILE__).'../../../../../../config.php');
 require_once dirname(__FILE__).'/recitcommon/WebApi.php';
 require_once dirname(__FILE__).'/PersistCtrl.php';
+require_once dirname(__FILE__).'/Options.php';
 
 use Exception;
 use stdClass;
@@ -233,6 +234,46 @@ class WebApi extends MoodleApi
         }
         catch(Exception $ex){
             return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+    public function callAzureAI($request){
+        try{
+            // Replace these with your Azure details
+            $endpoint = Options::getAiApiEndpoint();
+            $api_key = Options::getAiApiKey();
+
+            // $this->canUserAccess('a');
+            $payload = json_decode(json_encode($request['payload']), FALSE);
+
+            // Setup headers
+            $headers = [
+                "Content-Type: application/json",
+                "api-key: $api_key"
+            ];
+
+            // Initialize cURL
+            $ch = curl_init($endpoint);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+            // Execute request
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                $error = curl_error($ch);
+                curl_close($ch);
+                throw new Exception($error);
+            }
+
+            curl_close($ch);
+
+            return new WebApiResult(true, $response);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, null, $ex->GetMessage());
         }
     }
 }

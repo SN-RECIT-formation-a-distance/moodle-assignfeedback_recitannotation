@@ -117,4 +117,26 @@ export class AppWebApi extends WebApi
         let options = {data: data, service: "saveComment"};
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
+
+    callAzureAI(prompt, onSuccess){
+        let payload = {
+            messages: [
+        //    { role: "system", content: "You are a helpful assistant." },
+            { role: "user", content: "Tell me a joke." }
+            ],
+            temperature: 0.7,
+            max_tokens: 100
+        };
+        
+        let that = this;
+        let onSuccessTmp = function(result){     
+            onSuccess(result);
+            if(result.success){
+                that.notifyObservers('callAzureAI');
+            }
+        };
+
+        let options = {payload: payload, service: "callAzureAI"};
+        this.post(this.gateway, options, onSuccessTmp, null, true);
+    }
 };

@@ -26,3 +26,7 @@ $string['default'] = 'Enabled by default';
 $string['default_help'] = 'If set, this feedback method will be enabled by default for all new assignments.';
 $string['enabled'] = 'File feedback';
 $string['enabled_help'] = 'If enabled, the teacher will be able to annotate on students assignment submissions.';
+$string['ai_api_endpoint'] = 'AI API Endpoint';
+$string['ai_api_endpoint_desc'] = 'Full URL of the AI API to which Moodle should send requests.';
+$string['ai_api_key'] = 'AI API Key';
+$string['ai_api_key_desc'] = 'Secret authentication key provided by the AI service. It allows Moodle to securely access the API.';
