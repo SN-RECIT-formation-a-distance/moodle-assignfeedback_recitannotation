@@ -1,12 +1,12 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import { faArrowRight, faChalkboard, faCog, faComment, faSave, faTimes, faTrash} from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faBroom, faChalkboard, faCog, faComment, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
 import { $glVars } from '../common/common';
-import { JsNx } from '../libs/utils/Utils';
+import Utils, { JsNx } from '../libs/utils/Utils';
 import $ from 'jquery';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // includes tooltip
 
@@ -30,17 +30,26 @@ export class AnnotationView extends Component {
         this.onDbClick = this.onDbClick.bind(this);
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
-        this.save = this.save.bind(this);
-        this.onDataChange = this.onDataChange.bind(this);
+        this.save = this.save.bind(this);        
         this.getData = this.getData.bind(this);
-        this.afterGetData = this.afterGetData.bind(this);
- 
+        this.setAnnotationText = this.setAnnotationText.bind(this);
+
+        this.onUndo = this.onUndo.bind(this);
+        this.onRedo = this.onRedo.bind(this);
+        this.cancelDataChange = this.cancelDataChange.bind(this);
+        this.beforeDataChange = this.beforeDataChange.bind(this);
+        this.onCleanHtml = this.onCleanHtml.bind(this);
+
         this.state = {
             showModalAnnotate: false,
             showModalAskIA: false,
             data: null,
             counter: {},
-            updatedCounters: false
+            updatedCounters: false,
+            stack: {
+                undo: [],
+                redo: []
+            }
         };
 
         this.refAnnotation = React.createRef();
@@ -67,14 +76,16 @@ export class AnnotationView extends Component {
             }
             
             that.setState({data: result.data}, () => {
-                that.afterGetData();
-            });         
+                that.setAnnotationText(result.data.annotation);
+            }); 
         }
         
         $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.userid, callback);
     }
 
-    afterGetData(){
+    setAnnotationText(value){
+        this.refAnnotation.current.innerHTML = value;
+
         // Gérer le double-clic sur le texte surligné
         let elements = this.refAnnotation.current.querySelectorAll(`[data-criterion]`);
         for(let el of elements){
@@ -92,8 +103,26 @@ export class AnnotationView extends Component {
             <div className="container">
                 <Row className='p-3 main-view'>
                     <Col md={8}>
-                        <div className='h5'>Production de l'élève</div>
-                        <div ref={this.refAnnotation} onMouseUp={this.onMouseUp} className='p-3' dangerouslySetInnerHTML={{__html: this.state.data.annotation}}></div>
+                        <div className='d-flex'>
+                            <span className='h5 mb-0 mr-3'>Production de l'élève</span>
+                            <div>
+                                <ButtonGroup className='mr-2'>
+                                    <Button size='sm' onClick={this.onUndo} title='Défaire' disabled={(this.state.stack.undo.length === 0)}>
+                                        <FontAwesomeIcon icon={faUndo}/>
+                                    </Button>
+                                    <Button size='sm' onClick={this.onRedo} title='Refaire' disabled={(this.state.stack.redo.length === 0)}>
+                                        <FontAwesomeIcon icon={faRedo}/>
+                                    </Button>
+                                </ButtonGroup>
+                                <ButtonGroup>
+                                    <Button size='sm' onClick={this.onCleanHtml} title="Nettoyer le texte de l'élève">
+                                        <FontAwesomeIcon icon={faBroom}/>
+                                    </Button>
+                                </ButtonGroup>
+                            </div>
+                            
+                        </div>
+                        <div ref={this.refAnnotation} onMouseUp={this.onMouseUp} className='p-3'></div>
 
                         <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
                             <Button size='sm' onClick={this.onAnnotate}>
@@ -156,6 +185,7 @@ export class AnnotationView extends Component {
     onAnnotate(event){
         if (AnnotationView.currentRange) {
             this.setState({showModalAnnotate: true});// Open modal for a new comment
+            this.beforeDataChange();
         }
     }
 
@@ -176,6 +206,9 @@ export class AnnotationView extends Component {
             this.initTooltips();
             this.updateCounters();
             this.save();
+        }
+        else{
+            this.cancelDataChange();
         }
     }
 
@@ -202,6 +235,7 @@ export class AnnotationView extends Component {
         event.preventDefault(); // Empêche d'autres actions de double-clic
         AnnotationView.selectedElement = event.target; // 'this' est l'élément sur lequel le clic-droit a été fait
         this.setState({showModalAnnotate: true});
+        this.beforeDataChange();
     }
 
     // Function to position and show the floating button
@@ -223,10 +257,17 @@ export class AnnotationView extends Component {
         }
     }
 
-    onDataChange(event){
-        let data = this.state.data;
-        data[event.target.name] = event.target.value;
-        this.setState({data: data});
+    beforeDataChange(){
+        let stack = this.state.stack;
+        stack.undo.push(this.refAnnotation.current.innerHTML);
+        stack.redo = []; // Clear redo stack on new input
+        this.setState({stack: stack});
+    }
+
+    cancelDataChange(){
+        let stack = this.state.stack;
+        stack.undo.pop(); // remove element previously added because there was not any modification
+        this.setState({stack: stack});
     }
 
     save(){
@@ -252,6 +293,39 @@ export class AnnotationView extends Component {
         Object.assign(data.occurrences, this.state.counter);
 
         $glVars.webApi.saveAnnotation(data, callback);
+    }
+
+    onUndo(){
+        let stack = this.state.stack;
+    
+        if (stack.undo.length > 0) {
+            if (stack.redo.length > 25) {
+                stack.redo.shift(); // Remove the oldest state
+            }
+            stack.redo.push(this.refAnnotation.current.innerHTML);
+            this.setAnnotationText(stack.undo.pop());
+            this.setState({stack: stack}, this.save);
+        }
+    }
+
+    onRedo(){
+        let stack = this.state.stack;
+        if (stack.redo.length > 0) {
+            if (stack.undo.length > 25) {
+                stack.undo.shift(); // Remove the oldest state
+            }
+            stack.undo.push(this.refAnnotation.current.innerHTML);
+            this.setAnnotationText(stack.redo.pop());
+            this.setState({stack: stack}, this.save);
+        }
+    }
+
+    onCleanHtml(){
+        if(window.confirm(`Souhaitez-vous vraiment nettoyer le code HTML ?\n\nCette action supprimera également toutes les annotations que vous avez ajoutées.`)){
+            this.beforeDataChange();
+            this.setAnnotationText(Utils.cleanHTML(this.refAnnotation.current.innerHTML));
+            this.save();
+        }
     }
 }
 

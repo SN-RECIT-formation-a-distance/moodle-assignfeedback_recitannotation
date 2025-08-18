@@ -230,6 +230,33 @@ export default class Utils{
         
         return vars;
     }
+
+    static cleanHTML(inputHTML) {
+        const allowedTags = ['P', 'BR'];
+        const container = document.createElement('div');
+        container.innerHTML = inputHTML;
+
+        function sanitize(node) {
+            const children = Array.from(node.childNodes);
+            for (const child of children) {
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    if (!allowedTags.includes(child.tagName)) {
+                    // Replace disallowed element with its inner content
+                    const fragment = document.createDocumentFragment();
+                    while (child.firstChild) {
+                        fragment.appendChild(child.firstChild);
+                    }
+                    node.replaceChild(fragment, child);
+                    } else {
+                        sanitize(child); // Recursively sanitize allowed elements
+                    }
+                }
+            }
+        }
+
+        sanitize(container);
+        return container.innerHTML;
+    }
 }
 
 export class UtilsMoodle
