@@ -30,7 +30,8 @@ export const $glVars = {
         submission: 0,
         userid: 0,
         sesskey: "",
-        wwwroot: ""
+        wwwroot: "",
+        aiApi: false
     },
     i18n: {
         appName: "RÉCIT Annotation",

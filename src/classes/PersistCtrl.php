@@ -52,48 +52,15 @@ class PersistCtrl extends MoodlePersistCtrl
         parent::__construct($mysqlConn, $signedUser);
     }
     
-     public function getContextAccessIds($userId, $capabilities, $contextlevel){
-        global $DB;
-        
-        $ids = array();
-        if ($contextlevel == 40){//Categories
-            $categories = $DB->get_records_sql("SELECT id FROM {course_categories}");
-            foreach ($categories as $cat){
-                $hasAccess = false;
-                $ccontext = \context_coursecat::instance($cat->id);
-                foreach ($capabilities as $c){
-                    if (has_capability($c, $ccontext, $userId, false)) {
-                        $hasAccess = true;
-                    }
-                }
-                if ($hasAccess){
-                    $ids[] = $cat->id;
-                }
-            }
-        }else if ($contextlevel == 50){//Courses
-            $courses = enrol_get_users_courses($userId, false, 'id, shortname');
-            foreach ($courses as $course){
-                $hasAccess = false;
-                $ccontext = \context_course::instance($course->id);
-                foreach ($capabilities as $c){
-                    if (has_capability($c, $ccontext, $userId, false)) {
-                        $hasAccess = true;
-                    }
-                }
-                if ($hasAccess){
-                    $ids[] = $course->id;
-                }
-            }
-        }
-        $ids = implode(',', $ids);
-        if (empty($ids)) $ids = '0';
-        return $ids;
-    }
+    public function hasTeacherAccess(){
+        global $COURSE;
 
-    public function hasTeacherAccess($userId){
-        $capabilities = array(RECITWORKPLAN_ASSIGN_CAPABILITY, RECITWORKPLAN_MANAGE_CAPABILITY);
-        $isTeacher = $this->getContextAccessIds($userId, $capabilities, 50) != '0' || $this->getContextAccessIds($userId, $capabilities, 40) != '0';
-        return $isTeacher;
+        $context = \context_course::instance($COURSE->id);
+        if (has_capability('moodle/course:update', $context)) {
+            return true;
+        } else {
+            return false;
+        }        
     }
 
     public function getAnnotation($assignmentId, $userId){
@@ -111,9 +78,10 @@ class PersistCtrl extends MoodlePersistCtrl
 
         $result = RecitAnnotation::create($rst);
 
-        if($result->id == 0){
+        // clean html tags
+        /*if($result->id == 0){
             $result->annotation = strip_tags($result->annotation, ['<br>', '<p>']);
-        }
+        }*/
         
         return $result;
     }

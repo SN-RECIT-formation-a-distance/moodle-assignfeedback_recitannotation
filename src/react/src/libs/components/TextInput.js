@@ -40,7 +40,8 @@ export class TextInput extends Component{
         rows: null,
         max: 0,
         required: false,
-        size: ''
+        size: '',
+        pattern: '',
     };
 
     render(){

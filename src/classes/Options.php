@@ -31,4 +31,16 @@ class Options
     static function getAiApiKey(){ 
         return get_config('assignfeedback_recitannotation', 'ai_api_key');
     }
+
+    static function isAiApiActive(){
+        $endpoint = Options::getAiApiEndpoint();
+        $api_key = Options::getAiApiKey();
+
+        if((strlen($endpoint) > 0) && (strlen($api_key) > 0)){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
 }

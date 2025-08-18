@@ -22,10 +22,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(dirname(__FILE__).'/classes/Options.php');
 require_once(dirname(__FILE__).'/classes/PersistCtrl.php');
 
-define('ASSIGNFEEDBACK_RECITANNOTATION_FILEAREA', 'feedback');
-define('ASSIGNFEEDBACK_RECITANNOTATION_COMPONENT', 'assignfeedback_recitannotation');
+//define('ASSIGNFEEDBACK_RECITANNOTATION_FILEAREA', 'feedback');
+//define('ASSIGNFEEDBACK_RECITANNOTATION_COMPONENT', 'assignfeedback_recitannotation');
 
 /**
  * @package assignfeedback_recitannotation
@@ -118,7 +119,8 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                     window.loadRecitAnnotationReactApp({
                         assignment: " . json_encode($grade->assignment) . ",
                         submission: " . json_encode($data->submission) . ",
-                        userid: " . json_encode($userid) . "
+                        userid: " . json_encode($userid) . ",
+                        aiApi: ". json_encode(\recitannotation\Options::isAiApiActive()) ."
                     });
                 }
             });            

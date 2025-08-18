@@ -30,3 +30,4 @@ $string['ai_api_endpoint'] = 'Point de terminaison API IA';
 $string['ai_api_endpoint_desc'] = 'URL complète de l’API d’intelligence artificielle à laquelle Moodle doit envoyer les requêtes.';
 $string['ai_api_key'] = 'Clé API IA';
 $string['ai_api_key_desc'] = 'Clé secrète d’authentification fournie par le service d’intelligence artificielle. Elle permet à Moodle d’accéder de manière sécurisée à l’API.';
+$string['access_denied'] = 'Accès refusé: Vous n’avez actuellement pas l’autorisation d’utiliser cette fonctionnalité.';

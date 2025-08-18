@@ -99,7 +99,7 @@ export class AnnotationView extends Component {
                             <Button size='sm' onClick={this.onAnnotate}>
                                 <FontAwesomeIcon icon={faComment}/>{` Annoter`}
                             </Button>
-                            <Button size='sm' onClick={this.onAskIA}>
+                            <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi}>
                                 <FontAwesomeIcon icon={faChalkboard}/>{` Demander à l'IA`}
                             </Button>
                         </ButtonGroup>

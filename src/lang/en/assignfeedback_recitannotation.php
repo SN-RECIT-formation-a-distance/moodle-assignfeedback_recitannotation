@@ -30,3 +30,4 @@ $string['ai_api_endpoint'] = 'AI API Endpoint';
 $string['ai_api_endpoint_desc'] = 'Full URL of the AI API to which Moodle should send requests.';
 $string['ai_api_key'] = 'AI API Key';
 $string['ai_api_key_desc'] = 'Secret authentication key provided by the AI service. It allows Moodle to securely access the API.';
+$string['access_denied'] = 'Access Denied: You don’t currently have permission to use this feature.';

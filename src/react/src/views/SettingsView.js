@@ -79,10 +79,10 @@ class CriterionView extends Component{
             <>
                 <ButtonGroup className='d-block justify-content-end mb-4'>
                     <Button  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{" Ajouter un nouveau item"}</Button>
-                    <a className='btn btn-primary' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
-                        <FontAwesomeIcon icon={faDownload}/>{" Télécharger la liste"}
-                    </a>                    
                     <Button onClick={this.onSelectFile}><FontAwesomeIcon icon={faUpload}/>{" Importer des critères"}</Button>
+                    <a className='btn btn-primary' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
+                        <FontAwesomeIcon icon={faDownload}/>{" Exporter des critères"}
+                    </a>
                 </ButtonGroup>
                 <input  ref={this.fileRef} type="file" accept=".xml"  className='invisible' onChange={this.onFileChange} />
                 <Table striped bordered size='sm'>
@@ -254,14 +254,16 @@ class ModalCriterionForm extends Component{
             <Form onSubmit={this.onSubmit}>
                 <Form.Group className='mb-3' >
                     <Form.Label>{"Nom"}</Form.Label>
-                    <TextInput  name="name" value={this.state.data.name} onChange={this.onDataChange} max={25}/>
+                    <TextInput disabled={(this.state.data.id > 0)} 
+                            name="name" value={this.state.data.name} onChange={this.onDataChange} max={25}/>
+                    <Form.Text>Veuillez saisir uniquement des lettres minuscules sans espaces.</Form.Text>
                 </Form.Group>
                 <Form.Group className='mb-3' >
                     <Form.Label>{"Description"}</Form.Label>
                     <TextInput  name="description" value={this.state.data.description} onChange={this.onDataChange} max={50}/>
                 </Form.Group>
                 <Form.Group >
-                    <Form.Label>{"Commentaire"}</Form.Label>
+                    <Form.Label>{"Couleur"}</Form.Label>
                     <InputColor name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
                 </Form.Group>
             </Form>;
@@ -292,21 +294,28 @@ class ModalCriterionForm extends Component{
 
     onDataChange(event){
         let data = this.state.data;
+        
+        if(event.target.name === 'name'){
+            // Keep only lowercase letters a–z, remove everything else (including spaces)
+            event.target.value = event.target.value.replace(/[^a-z]/g, '');
+        }
+
         data[event.target.name] = event.target.value;
+
         this.setState({data: data});
     }
 
     onSave(){
         if(this.state.data.name.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'nom' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.appName, "Veuillez remplir le champ 'nom' avant de continuer.", 3);
             return;
         }
         else if(this.state.data.description.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'description' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.appName, "Veuillez remplir le champ 'description' avant de continuer.", 3);
             return;
         }
         else if(this.state.data.backgroundcolor.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'couleur' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.appName, "Veuillez remplir le champ 'couleur' avant de continuer.", 3);
             return;
         }
 
