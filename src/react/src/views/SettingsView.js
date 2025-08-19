@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
-import { faArrowDown, faArrowLeft,  faArrowUp,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowLeft,  faArrowUp,  faCheckCircle,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ComboBoxPlus, InputColor, InputTextArea} from '../libs/components/Components';
 import { $glVars, Options } from '../common/common';
@@ -239,7 +239,7 @@ class ModalCriterionForm extends Component{
                 assignment: $glVars.moodleData.assignment,
                 name: '',
                 description: '',
-                backgroundcolor: '#000',
+                backgroundcolor: "#cce5ff",
                 sortorder: props.nbItems + 1
             }
         };
@@ -264,12 +264,39 @@ class ModalCriterionForm extends Component{
                 </Form.Group>
                 <Form.Group >
                     <Form.Label>{"Couleur"}</Form.Label>
-                    <InputColor name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
+                    <div>
+                        <Button variant='link' className='btn-color-picker' style={{backgroundColor: "#cce5ff",}} 
+                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#cce5ff"}})}>
+                            {this.state.data.backgroundcolor === "#cce5ff" && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
+                        </Button>
+                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#d4edda"}}
+                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#d4edda"}})}>
+                            {this.state.data.backgroundcolor === '#d4edda' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
+                        </Button>
+                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#f8d7da"}}
+                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#f8d7da"}})}>
+                            {this.state.data.backgroundcolor === '#f8d7da' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
+                        </Button>
+                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#fff3cd"}} 
+                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#fff3cd"}})}>
+                            {this.state.data.backgroundcolor === '#fff3cd' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
+                        </Button>
+                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#d1ecf1"}} 
+                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#d1ecf1"}})}>
+                            {this.state.data.backgroundcolor === '#d1ecf1' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
+                        </Button>
+                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#e2e3e5"}} 
+                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#e2e3e5"}})}>
+                            {this.state.data.backgroundcolor === '#e2e3e5' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
+                        </Button>
+                        <InputColor className="m-2" name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
+                    </div>
+                    
                 </Form.Group>
             </Form>;
 
         let main = 
-            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
+            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1" className='main-view'>
                 <Modal.Header closeButton>
                     <Modal.Title>Ajouter/Modifier un critère</Modal.Title>
                 </Modal.Header>

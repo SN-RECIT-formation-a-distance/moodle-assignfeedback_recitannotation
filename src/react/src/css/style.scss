@@ -20,6 +20,11 @@
         overflow-y: auto;
         /* Permet le défilement si le contenu est trop long */
     }
+
+    .btn-color-picker{
+        width: 3rem; height: 1.5rem; margin: .5rem;
+        display: inline-flex; justify-content: center;    align-items: center;
+    }
 }
 
 
