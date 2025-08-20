@@ -33,9 +33,5 @@ export const $glVars = {
         wwwroot: "",
         aiApi: false
     },
-    i18n: {
-        appName: "RÉCIT Annotation",
-        msgactioncompleted: "L'action a été complétée avec succès",
-        msgConfirmDeletion: 'Confirmez-vous la suppression? Cette opération est irréversible.'
-    }
+    i18n: {}
 }

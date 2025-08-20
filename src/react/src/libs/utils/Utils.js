@@ -310,6 +310,10 @@ export class UtilsString
             return str;
         }
     }
+
+    static sprintf(str, ...args) {
+        return str.replace(/%s/g, () => args.shift());
+    }
 }
 
 export class UtilsDateTime

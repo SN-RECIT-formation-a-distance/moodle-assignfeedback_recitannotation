@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
 import { $glVars } from '../common/common';
-import Utils, { JsNx } from '../libs/utils/Utils';
+import Utils, { JsNx, UtilsString } from '../libs/utils/Utils';
 import $ from 'jquery';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // includes tooltip
 
@@ -71,7 +71,7 @@ export class AnnotationView extends Component {
 
          let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             
@@ -104,18 +104,18 @@ export class AnnotationView extends Component {
                 <Row className='p-3 main-view'>
                     <Col md={8}>
                         <div className='d-flex'>
-                            <span className='h5 mb-0 mr-3'>Production de l'élève</span>
+                            <span className='h5 mb-0 mr-3'>{$glVars.i18n.student_production}</span>
                             <div>
                                 <ButtonGroup className='mr-2'>
-                                    <Button size='sm' onClick={this.onUndo} title='Défaire' disabled={(this.state.stack.undo.length === 0)}>
+                                    <Button size='sm' onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
                                         <FontAwesomeIcon icon={faUndo}/>
                                     </Button>
-                                    <Button size='sm' onClick={this.onRedo} title='Refaire' disabled={(this.state.stack.redo.length === 0)}>
+                                    <Button size='sm' onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
                                         <FontAwesomeIcon icon={faRedo}/>
                                     </Button>
                                 </ButtonGroup>
                                 <ButtonGroup>
-                                    <Button size='sm' onClick={this.onCleanHtml} title="Nettoyer le texte de l'élève">
+                                    <Button size='sm' onClick={this.onCleanHtml} title={$glVars.i18n.clean_student_production}>
                                         <FontAwesomeIcon icon={faBroom}/>
                                     </Button>
                                 </ButtonGroup>
@@ -126,17 +126,17 @@ export class AnnotationView extends Component {
 
                         <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
                             <Button size='sm' onClick={this.onAnnotate}>
-                                <FontAwesomeIcon icon={faComment}/>{` Annoter`}
+                                <FontAwesomeIcon icon={faComment}/>{` ${$glVars.i18n.annotate}`}
                             </Button>
                             <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi}>
-                                <FontAwesomeIcon icon={faChalkboard}/>{` Demander à l'IA`}
+                                <FontAwesomeIcon icon={faChalkboard}/>{` ${$glVars.i18n.ask_ai}`}
                             </Button>
                         </ButtonGroup>
                         
                     </Col>
                     <Col md={4} className='fixed'>
                         <div className='d-flex align-items-baseline'>
-                            <span className='h5'>Occurrences</span>
+                            <span className='h5'>{$glVars.i18n.occurrences}</span>
                             <Button size='sm' variant='link' className='ml-1' onClick={() => this.props.onChangeView('settings')}>
                                 <FontAwesomeIcon icon={faCog}/>
                             </Button>
@@ -145,8 +145,8 @@ export class AnnotationView extends Component {
                         <Table striped bordered size='sm'>
                             <thead>
                                 <tr>
-                                    <th>Critère</th>
-                                    <th>Nombre</th>
+                                    <th>{$glVars.i18n.criterion}</th>
+                                    <th>{$glVars.i18n.count}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -274,11 +274,11 @@ export class AnnotationView extends Component {
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 2);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
                 let data = that.state.data;
                 data.id = result.data;                
                 that.setState({data: data});
@@ -321,7 +321,7 @@ export class AnnotationView extends Component {
     }
 
     onCleanHtml(){
-        if(window.confirm(`Souhaitez-vous vraiment nettoyer le code HTML ?\n\nCette action supprimera également toutes les annotations que vous avez ajoutées.`)){
+        if(window.confirm($glVars.i18n.msg_confirm_clean_html_code)){
             this.beforeDataChange();
             this.setAnnotationText(Utils.cleanHTML(this.refAnnotation.current.innerHTML));
             this.save();
@@ -387,12 +387,12 @@ class ModalAnnotateForm extends Component{
         let body = 
         <Form onSubmit={this.onSubmit}>
             <Form.Group className='mb-3' >
-                <Form.Label>{"Critère"}</Form.Label>
-                <ComboBoxPlus placeholder={"Sélectionnez un item..."} name="criterion" value={this.state.data.criterion} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
+                <Form.Label>{$glVars.i18n.criterion}</Form.Label>
+                <ComboBoxPlus placeholder={`${$glVars.i18n.select_item}...`} name="criterion" value={this.state.data.criterion} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
             </Form.Group>
             <Form.Group >
-                <Form.Label>{"Commentaire"}</Form.Label>
-                <ComboBoxPlus isClearable={true} placeholder={"Cherchez un commentaire..."} name="commentSearch" value={this.state.data.search} options={commentList} onChange={this.onDataChange} />
+                <Form.Label>{$glVars.i18n.comment}</Form.Label>
+                <ComboBoxPlus isClearable={true} placeholder={`${$glVars.i18n.search_comment}...`} name="commentSearch" value={this.state.data.search} options={commentList} onChange={this.onDataChange} />
                 <InputTextArea className="mt-1" name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
             </Form.Group>
         </Form>;
@@ -400,22 +400,22 @@ class ModalAnnotateForm extends Component{
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
-                    <Modal.Title>Ajouter/Modifier un Commentaire</Modal.Title>
+                    <Modal.Title>{$glVars.i18n.add_edit_comment}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>{body}</Modal.Body>
                 <Modal.Footer>
                     <ButtonToolbar className='justify-content-between w-100'>
                         <ButtonGroup  >
                             <Button variant='danger'  onClick={() => this.onDelete(true)}>
-                                 <FontAwesomeIcon icon={faTrash}/>{' Supprimer'}
+                                 <FontAwesomeIcon icon={faTrash}/>{` ${$glVars.i18n.delete}`}
                             </Button>
                         </ButtonGroup>
                         <ButtonGroup >
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>
-                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
                             </Button>
                             <Button  variant='success' onClick={this.onSubmit}>
-                                <FontAwesomeIcon icon={faSave}/>{' Enregistrer'}
+                                <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.save}`}
                             </Button>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -457,11 +457,11 @@ class ModalAnnotateForm extends Component{
         event.stopPropagation();
            
         if(this.state.data.criterion.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'Critère' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.criterion), 3);
             return;
         }
         else if(this.state.data.comment.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'Commentaire' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.comment), 3);
             return;
         }
 
@@ -477,7 +477,7 @@ class ModalAnnotateForm extends Component{
 
                 el.addEventListener('dblclick', this.props.onDbClick);  // Gérer le double-clic sur le texte surligné
             }catch (error) {
-                let msg ="Erreur lors de l'application du surlignage: il y a des nœuds partiellement sélectionnés.";
+                let msg = $glVars.i18n.msg_error_highlighting;
                 alert(msg);
                 console.log(msg, error);
             }
@@ -527,24 +527,24 @@ class ModalAskIA extends Component{
         <Form onSubmit={this.onSubmit}>
             <Form.Group >
                 <div className='p-2 text-muted bg-light rounded'>{window.getSelection().toString()}</div>
-                <InputTextArea placeholder="Poser une question" name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={5} />
+                <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={5} />
             </Form.Group>
         </Form>;
 
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
-                    <Modal.Title>Demander à l'IA</Modal.Title>
+                    <Modal.Title>{$glVars.i18n.ask_ai}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>{body}</Modal.Body>
                 <Modal.Footer>
                     <ButtonToolbar>
                         <ButtonGroup >
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>
-                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
                             </Button>
                             <Button  variant='success' onClick={this.onSubmit}>
-                                <FontAwesomeIcon icon={faArrowRight}/>{' Demander'}
+                                <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask}`}
                             </Button>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -569,11 +569,11 @@ class ModalAskIA extends Component{
             console.log(result);
 
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.onClose(true);
             }        
         }

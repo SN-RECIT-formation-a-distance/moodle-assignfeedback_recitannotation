@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ComboBoxPlus, InputColor, InputTextArea} from '../libs/components/Components';
 import { $glVars, Options } from '../common/common';
 import { TextInput } from '../libs/components/TextInput';
+import { UtilsString } from '../libs/utils/Utils';
 
 export class SettingsView extends Component{
     static defaultProps = {
@@ -28,14 +29,14 @@ export class SettingsView extends Component{
         let main = 
         <div className='p-2'>
             <Button onClick={this.props.onChangeView} className='mb-5'>
-                <FontAwesomeIcon icon={faArrowLeft}/>{` Revenir dans l'écran d'annotation`}
+                <FontAwesomeIcon icon={faArrowLeft}/>{` ${$glVars.i18n.back_annotation_view}`}
             </Button>
 
             <Tabs activeKey={this.state.tab} onSelect={(tab) => this.setState({tab: tab})}>
-                <Tab eventKey="0" title="Liste de critères" className='p-3'>
+                <Tab eventKey="0" title={$glVars.i18n.criteria_list} className='p-3'>
                     <CriterionView criteriaList={criteriaList} refresh={this.props.refresh}/>
                 </Tab>
-                <Tab eventKey="1" title="Liste de commentaires"  className='p-3'>
+                <Tab eventKey="1" title={$glVars.i18n.comment_list}  className='p-3'>
                     <CommentsView  criteriaList={criteriaList} commentList={commentList} refresh={this.props.refresh}/>
                 </Tab>
             </Tabs>
@@ -78,19 +79,19 @@ class CriterionView extends Component{
         let main = 
             <>
                 <ButtonGroup className='d-block justify-content-end mb-4'>
-                    <Button  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{" Ajouter un nouveau item"}</Button>
-                    <Button onClick={this.onSelectFile}><FontAwesomeIcon icon={faUpload}/>{" Importer des critères"}</Button>
+                    <Button  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{` ${$glVars.i18n.add_new_item}`}</Button>
+                    <Button onClick={this.onSelectFile}><FontAwesomeIcon icon={faUpload}/>{` ${$glVars.i18n.import_criteria}`}</Button>
                     <a className='btn btn-primary' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
-                        <FontAwesomeIcon icon={faDownload}/>{" Exporter des critères"}
+                        <FontAwesomeIcon icon={faDownload}/>{` ${$glVars.i18n.export_criteria}`}
                     </a>
                 </ButtonGroup>
                 <input  ref={this.fileRef} type="file" accept=".xml"  className='invisible' onChange={this.onFileChange} />
                 <Table striped bordered size='sm'>
                     <thead>
                         <tr>
-                            <th>Nom</th>
-                            <th>Description</th>
-                            <th  style={{width: 100}}>Couleur</th>
+                            <th>{$glVars.i18n.name}</th>
+                            <th>{$glVars.i18n.description}</th>
+                            <th  style={{width: 100}}>{$glVars.i18n.color}</th>
                             <th style={{width: 80}}></th>
                         </tr>
                     </thead>
@@ -103,10 +104,10 @@ class CriterionView extends Component{
                                     <td style={{backgroundColor: item.backgroundcolor}}></td>
                                     <td className='text-center'>
                                         <ButtonGroup>
-                                            <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title='Modifier'/></Button>
-                                            <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title='Supprimer'/></Button>
-                                            <Button disabled={item.sortorder.toString() === "1"} onClick={() => this.changeCriterionSortOrder(item.id, 'up')} size='sm'><FontAwesomeIcon icon={faArrowUp} title='Déplacement vers le haut'/></Button>
-                                            <Button disabled={criteriaList.length.toString() === item.sortorder.toString()} onClick={() => this.changeCriterionSortOrder(item.id, 'down')} size='sm'><FontAwesomeIcon icon={faArrowDown} title='Déplacement vers le bas'/></Button>
+                                            <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title={$glVars.i18n.edit}/></Button>
+                                            <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title={$glVars.i18n.delete}/></Button>
+                                            <Button disabled={item.sortorder.toString() === "1"} onClick={() => this.changeCriterionSortOrder(item.id, 'up')} size='sm'><FontAwesomeIcon icon={faArrowUp} title={$glVars.i18n.move_up}/></Button>
+                                            <Button disabled={criteriaList.length.toString() === item.sortorder.toString()} onClick={() => this.changeCriterionSortOrder(item.id, 'down')} size='sm'><FontAwesomeIcon icon={faArrowDown} title={$glVars.i18n.move_down}/></Button>
                                         </ButtonGroup>
                                     </td>
                                 </tr>
@@ -125,16 +126,16 @@ class CriterionView extends Component{
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.props.refresh();
             }        
         }
 
-        if(window.confirm($glVars.i18n.msgConfirmDeletion)){        
+        if(window.confirm($glVars.i18n.msg_confirm_deletion)){
             $glVars.webApi.deleteCriterion(id, callback);
         }        
     }
@@ -171,7 +172,7 @@ class CriterionView extends Component{
         };
 
         reader.onerror = function () {
-            $glVars.feedback.showError($glVars.i18n.appName, reader.error);
+            $glVars.feedback.showError($glVars.i18n.pluginname, reader.error);
         };
     };
 
@@ -185,11 +186,11 @@ class CriterionView extends Component{
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 that.setState({importFile: {content: null, name: ""}}); 
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.setState({importFile: {content: null, name: ""}}, that.props.refresh);
             }    
         }
@@ -207,10 +208,10 @@ class CriterionView extends Component{
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.props.refresh();
             }    
         }
@@ -253,17 +254,17 @@ class ModalCriterionForm extends Component{
         let body = 
             <Form onSubmit={this.onSubmit}>
                 <Form.Group className='mb-3' >
-                    <Form.Label>{"Nom"}</Form.Label>
+                    <Form.Label>{$glVars.i18n.name}</Form.Label>
                     <TextInput disabled={(this.state.data.id > 0)} 
                             name="name" value={this.state.data.name} onChange={this.onDataChange} max={25}/>
-                    <Form.Text>Veuillez saisir uniquement des lettres minuscules sans espaces.</Form.Text>
+                    <Form.Text>{$glVars.i18n.only_lowercase}</Form.Text>
                 </Form.Group>
                 <Form.Group className='mb-3' >
-                    <Form.Label>{"Description"}</Form.Label>
+                    <Form.Label>{$glVars.i18n.description}</Form.Label>
                     <TextInput  name="description" value={this.state.data.description} onChange={this.onDataChange} max={50}/>
                 </Form.Group>
                 <Form.Group >
-                    <Form.Label>{"Couleur"}</Form.Label>
+                    <Form.Label>{$glVars.i18n.color}</Form.Label>
                     <div>
                         <Button variant='link' className='btn-color-picker' style={{backgroundColor: "#cce5ff",}} 
                             onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#cce5ff"}})}>
@@ -298,17 +299,17 @@ class ModalCriterionForm extends Component{
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1" className='main-view'>
                 <Modal.Header closeButton>
-                    <Modal.Title>Ajouter/Modifier un critère</Modal.Title>
+                    <Modal.Title>{$glVars.i18n.add_edit_criterion}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>{body}</Modal.Body>
                 <Modal.Footer>
                     <ButtonToolbar>
                         <ButtonGroup >
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>
-                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
                             </Button>
                             <Button  variant='success' onClick={this.onSave}>
-                                <FontAwesomeIcon icon={faSave}/>{' Enregistrer'}
+                                <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.save}`}
                             </Button>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -334,26 +335,26 @@ class ModalCriterionForm extends Component{
 
     onSave(){
         if(this.state.data.name.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Veuillez remplir le champ 'nom' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.name), 3);
             return;
         }
         else if(this.state.data.description.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Veuillez remplir le champ 'description' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.description), 3);
             return;
         }
         else if(this.state.data.backgroundcolor.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Veuillez remplir le champ 'couleur' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.color), 3);
             return;
         }
 
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.onClose(true);
             }        
         }
@@ -389,12 +390,12 @@ class CommentsView extends Component{
 
         let main = 
         <>
-            <Button className='d-block ml-auto mb-4' onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{" Ajouter un nouveau item"}</Button>
+            <Button className='d-block ml-auto mb-4' onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{` ${$glVars.i18n.add_new_item}`}</Button>
             <Table striped bordered size='sm'>
                 <thead>
                     <tr>
-                        <th style={{width: 150}}>Critère</th>
-                        <th>Commentaire</th>
+                        <th style={{width: 150}}>{$glVars.i18n.criterion}</th>
+                        <th>{$glVars.i18n.comment}</th>
                         <th style={{width: 70}}></th>
                     </tr>
                 </thead>
@@ -406,8 +407,8 @@ class CommentsView extends Component{
                                 <td>{item.comment}</td>
                                 <td className='text-center'>
                                         <ButtonGroup>
-                                            <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title='Modifier'/></Button>
-                                            <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title='Supprimer'/></Button>
+                                            <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title={$glVars.i18n.edit}/></Button>
+                                            <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title={$glVars.i18n.delete}/></Button>
                                         </ButtonGroup>
                                     </td>
                             </tr>
@@ -425,16 +426,16 @@ class CommentsView extends Component{
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.props.refresh();
             }        
         }
 
-        if(window.confirm($glVars.i18n.msgConfirmDeletion)){        
+        if(window.confirm($glVars.i18n.msg_confirm_deletion)){        
             $glVars.webApi.deleteComment(id, callback);
         }        
     }
@@ -497,11 +498,11 @@ class ModalCommentForm extends Component{
         let body = 
             <Form onSubmit={this.onSubmit}>
                 <Form.Group className='mb-3' >
-                    <Form.Label>{"Critère"}</Form.Label>
-                    <ComboBoxPlus  placeholder={"Sélectionnez un item..."} name="criterionid" value={this.state.data.criterionid} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
+                    <Form.Label>{$glVars.i18n.criterion}</Form.Label>
+                    <ComboBoxPlus  placeholder={`${$glVars.i18n.select_item}...`} name="criterionid" value={this.state.data.criterionid} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
                 </Form.Group>
                 <Form.Group className='mb-3' >
-                    <Form.Label>{"Commentaire"}</Form.Label>
+                    <Form.Label>{$glVars.i18n.comment}</Form.Label>
                     <InputTextArea name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
                 </Form.Group>
                 
@@ -510,17 +511,17 @@ class ModalCommentForm extends Component{
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
-                    <Modal.Title>Ajouter/Modifier un commentaire</Modal.Title>
+                    <Modal.Title>{$glVars.i18n.add_edit_comment}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>{body}</Modal.Body>
                 <Modal.Footer>
                     <ButtonToolbar>
                         <ButtonGroup >
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>
-                                 <FontAwesomeIcon icon={faTimes}/>{' Annuler'}
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
                             </Button>
                             <Button  variant='success' onClick={this.onSave}>
-                                <FontAwesomeIcon icon={faSave}/>{' Enregistrer'}
+                                <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.save}`}
                             </Button>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -539,22 +540,22 @@ class ModalCommentForm extends Component{
 
     onSave(){
         if(!(parseInt(this.state.data.criterionid) > 0)){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'critère' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.criterion), 3);
             return;
         }
         else if(this.state.data.comment.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.appName, "Erreur : vous devez remplir le champ 'commentaire' avant de continuer.", 3);
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.comment), 3);
             return;
         }
 
         let that = this;
         let callback = function(result){
             if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.appName, result.msg);
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.appName, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msgactioncompleted, 3);
                 that.onClose(true);
             }        
         }

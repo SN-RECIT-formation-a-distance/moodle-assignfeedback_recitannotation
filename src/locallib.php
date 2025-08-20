@@ -113,6 +113,19 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $html = html_writer::script('', "{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.js");
         $html .= "<link href='{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.css' rel='stylesheet'></link>";
         
+        $strings = array('pluginname' => '', 'msg_action_completed' => '', 'msg_confirm_deletion' => '', 'student_production' => '', 
+                    'undo' => '', 'redo' => '', 'clean_student_production' => '', 'annotate' => '', 'ask_ai' => '', 
+                    'occurrences' => '', 'criterion' => '', 'count' => '', 'msg_confirm_clean_html_code' => '', 'select_item' => '', 
+                    'comment' => '', 'search_comment' => '', 'add_edit_comment' => '', 'delete' => '', 'cancel' => '', 
+                    'save' => '', 'msg_required_field' => '', 'msg_error_highlighting' => '', 'ask_question' => '', 'ask' => '',
+                    'back_annotation_view' => '', 'criteria_list' => '', 'comment_list' => '', 'add_new_item' => '', 'import_criteria' => '', 
+                    'export_criteria' => '', 'name' => '', 'description' => '', 'color' => '', 'edit' => '', 
+                    'move_up' => '', 'move_down' => '', 'only_lowercase' => '', 'add_edit_criterion' => '');
+        
+        foreach($strings as $key => $value){
+            $strings[$key] = get_string($key, 'assignfeedback_recitannotation');
+        }
+
         $html .= html_writer::script("
             require(['recitannotation'], function () {
                 if (window.loadRecitAnnotationReactApp) {
@@ -121,7 +134,8 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                         submission: " . json_encode($data->submission) . ",
                         userid: " . json_encode($userid) . ",
                         aiApi: ". json_encode(\recitannotation\Options::isAiApiActive()) ."
-                    });
+                    },
+                    ". json_encode($strings) .");
                 }
             });            
         ");

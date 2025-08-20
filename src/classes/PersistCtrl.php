@@ -212,7 +212,7 @@ class PersistCtrl extends MoodlePersistCtrl
             $result = $this->getRecordsSQL($query, array($id));
 
             if(count($result) > 0){
-                throw new Exception("Une contrainte de clé étrangère empêche la suppression afin de garantir l'intégrité des données. Veuillez d'abord supprimer ou modifier les éléments associés.");
+                throw new Exception(get_string('foreign_key', 'assignfeedback_recitannotation'));
             }
 
             $current = $this->mysqlConn->get_record('assignfeedback_recitannot_crit', ['id' => $id], '*', MUST_EXIST);
