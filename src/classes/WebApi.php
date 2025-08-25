@@ -40,8 +40,8 @@ class WebApi extends MoodleApi
     /**
      * $level [a = admin | s = student]
      */
-    public function canUserAccess($level){
-        $isTeacher = $this->ctrl->hasTeacherAccess();
+    public function canUserAccess($level, $assignment){        
+        $isTeacher = $this->ctrl->hasTeacherAccess($assignment);
         
          // if the level is admin then the user must have access to CAPABILITY
         if(($level == 'a') && $isTeacher){
@@ -57,11 +57,11 @@ class WebApi extends MoodleApi
     }
     
     public function getAnnotationFormKit($request){
-        try{
-            $this->canUserAccess('a');
-
+        try{            
             $assignment = clean_param($request['assignment'], PARAM_INT);
             $userid = clean_param($request['userid'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $result = $this->ctrl->getAnnotation($assignment, $userid);
             $this->prepareJson($result);
@@ -73,10 +73,10 @@ class WebApi extends MoodleApi
     }
 
     public function getCriteriaList($request){
-        try{
-            $this->canUserAccess('a');
-
+        try{            
             $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $result = new stdClass();
             $result->criteriaList = $this->ctrl->getCriteriaList($assignment);
@@ -90,10 +90,10 @@ class WebApi extends MoodleApi
     }
 
     public function saveCriterion($request){
-        try{
-            $this->canUserAccess('a');
-
+        try{            
             $data = json_decode(json_encode($request['data']), FALSE);
+
+            $this->canUserAccess('a', $data->assignment);
 
             $result = $this->ctrl->saveCriterion($data);
 
@@ -106,9 +106,10 @@ class WebApi extends MoodleApi
 
     public function deleteCriterion($request){
         try{
-            $this->canUserAccess('a');
-
+            $assignment = clean_param($request['assignment'], PARAM_INT);
             $id = clean_param($request['id'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $this->ctrl->deleteCriterion($id);
             return new WebApiResult(true);
@@ -119,10 +120,11 @@ class WebApi extends MoodleApi
     }
 
     public function saveAnnotation($request){
-        try{
-            $this->canUserAccess('a');
-
+        try{            
             $data = json_decode(json_encode($request['data']), FALSE);
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $result = $this->ctrl->saveAnnotation($data);
 
@@ -135,9 +137,10 @@ class WebApi extends MoodleApi
 
     public function saveComment($request){
         try{
-            $this->canUserAccess('a');
-
             $data = json_decode(json_encode($request['data']), FALSE);
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $result = $this->ctrl->saveComment($data);
 
@@ -150,9 +153,10 @@ class WebApi extends MoodleApi
 
     public function deleteComment($request){
         try{
-            $this->canUserAccess('a');
-
             $id = clean_param($request['id'], PARAM_INT);
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $this->ctrl->deleteComment($id);
             return new WebApiResult(true);
@@ -164,9 +168,8 @@ class WebApi extends MoodleApi
 
     public function exportCriteriaList($request){
         try{
-            $this->canUserAccess('a');
-
             $assignment = clean_param($request['assignment'], PARAM_INT);
+            $this->canUserAccess('a', $assignment);
 
             $criteriaList = $this->ctrl->getCriteriaList($assignment);
             $commentList = $this->ctrl->getCommentList($assignment);
@@ -213,9 +216,9 @@ class WebApi extends MoodleApi
 
     public function importCriteriaList($request){
         try{
-            $this->canUserAccess('a');
-
             $data = json_decode(json_encode($request['data']), FALSE);
+
+            $this->canUserAccess('a', $data->assignment);
             
             $this->ctrl->importCriteriaList($data);
             return new WebApiResult(true);
@@ -226,11 +229,12 @@ class WebApi extends MoodleApi
     }
     
     public function changeCriterionSortOrder($request){
-        try{
-            $this->canUserAccess('a');
-
+        try{            
             $id = clean_param($request['id'], PARAM_INT);
             $direction = clean_param($request['direction'], PARAM_TEXT);
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
 
             $result = $this->ctrl->changeCriterionSortOrder($id, $direction);
             return new WebApiResult(true, $result);
@@ -242,13 +246,14 @@ class WebApi extends MoodleApi
 
     public function callAzureAI($request){
         try{
-            $this->canUserAccess('a');
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+            $payload = json_decode(json_encode($request['payload']), FALSE);
+
+            $this->canUserAccess('a', $assignment);
 
             // Replace these with your Azure details
             $endpoint = Options::getAiApiEndpoint();
             $api_key = Options::getAiApiKey();
-
-            $payload = json_decode(json_encode($request['payload']), FALSE);
 
             // Setup headers
             $headers = [

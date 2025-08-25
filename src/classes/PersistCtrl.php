@@ -52,15 +52,25 @@ class PersistCtrl extends MoodlePersistCtrl
         parent::__construct($mysqlConn, $signedUser);
     }
     
-    public function hasTeacherAccess(){
-        global $COURSE;
+    public function hasTeacherAccess($assignment){
+        global $DB, $USER;
 
-        $context = \context_course::instance($COURSE->id);
-        if (has_capability('moodle/course:update', $context)) {
+        $assign = $DB->get_record('assign', ['id' => $assignment], '*', MUST_EXIST);
+
+        $context = \context_course::instance($assign->course);
+        $roles = get_user_roles($context, $USER->id, true);
+
+        foreach ($roles as $role) {
+            if ($role->shortname == 'editingteacher' || $role->shortname == 'teacher') {
+                return true;
+            }
+        }
+        
+        if (has_capability('moodle/course:update', $context) || has_capability('moodle/grade:viewall', $context)) {
             return true;
-        } else {
-            return false;
-        }        
+        } 
+        
+        return false;
     }
 
     public function getAnnotation($assignmentId, $userId){

@@ -136,7 +136,7 @@ class CriterionView extends Component{
         }
 
         if(window.confirm($glVars.i18n.msg_confirm_deletion)){
-            $glVars.webApi.deleteCriterion(id, callback);
+            $glVars.webApi.deleteCriterion(id, $glVars.moodleData.assignment, callback);
         }        
     }
 
@@ -216,7 +216,7 @@ class CriterionView extends Component{
             }    
         }
 
-        $glVars.webApi.changeCriterionSortOrder(id, direction, callback)
+        $glVars.webApi.changeCriterionSortOrder(id, direction, $glVars.moodleData.assignment, callback)
     }
 }
 
@@ -436,7 +436,7 @@ class CommentsView extends Component{
         }
 
         if(window.confirm($glVars.i18n.msg_confirm_deletion)){        
-            $glVars.webApi.deleteComment(id, callback);
+            $glVars.webApi.deleteComment(id, $glVars.moodleData.assignment, callback);
         }        
     }
 
@@ -560,7 +560,7 @@ class ModalCommentForm extends Component{
             }        
         }
 
-        $glVars.webApi.saveComment(this.state.data, callback);
+        $glVars.webApi.saveComment(this.state.data, $glVars.moodleData.assignment, callback);
     }
 
     onClose(refresh){

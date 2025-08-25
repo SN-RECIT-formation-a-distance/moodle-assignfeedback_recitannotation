@@ -59,8 +59,8 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess);
     } 
 
-    deleteCriterion(id, onSuccess){
-        let data = {id: id, service: "deleteCriterion"};
+    deleteCriterion(id, assignment, onSuccess){
+        let data = {id: id, assignment: assignment, service: "deleteCriterion"};
         this.post(this.gateway, data, onSuccess);
     }
 
@@ -69,8 +69,8 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess); 
     }
 
-    changeCriterionSortOrder(id, direction, onSuccess){
-        let data = {id: id, direction: direction, service: "changeCriterionSortOrder"};
+    changeCriterionSortOrder(id, direction, assignment, onSuccess){
+        let data = {id: id, direction: direction, assignment: assignment, service: "changeCriterionSortOrder"};
         this.post(this.gateway, data, onSuccess); 
     }
 
@@ -87,7 +87,7 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 
-    saveAnnotation(data, onSuccess){
+    saveAnnotation(data, assignment, onSuccess){
         let that = this;
         let onSuccessTmp = function(result){     
             onSuccess(result);
@@ -96,16 +96,16 @@ export class AppWebApi extends WebApi
             }
         };
 
-        let options = {data: data, service: "saveAnnotation"};
+        let options = {data: data, assignment: assignment, service: "saveAnnotation"};
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 
-    deleteComment(id, onSuccess){
-        let data = {id: id, service: "deleteComment"};
+    deleteComment(id, assignment, onSuccess){
+        let data = {id: id, assignment: assignment, service: "deleteComment"};
         this.post(this.gateway, data, onSuccess);
     }
 
-    saveComment(data, onSuccess){
+    saveComment(data, assignment, onSuccess){
         let that = this;
         let onSuccessTmp = function(result){     
             onSuccess(result);
@@ -114,11 +114,11 @@ export class AppWebApi extends WebApi
             }
         };
 
-        let options = {data: data, service: "saveComment"};
+        let options = {data: data, assignment: assignment, service: "saveComment"};
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 
-    callAzureAI(prompt, onSuccess){
+    callAzureAI(prompt, assignment, onSuccess){
         let payload = {
             messages: [
         //    { role: "system", content: "You are a helpful assistant." },
@@ -136,7 +136,7 @@ export class AppWebApi extends WebApi
             }
         };
 
-        let options = {payload: payload, service: "callAzureAI"};
+        let options = {payload: payload, assignment: assignment, service: "callAzureAI"};
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 };

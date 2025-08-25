@@ -27,7 +27,7 @@
         <FIELD NAME="name" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" />
         <FIELD NAME="description" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" />
         <FIELD NAME="backgroundcolor" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Unique id for this feedback value."/>

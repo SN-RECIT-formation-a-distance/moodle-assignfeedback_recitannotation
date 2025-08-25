@@ -292,7 +292,7 @@ export class AnnotationView extends Component {
         data.occurrences = {}; // force new object
         Object.assign(data.occurrences, this.state.counter);
 
-        $glVars.webApi.saveAnnotation(data, callback);
+        $glVars.webApi.saveAnnotation(data, $glVars.moodleData.assignment, callback);
     }
 
     onUndo(){
@@ -578,7 +578,7 @@ class ModalAskIA extends Component{
             }        
         }
         
-        $glVars.webApi.callAzureAI(this.state.data.prompt, callback);
+        $glVars.webApi.callAzureAI(this.state.data.prompt, $glVars.moodleData.assignment, callback);
     }
 
     onClose(refresh){
