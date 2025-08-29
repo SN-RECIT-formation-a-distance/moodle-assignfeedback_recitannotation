@@ -204,6 +204,15 @@ class PersistCtrl extends MoodlePersistCtrl
         }
     }
 
+    public function getLastSortOrder($assignment){
+        $query = "select coalesce(max(sortorder),0) as sortorder from {assignfeedback_recitannot_crit} 
+                where assignment = ?";
+
+        $result = $this->getRecordsSQL($query, array($assignment));
+
+        return array_pop($result);
+    }
+
     public function getCriteriaList($assignment){
         $query = "select * from {assignfeedback_recitannot_crit} 
                 where assignment = ?
@@ -298,6 +307,8 @@ class PersistCtrl extends MoodlePersistCtrl
                 throw new Exception($msg);
             }
 
+            $sortOrderObj = $this->getLastSortOrder($data->assignment);
+
             // Loop through each criterion
             foreach ($xml->criterion as $item) {
                 $criterion = new TableCriterion();
@@ -305,7 +316,7 @@ class PersistCtrl extends MoodlePersistCtrl
                 $criterion->name = (string) $item->name;
                 $criterion->description = (string) $item->description;
                 $criterion->backgroundcolor = (string) $item->backgroundcolor;
-                $criterion->sortorder = (int) $item->sortorder;
+                $criterion->sortorder = ++$sortOrderObj->sortorder;
                 
                 $criterion = $this->saveCriterion($criterion);
 

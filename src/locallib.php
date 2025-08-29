@@ -158,34 +158,15 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
     public function view_summary(stdClass $grade, & $showviewlink) {
         global $DB, $USER;
        
-        $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
-        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
-
-        if($data->id == 0){
-            return "";
-        }
-
-        $showviewlink = true;
-
-        return "Cliquez sur le + pour voir l’annotation";
-    }
-
-    /**
-     * Display the comment in the feedback table.
-     *
-     * @param stdClass $grade
-     * @return string
-     */
-    public function view(stdClass $grade) {
-        global $DB, $USER;
+        $showviewlink = false;
 
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
         $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
         $criteriaList = $persistCtrl->getCriteriaList($grade->assignment);
 
-        $html = "<div class='bg-white'>";
+        $html = "<div class='bg-white p-2'>";
 
-        $html .= "<div class='mb-3'>$data->annotation</div>";
+        $html .= "<div class='mb-3 p-2'>$data->annotation</div>";
 
         $data->occurrences = json_decode($data->occurrences);
         $html .= "<table class='w-50 table table-striped table-bordered bordered table-sm'>";
@@ -215,7 +196,17 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         
         $html .= "</div>";
 
-        return $html;
+        return $html;        
+    }
+
+    /**
+     * Display the comment in the feedback table.
+     *
+     * @param stdClass $grade
+     * @return string
+     */
+    public function view(stdClass $grade) {
+        return "";
     }
 
     /**

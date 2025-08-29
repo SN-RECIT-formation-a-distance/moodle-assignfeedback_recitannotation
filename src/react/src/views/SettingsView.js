@@ -90,7 +90,6 @@ class CriterionView extends Component{
                     <thead>
                         <tr>
                             <th>{$glVars.i18n.name}</th>
-                            <th>{$glVars.i18n.description}</th>
                             <th  style={{width: 100}}>{$glVars.i18n.color}</th>
                             <th style={{width: 80}}></th>
                         </tr>
@@ -99,8 +98,7 @@ class CriterionView extends Component{
                         {criteriaList.map((item, index) => {
                             let row = 
                                 <tr key={index}>
-                                    <td>{item.name}</td>
-                                    <td>{item.description}</td>
+                                    <td title={item.name}>{item.description}</td>
                                     <td style={{backgroundColor: item.backgroundcolor}}></td>
                                     <td className='text-center'>
                                         <ButtonGroup>
@@ -250,17 +248,18 @@ class ModalCriterionForm extends Component{
         }
     }
 
-    render(){
-        let body = 
-            <Form onSubmit={this.onSubmit}>
-                <Form.Group className='mb-3' >
+    /*<Form.Group className='mb-3' >
                     <Form.Label>{$glVars.i18n.name}</Form.Label>
                     <TextInput disabled={(this.state.data.id > 0)} 
                             name="name" value={this.state.data.name} onChange={this.onDataChange} max={25}/>
                     <Form.Text>{$glVars.i18n.only_lowercase}</Form.Text>
-                </Form.Group>
+                </Form.Group>*/
+    render(){
+        let body = 
+            <Form onSubmit={this.onSubmit}>
+                
                 <Form.Group className='mb-3' >
-                    <Form.Label>{$glVars.i18n.description}</Form.Label>
+                    <Form.Label>{$glVars.i18n.name}</Form.Label>
                     <TextInput  name="description" value={this.state.data.description} onChange={this.onDataChange} max={50}/>
                 </Form.Group>
                 <Form.Group >
@@ -321,24 +320,13 @@ class ModalCriterionForm extends Component{
     }
 
     onDataChange(event){
-        let data = this.state.data;
-        
-        if(event.target.name === 'name'){
-            // Keep only lowercase letters a–z, remove everything else (including spaces)
-            event.target.value = event.target.value.replace(/[^a-z]/g, '');
-        }
-
+        let data = this.state.data;               
         data[event.target.name] = event.target.value;
-
         this.setState({data: data});
     }
 
     onSave(){
-        if(this.state.data.name.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.name), 3);
-            return;
-        }
-        else if(this.state.data.description.length === 0){
+        if(this.state.data.description.length === 0){
             $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.description), 3);
             return;
         }
@@ -357,6 +345,11 @@ class ModalCriterionForm extends Component{
                 $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.onClose(true);
             }        
+        }
+
+        if((parseInt(this.state.data.id) === 0) && (this.state.data.name.length === 0)){
+            // Keep only lowercase letters a–z, remove everything else (including spaces and accents)
+            this.state.data.name = this.state.data.description.substring(0,24).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '').match(/[A-Za-z]/g).join('');
         }
 
         $glVars.webApi.saveCriterion(this.state.data, callback);
