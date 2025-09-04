@@ -59,23 +59,29 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
     public function process_assignfeedback_recitannotation_annotation($data) {
         global $DB;
 
-        $data = (object)$data;
-        if ($data->ownerid > 0) {
-            $data->ownerid = $this->get_mappingid('user', $data->ownerid);
+        try{
+            $data = (object)$data;
+
+            if ($data->ownerid > 0) {
+                $data->ownerid = $this->get_mappingid('user', $data->ownerid);
+            }
+
+            if ($data->userid > 0) {
+                $data->userid = $this->get_mappingid('user', $data->userid);
+            }
+            
+            $assignment = $this->get_new_parentid('assign');
+            $submission = $DB->get_record('assign_submission', ['assignment' => $assignment, 'userid' => $data->userid], 'id', MUST_EXIST);
+            $data->submission = $submission->id;
+
+            // debugging('assignfeedback_recitannotation: ' . print_r($data, true), DEBUG_DEVELOPER);
+
+            // Insert new record
+            $DB->insert_record('assignfeedback_recitannotation', $data);
         }
-
-        if ($data->userid > 0) {
-            $data->userid = $this->get_mappingid('user', $data->userid);
+        catch(Exception $ex){
+            debugging('Error on assignfeedback_recitannotation: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
         }
-         
-        $assignment = $this->get_new_parentid('assign');
-        $submission = $DB->get_record('assign_submission', ['assignment' => $assignment, 'userid' => $data->userid], 'id', MUST_EXIST);
-        $data->submission = $submission->id;
-
-        //debugging(print_r($data, true), DEBUG_DEVELOPER);
-
-        // Insert new record
-        $DB->insert_record('assignfeedback_recitannotation', $data);
     }
 
     /**
@@ -84,16 +90,23 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
     public function process_assignfeedback_recitannotation_criterion($data) {
         global $DB;
 
-        $data = (object)$data;
-        $oldid = $data->id;
-        
-        $data->assignment = $this->get_new_parentid('assign');
+        try{
+            $data = (object)$data;
+            $oldid = $data->id;
+            
+            $data->assignment = $this->get_new_parentid('assign');
 
-        // Insert new record
-        $newitemid = $DB->insert_record('assignfeedback_recitannot_crit', $data);
+            // debugging('assignfeedback_recitannot_crit: ' . print_r($data, true), DEBUG_DEVELOPER);
 
-        // Save mapping for child table
-        $this->set_mapping('criterion', $oldid, $newitemid);
+            // Insert new record
+            $newitemid = $DB->insert_record('assignfeedback_recitannot_crit', $data);
+
+            // Save mapping for child table
+            $this->set_mapping('criterion', $oldid, $newitemid);
+        }
+        catch(Exception $ex){
+            debugging('Error on assignfeedback_recitannot_crit: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
+        }
     }
 
     /**
@@ -102,16 +115,24 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
     public function process_assignfeedback_recitannotation_comment($data) {
         global $DB;
 
-        $data = (object)$data;
+        try{
+            $data = (object)$data;
 
-       // Map foreign key
-        $data->criterionid = $this->get_mappingid('criterion', $data->criterionid);
+            // Map foreign key
+            $data->criterionid = $this->get_mappingid('criterion', $data->criterionid);
 
-        if ($data->criterionid) {
-            $DB->insert_record('assignfeedback_recitannot_comment', $data);
-        } else {
-            debugging("Could not find mapping for criterionid!", DEBUG_DEVELOPER);
+            if ($data->criterionid) {
+             //   debugging('assignfeedback_recitannot_comment: ' . print_r($data, true), DEBUG_DEVELOPER);
+
+                $DB->insert_record('assignfeedback_recitannot_comment', $data);
+            } else {
+                throw new Exception("Could not find mapping for criterionid!");
+            }
         }
+        catch(Exception $ex){
+            debugging('Error on assignfeedback_recitannot_comment: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
+        }
+        
     }
 
 }

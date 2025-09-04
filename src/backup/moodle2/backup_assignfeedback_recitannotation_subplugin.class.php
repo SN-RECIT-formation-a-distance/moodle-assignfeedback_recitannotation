@@ -47,7 +47,7 @@ class backup_assignfeedback_recitannotation_subplugin extends backup_subplugin {
 
         $crits = new backup_nested_element('feedback_recitannot_crits'); // container
         $crit = new backup_nested_element('recitannot_crit', ['id'], [
-            'assignment', 'name', 'description', 'backgroundcolor'
+            'assignment', 'name', 'description', 'backgroundcolor', 'sortorder'
         ]);
 
         $comments = new backup_nested_element('feedback_recitannot_comments'); // container
@@ -76,7 +76,7 @@ class backup_assignfeedback_recitannotation_subplugin extends backup_subplugin {
             'criterionid' => backup::VAR_PARENTID
         ]);
 
-        //debugging(print_r($subplugin, true), DEBUG_DEVELOPER);
+        //debugging(print_r($crits, true), DEBUG_DEVELOPER);
 
         return $subplugin;
     }
