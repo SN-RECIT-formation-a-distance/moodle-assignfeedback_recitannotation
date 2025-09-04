@@ -42,6 +42,8 @@ export class MainView extends Component {
         panelGrade.style.display = 'grid';
         panelGrade.style.gridTemplateColumns = "calc(65% - 1rem) calc(35% - 1rem)";
         panelGrade.style.gap = "1rem";
+        panelGrade.style.gridAutoRows = "auto";
+        panelGrade.style.alignItems = "start";
     }
 
     getData(){

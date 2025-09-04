@@ -106,7 +106,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $html .= "<button class='btn btn-primary' id='btn-annotation-tool'><i class='fa fa-comments'></i> Annotate</button>";
         $html .= "</div>";*/
         
-        $group[] = $mform->createElement('static', '', '', "<div id='recitannotation_appreact_placeholder' class='bg-white rounded'></div>");
+        $group[] = $mform->createElement('static', '', '', "<div id='recitannotation_appreact_placeholder' style='position: sticky; top: 0;' class='bg-white rounded'></div>");
         
        // $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array($grade->assignment, $data->submission, $userid));
 

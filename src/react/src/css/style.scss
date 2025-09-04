@@ -11,20 +11,22 @@
             min-width: 140px;
         }
     }
-    .col-md-4.fixed {
+    /*.col-md-4.fixed {
         position: sticky;
         top: 20px;
-        /* Ajustez cette valeur selon vos besoins */
+        // Ajustez cette valeur selon vos besoins 
         height: calc(100vh - 20px);
-        /* Ajustez cette valeur selon vos besoins */
+        // Ajustez cette valeur selon vos besoins 
         overflow-y: auto;
-        /* Permet le défilement si le contenu est trop long */
-    }
+        // Permet le défilement si le contenu est trop long 
+    }*/
 
     .btn-color-picker{
         width: 3rem; height: 1.5rem; margin: .5rem;
         display: inline-flex; justify-content: center;    align-items: center;
     }
+
+    span[data-criterion]{cursor: pointer;     text-decoration: underline;}
 }
 
 

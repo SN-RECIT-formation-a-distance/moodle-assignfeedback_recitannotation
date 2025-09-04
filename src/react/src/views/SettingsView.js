@@ -387,7 +387,7 @@ class CommentsView extends Component{
             <Table striped bordered size='sm'>
                 <thead>
                     <tr>
-                        <th style={{width: 150}}>{$glVars.i18n.criterion}</th>
+                        <th>{$glVars.i18n.criterion}</th>
                         <th>{$glVars.i18n.comment}</th>
                         <th style={{width: 70}}></th>
                     </tr>

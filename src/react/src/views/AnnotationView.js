@@ -27,7 +27,7 @@ export class AnnotationView extends Component {
         this.positionFloatingButton = this.positionFloatingButton.bind(this);
         this.onAnnotate = this.onAnnotate.bind(this);
         this.onAskIA = this.onAskIA.bind(this);
-        this.onDbClick = this.onDbClick.bind(this);
+        this.onClick = this.onClick.bind(this);
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
         this.save = this.save.bind(this);        
@@ -39,6 +39,7 @@ export class AnnotationView extends Component {
         this.cancelDataChange = this.cancelDataChange.bind(this);
         this.beforeDataChange = this.beforeDataChange.bind(this);
         this.onCleanHtml = this.onCleanHtml.bind(this);
+        this.refresh = this.refresh.bind(this);
 
         this.state = {
             showModalAnnotate: false,
@@ -89,7 +90,7 @@ export class AnnotationView extends Component {
         // Gérer le double-clic sur le texte surligné
         let elements = this.refAnnotation.current.querySelectorAll(`[data-criterion]`);
         for(let el of elements){
-            el.addEventListener('dblclick', this.onDbClick);  
+            el.addEventListener('click', this.onClick);  
         }
     }
 
@@ -134,7 +135,7 @@ export class AnnotationView extends Component {
                         </ButtonGroup>
                         
                     </Col>
-                    <Col md={4} className='fixed'>
+                    <Col md={4} >
                         <div className='d-flex align-items-baseline'>
                             <span className='h5'>{$glVars.i18n.occurrences}</span>
                             <Button size='sm' variant='link' className='ml-1' onClick={() => this.props.onChangeView('settings')}>
@@ -161,7 +162,7 @@ export class AnnotationView extends Component {
                             </tbody>
                         </Table>
                     </Col>
-                    {this.state.showModalAnnotate && <ModalAnnotateForm onClose={this.onClose} onDbClick={this.onDbClick} 
+                    {this.state.showModalAnnotate && <ModalAnnotateForm onClose={this.onClose} onClick={this.onClick} 
                                 criteriaList={criteriaList} commentList={commentList}/>}
                     
                     {this.state.showModalAskIA && <ModalAskIA onClose={this.onClose}/>}
@@ -202,14 +203,17 @@ export class AnnotationView extends Component {
         AnnotationView.currentRange = null;
         AnnotationView.selectedElement = null;
         
-        if(refresh){
-            this.initTooltips();
-            this.updateCounters();
+        if(refresh){            
             this.save();
         }
         else{
             this.cancelDataChange();
         }
+    }
+
+    refresh(){
+        this.initTooltips();
+        this.updateCounters();
     }
 
     updateCounters(){
@@ -231,8 +235,8 @@ export class AnnotationView extends Component {
         }); 
     }
 
-    onDbClick(event){
-        event.preventDefault(); // Empêche d'autres actions de double-clic
+    onClick(event){
+        event.preventDefault(); // Empêche d'autres actions de clic
         AnnotationView.selectedElement = event.target; // 'this' est l'élément sur lequel le clic-droit a été fait
         this.setState({showModalAnnotate: true});
         this.beforeDataChange();
@@ -281,7 +285,7 @@ export class AnnotationView extends Component {
                 $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
                 let data = that.state.data;
                 data.id = result.data;                
-                that.setState({data: data});
+                that.setState({data: data}, that.refresh);
                 return; 
             }
         } 
@@ -332,7 +336,7 @@ export class AnnotationView extends Component {
 class ModalAnnotateForm extends Component{
     static defaultProps = {        
         onClose: null,
-        onDbClick: null,
+        onClick: null,
         criteriaList: [],
         commentList: []
     };
@@ -475,7 +479,7 @@ class ModalAnnotateForm extends Component{
                // el.appendChild(MainView.currentRange.extractContents());
                // MainView.currentRange.insertNode(el);
 
-                el.addEventListener('dblclick', this.props.onDbClick);  // Gérer le double-clic sur le texte surligné
+                el.addEventListener('click', this.props.onClick);  // Gérer le clic sur le texte surligné
             }catch (error) {
                 let msg = $glVars.i18n.msg_error_highlighting;
                 alert(msg);
