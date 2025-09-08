@@ -231,6 +231,7 @@ class ModalCriterionForm extends Component{
         this.onDataChange = this.onDataChange.bind(this);
         this.onSave = this.onSave.bind(this);
         this.onClose = this.onClose.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
 
         this.state = {
             data: {
@@ -248,6 +249,12 @@ class ModalCriterionForm extends Component{
         }
     }
 
+    onKeyDown(e){
+        if(e.key === 'Enter' && e.target.type !== 'textarea') {
+            e.preventDefault();
+        }
+    }
+
     /*<Form.Group className='mb-3' >
                     <Form.Label>{$glVars.i18n.name}</Form.Label>
                     <TextInput disabled={(this.state.data.id > 0)} 
@@ -256,7 +263,7 @@ class ModalCriterionForm extends Component{
                 </Form.Group>*/
     render(){
         let body = 
-            <Form onSubmit={this.onSubmit}>
+            <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>
                 
                 <Form.Group className='mb-3' >
                     <Form.Label>{$glVars.i18n.name}</Form.Label>
@@ -465,6 +472,7 @@ class ModalCommentForm extends Component{
         this.onDataChange = this.onDataChange.bind(this);
         this.onSave = this.onSave.bind(this);
         this.onClose = this.onClose.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
 
         this.state = {
             data: {
@@ -487,9 +495,15 @@ class ModalCommentForm extends Component{
         }
     }
 
+    onKeyDown(e){
+        if(e.key === 'Enter' && e.target.type !== 'textarea') {
+            e.preventDefault();
+        }
+    }
+
     render(){
         let body = 
-            <Form onSubmit={this.onSubmit}>
+            <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>
                 <Form.Group className='mb-3' >
                     <Form.Label>{$glVars.i18n.criterion}</Form.Label>
                     <ComboBoxPlus  placeholder={`${$glVars.i18n.select_item}...`} name="criterionid" value={this.state.data.criterionid} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />

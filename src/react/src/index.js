@@ -28,7 +28,7 @@ class App extends Component {
 
     componentDidMount(){
         $glVars.feedback.addObserver("App", this.onFeedback);
-        window.document.title += ' | v' + Options.appVersion();
+        console.log(' | v' + Options.appVersion());
     }
 
     componentWillUnmount(){

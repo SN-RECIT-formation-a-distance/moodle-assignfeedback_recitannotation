@@ -61,6 +61,7 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
 
         try{
             $data = (object)$data;
+            unset($data->id);
 
             if ($data->ownerid > 0) {
                 $data->ownerid = $this->get_mappingid('user', $data->ownerid);
@@ -93,16 +94,22 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
         try{
             $data = (object)$data;
             $oldid = $data->id;
+            unset($data->id);
             
             $data->assignment = $this->get_new_parentid('assign');
 
             // debugging('assignfeedback_recitannot_crit: ' . print_r($data, true), DEBUG_DEVELOPER);
 
-            // Insert new record
-            $newitemid = $DB->insert_record('assignfeedback_recitannot_crit', $data);
+            // Example: check if a record already exists.
+            if (!$DB->record_exists('assignfeedback_recitannot_crit', [
+                'assignment' => $data->assignment,
+                'name' => $data->name
+            ])) {
+                $newitemid = $DB->insert_record('assignfeedback_recitannot_crit', $data);
 
-            // Save mapping for child table
-            $this->set_mapping('criterion', $oldid, $newitemid);
+                // Save mapping for child table
+                $this->set_mapping('criterion', $oldid, $newitemid);
+            }
         }
         catch(Exception $ex){
             debugging('Error on assignfeedback_recitannot_crit: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
@@ -117,14 +124,20 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
 
         try{
             $data = (object)$data;
+            unset($data->id);
 
             // Map foreign key
             $data->criterionid = $this->get_mappingid('criterion', $data->criterionid);
 
             if ($data->criterionid) {
              //   debugging('assignfeedback_recitannot_comment: ' . print_r($data, true), DEBUG_DEVELOPER);
-
-                $DB->insert_record('assignfeedback_recitannot_comment', $data);
+                 // Example: check if a record already exists.
+                if (!$DB->record_exists('assignfeedback_recitannot_comment', [
+                    'criterionid' => $data->criterionid,
+                    'comment' => $data->comment
+                ])) {
+                    $DB->insert_record('assignfeedback_recitannot_comment', $data);
+                }
             } else {
                 throw new Exception("Could not find mapping for criterionid!");
             }

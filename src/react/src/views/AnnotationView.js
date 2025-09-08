@@ -92,6 +92,8 @@ export class AnnotationView extends Component {
         for(let el of elements){
             el.addEventListener('click', this.onClick);  
         }
+
+        this.refresh();
     }
 
     render() {
@@ -170,7 +172,7 @@ export class AnnotationView extends Component {
             </div>;
 
         return (main);
-    }
+    }  
 
     onMouseUp(event){
         const selection = window.getSelection();
@@ -348,6 +350,7 @@ class ModalAnnotateForm extends Component{
         this.onClose = this.onClose.bind(this);
         this.onDataChange = this.onDataChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
 
         this.state = {
             data: {},
@@ -379,6 +382,12 @@ class ModalAnnotateForm extends Component{
         }
     }
 
+    onKeyDown(e){
+        if(e.key === 'Enter' && e.target.type !== 'textarea') {
+            e.preventDefault();
+        }
+    }
+
     render(){
         let commentList = [];
 
@@ -389,7 +398,7 @@ class ModalAnnotateForm extends Component{
         }
 
         let body = 
-        <Form onSubmit={this.onSubmit}>
+        <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>
             <Form.Group className='mb-3' >
                 <Form.Label>{$glVars.i18n.criterion}</Form.Label>
                 <ComboBoxPlus placeholder={`${$glVars.i18n.select_item}...`} name="criterion" value={this.state.data.criterion} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
