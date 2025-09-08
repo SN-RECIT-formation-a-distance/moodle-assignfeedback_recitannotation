@@ -510,7 +510,8 @@ class ModalCommentForm extends Component{
                 </Form.Group>
                 <Form.Group className='mb-3' >
                     <Form.Label>{$glVars.i18n.comment}</Form.Label>
-                    <InputTextArea name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
+                    <InputTextArea name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} 
+                                maxLength={500}/>
                 </Form.Group>
                 
             </Form>;

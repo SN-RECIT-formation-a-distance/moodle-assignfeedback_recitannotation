@@ -406,7 +406,8 @@ class ModalAnnotateForm extends Component{
             <Form.Group >
                 <Form.Label>{$glVars.i18n.comment}</Form.Label>
                 <ComboBoxPlus isClearable={true} placeholder={`${$glVars.i18n.search_comment}...`} name="commentSearch" value={this.state.data.search} options={commentList} onChange={this.onDataChange} />
-                <InputTextArea className="mt-1" name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} />
+                <InputTextArea className="mt-1" name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} 
+                    maxLength={350}/>
             </Form.Group>
         </Form>;
 

@@ -32,7 +32,8 @@ export class InputTextArea extends Component {
         onChange: null,
         disabled: false,
         rows: 4,
-        className: ""
+        className: "",
+        maxLength: null
     };
 
     constructor(props){
@@ -42,7 +43,7 @@ export class InputTextArea extends Component {
     }
     
     render() {       
-        let main = <FormControl name={this.props.name} as="textarea" className={this.props.className}
+        let main = <FormControl name={this.props.name} as="textarea" className={this.props.className} maxLength={this.props.maxLength}
                     value={this.props.value} placeholder={this.props.placeholder} onChange={this.onChange} 
                     disabled={this.props.disabled} rows={this.props.rows}/>
         return (main);
