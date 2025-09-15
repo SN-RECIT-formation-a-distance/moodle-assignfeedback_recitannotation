@@ -32,16 +32,15 @@ class App extends Component {
     }
 
     componentWillUnmount(){
-        $glVars.feedback.removeObserver("App");        
+        $glVars.feedback.removeObserver("App");     
     }
 
     render() {
+        $glVars.feedback.render();
+
         let main =
             <div>
-                <MainView />
-                {$glVars.feedback.msg.map((item, index) => {  
-                    return (<VisualFeedback key={index} id={index} msg={item.msg} type={item.type} title={item.title} timeout={item.timeout}/>);                                    
-                })}
+                <MainView />                
                 <Loading webApi={$glVars.webApi}><FontAwesomeIcon icon={faSpinner} spin/></Loading>
             </div>
 

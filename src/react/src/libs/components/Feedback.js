@@ -68,61 +68,96 @@ export class FeedbackCtrl
             this.notifyObservers();
         }
     }
+
+    render(){
+        let item = this.msg.pop() || null;
+        while(item != null){
+            let vf = new VisualFeedback();
+            vf.render(item.msg, item.type, item.title, item.timeout);
+            item = this.msg.pop();
+        }
+    }
 }
 
-export class VisualFeedback extends Component {
-    constructor(props){
-        super(props);
-        
+class VisualFeedback {
+    constructor(){
         this.onDismiss = this.onDismiss.bind(this);
+
+        this.main = null;
     }
     
-    static defaultProps = {
-        id: 0,
-        title: "",
-        msg: "",
-        type: "",
-        timeout: 0 // in secs
-    };
-    
-    render() {
+    render(msg, type, title, timeout) {
         let bsStyle = "";
         let icon = "";
         
-        switch(this.props.type){
+        switch(type){
             case 'error':
-                bsStyle = "danger";
-                icon = faExclamationTriangle;
+                bsStyle = "alert-danger";
+                icon = "fa-exclamation-triangle";
                 break;
             case 'warning':
-                bsStyle = "warning";
-                icon = faExclamationTriangle;
+                bsStyle = "alert-warning";
+                icon = "fa-exclamation-triangle";
                 break;
             case 'info':                
-                bsStyle = "info";
-                icon = faInfoCircle;
+                bsStyle = "alert-info";
+                icon = "fa-info-circle";
                 break;
             default:
-                bsStyle = "danger";
-                icon = faExclamationTriangle;
+                bsStyle = "alert-danger";
+                icon = "fa-exclamation-triangle";
         }
 
-        if(this.props.timeout){
-            setTimeout(this.onDismiss, this.props.timeout * 1000);
+        if(timeout){
+            setTimeout(this.onDismiss, timeout * 1000);
         }
         
-        let main = 
-                <div className="VisualFeedback" data-feedback-type={this.props.type}>
-                    <Alert variant={bsStyle} onClose={this.onDismiss} dismissible>
-                        <Alert.Heading>{this.props.title}</Alert.Heading>                    
-                        <p><FontAwesomeIcon icon={icon} />{' '}{this.props.msg}</p>
-                    </Alert>
-                </div>;
-        return (main);
+        this.main = document.createElement("div");
+        this.main.classList.add("VisualFeedback");
+        this.main.dataset.feedbackType = type;
+
+        let alert = document.createElement("div");
+        alert.classList.add("alert", bsStyle);
+        alert.setAttribute("role", "alert");
+        this.main.appendChild(alert);
+
+        let btn = document.createElement("button");
+        btn.setAttribute("type", "button");
+        btn.classList.add("close");
+        btn.addEventListener("click", this.onDismiss);
+        alert.appendChild(btn);
+
+        let span = document.createElement("span");
+        span.setAttribute("aria-hidden", "true");
+        span.innerHTML = "x";
+        btn.appendChild(span);
+
+        span = document.createElement("span");
+        span.classList.add("sr-only");
+        span.innerHTML = "Close alert";
+        btn.appendChild(span);
+
+        let alertHeading = document.createElement("div");
+        alertHeading.classList.add("alert-heading", "h4");
+        alertHeading.innerHTML = title;
+        alert.appendChild(alertHeading);
+
+        let paragraph = document.createElement("p");
+        alert.appendChild(paragraph);
+
+        let fsIcon = document.createElement("i");
+        fsIcon.classList.add("fa", icon);
+        paragraph.appendChild(fsIcon);
+
+        let text = document.createElement("span");
+        text.innerHTML = ` ${msg}`;
+        paragraph.appendChild(text);
+
+        document.body.appendChild(this.main);
     }
     
     onDismiss(){
-        FeedbackCtrl.instance.removeItem(this.props.id);
+        this.main.remove();
     }
 }
 
