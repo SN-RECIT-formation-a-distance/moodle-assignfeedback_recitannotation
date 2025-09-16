@@ -63,6 +63,7 @@ window.loadRecitAnnotationReactApp = function(moodleData, i18n){
 
     const domContainer = document.getElementById('recitannotation_appreact_placeholder');
     const root = createRoot(domContainer);
+    console.log("aaaa");
     root.render(<App />);
     return root;
 };

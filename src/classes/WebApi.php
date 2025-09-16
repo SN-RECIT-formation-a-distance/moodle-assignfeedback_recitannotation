@@ -59,11 +59,12 @@ class WebApi extends MoodleApi
     public function getAnnotationFormKit($request){
         try{            
             $assignment = clean_param($request['assignment'], PARAM_INT);
+            $attemptnumber = clean_param($request['attemptnumber'], PARAM_INT);
             $userid = clean_param($request['userid'], PARAM_INT);
 
             $this->canUserAccess('a', $assignment);
 
-            $result = $this->ctrl->getAnnotation($assignment, $userid);
+            $result = $this->ctrl->getAnnotation($assignment, $userid, $attemptnumber);
             $this->prepareJson($result);
             return new WebApiResult(true, $result);
         }

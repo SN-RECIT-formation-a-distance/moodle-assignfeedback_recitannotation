@@ -89,27 +89,11 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         global $PAGE, $DB, $USER, $CFG;
 
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
-
-        $data = $persistCtrl->getAnnotation($grade->assignment, $userid);
-        
-        /*$html = "<div>";
-        
-        $html .= "<div class='mb-3'>{$data->annotation}</div>";
-        
-        if(strlen($data->generalfeedback) > 0){
-            $html .= "<div class='mb-3'>";
-            $html .= "<b>Rétroaction générale:</b>";
-            $html .= "<p>{$data->generalfeedback}</p>";
-            $html .= "</div>";
-        }
-        
-        $html .= "<button class='btn btn-primary' id='btn-annotation-tool'><i class='fa fa-comments'></i> Annotate</button>";
-        $html .= "</div>";*/
+ 
+        $data = $persistCtrl->getAnnotation($grade->assignment, $userid, $grade->attemptnumber);
         
         $group[] = $mform->createElement('static', '', '', "<div id='recitannotation_appreact_placeholder' style='position: sticky; top: 0;' class='bg-white rounded'></div>");
         
-       // $PAGE->requires->yui_module('moodle-assignfeedback_recitannotation-button', 'M.assignfeedback_recitannotation.recitannotation.init', array($grade->assignment, $data->submission, $userid));
-
         $html = html_writer::script('', "{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.js");
         $html .= "<link href='{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.css' rel='stylesheet'></link>";
         
@@ -132,6 +116,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                     window.loadRecitAnnotationReactApp({
                         assignment: " . json_encode($grade->assignment) . ",
                         submission: " . json_encode($data->submission) . ",
+                        attemptnumber: " . json_encode($grade->attemptnumber) . ",
                         userid: " . json_encode($userid) . ",
                         aiApi: ". json_encode(\recitannotation\Options::isAiApiActive()) ."
                     },
@@ -143,7 +128,6 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $group[] = $mform->createElement('static', '', '', $html);
 
         $mform->addGroup($group, 'assignfeedbackrecitannotation_group', $this->get_name(), '', false, array('class' => 'has-popout invisible'));
-        
 
         return true;
     }

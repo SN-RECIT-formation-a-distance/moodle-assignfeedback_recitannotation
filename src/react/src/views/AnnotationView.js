@@ -82,7 +82,7 @@ export class AnnotationView extends Component {
             }); 
         }
         
-        $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.userid, callback);
+        $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.attemptnumber, $glVars.moodleData.userid, callback);
     }
 
     setAnnotationText(value){
@@ -287,8 +287,8 @@ export class AnnotationView extends Component {
             else{
                 $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
                 let data = that.state.data;
-                data.id = result.data;                
-                that.setState({data: data}, that.refresh);
+                data.id = result.data;          
+                that.setState({data: data});
                 return; 
             }
         } 
@@ -298,6 +298,7 @@ export class AnnotationView extends Component {
         data.annotation = this.refAnnotation.current.innerHTML;
         data.occurrences = {}; // force new object
         Object.assign(data.occurrences, this.state.counter);
+        this.refresh();     
 
         $glVars.webApi.saveAnnotation(data, $glVars.moodleData.assignment, callback);
     }

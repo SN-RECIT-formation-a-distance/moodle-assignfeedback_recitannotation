@@ -28,6 +28,7 @@ export const $glVars = {
     moodleData: {
         assignment: 0,
         submission: 0,
+        attemptnumber: 0,
         userid: 0,
         sesskey: "",
         wwwroot: "",
