@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
 import { faArrowDown, faArrowLeft,  faArrowUp,  faCheckCircle,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ComboBoxPlus, InputColor, InputTextArea} from '../libs/components/Components';
+import { ComboBoxPlus, DlgConfirm, InputColor, InputTextArea} from '../libs/components/Components';
 import { $glVars, Options } from '../common/common';
 import { TextInput } from '../libs/components/TextInput';
 import { UtilsString } from '../libs/utils/Utils';
@@ -133,9 +133,11 @@ class CriterionView extends Component{
             }        
         }
 
-        if(window.confirm($glVars.i18n.msg_confirm_deletion)){
+        let onApply = function(){
             $glVars.webApi.deleteCriterion(id, $glVars.moodleData.assignment, callback);
-        }        
+        }
+
+        DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_deletion, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
     onAdd(){
@@ -435,9 +437,11 @@ class CommentsView extends Component{
             }        
         }
 
-        if(window.confirm($glVars.i18n.msg_confirm_deletion)){        
+        let onApply = function(){
             $glVars.webApi.deleteComment(id, $glVars.moodleData.assignment, callback);
-        }        
+        }
+
+        DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_deletion, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
     onAdd(){
@@ -563,7 +567,7 @@ class ModalCommentForm extends Component{
                 return;
             }
             else{
-                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msgactioncompleted, 3);
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
                 that.onClose(true);
             }        
         }

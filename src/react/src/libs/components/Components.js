@@ -32,6 +32,7 @@ export * from './ToggleButtons';
 export * from './InputTextArea';
 export * from './TextInput';
 export * from './InputColor';
+export * from './DlgConfirm';
 
 export default class Components{
     static version = 1.0;

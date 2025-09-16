@@ -120,7 +120,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                     'save' => '', 'msg_required_field' => '', 'msg_error_highlighting' => '', 'ask_question' => '', 'ask' => '',
                     'back_annotation_view' => '', 'criteria_list' => '', 'comment_list' => '', 'add_new_item' => '', 'import_criteria' => '', 
                     'export_criteria' => '', 'name' => '', 'description' => '', 'color' => '', 'edit' => '', 
-                    'move_up' => '', 'move_down' => '', 'only_lowercase' => '', 'add_edit_criterion' => '');
+                    'move_up' => '', 'move_down' => '', 'only_lowercase' => '', 'add_edit_criterion' => '', 'ok' => '');
         
         foreach($strings as $key => $value){
             $strings[$key] = get_string($key, 'assignfeedback_recitannotation');
@@ -161,7 +161,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $showviewlink = false;
 
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
-        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
+        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid, $grade->attemptnumber);
         $criteriaList = $persistCtrl->getCriteriaList($grade->assignment);
 
         $html = "<div class='bg-white p-2'>";
@@ -241,7 +241,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         global $DB, $USER;
        
         $persistCtrl = \recitannotation\PersistCtrl::getInstance($DB, $USER);
-        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid);
+        $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid, $grade->attemptnumber);
 
         return ($data->id == 0);
     }

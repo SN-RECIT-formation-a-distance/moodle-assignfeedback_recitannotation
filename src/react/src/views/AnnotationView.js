@@ -9,6 +9,7 @@ import { $glVars } from '../common/common';
 import Utils, { JsNx, UtilsString } from '../libs/utils/Utils';
 import $ from 'jquery';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // includes tooltip
+import { DlgConfirm } from '../libs/components/DlgConfirm';
 
 export class AnnotationView extends Component {
     static defaultProps = {
@@ -327,11 +328,13 @@ export class AnnotationView extends Component {
     }
 
     onCleanHtml(){
-        if(window.confirm($glVars.i18n.msg_confirm_clean_html_code)){
-            this.beforeDataChange();
-            this.setAnnotationText(Utils.cleanHTML(this.refAnnotation.current.innerHTML));
-            this.save();
+        let that = this;
+        let onApply = function(){
+            that.beforeDataChange();
+            that.setAnnotationText(Utils.cleanHTML(that.refAnnotation.current.innerHTML));
+            that.save();
         }
+        DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_clean_html_code, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 }
 

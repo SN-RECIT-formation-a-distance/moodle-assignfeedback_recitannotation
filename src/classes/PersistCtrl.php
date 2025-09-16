@@ -73,16 +73,25 @@ class PersistCtrl extends MoodlePersistCtrl
         return false;
     }
 
-    public function getAnnotation($assignmentId, $userId){
+    public function getAnnotation($assignmentId, $userId, $attemptnumber = null){
+
+        $vars = [$assignmentId, $userId];
+        $whereStmt = " t2.latest = 1";
+        
+        if($attemptnumber != null){
+            $whereStmt = " t2.attemptnumber = ?";
+            $vars[] = $attemptnumber;
+        }
+
         $query = "select ". $this->sql_uniqueid() ." uniqueid, coalesce(t1.id, 0) id, 
         coalesce(t1.submission, t2.id) as submission, t1.ownerid, coalesce(t1.annotation, t3.onlinetext) as annotation,
         coalesce(t1.occurrences, '') as occurrences, t1.lastupdate
         from {assign_submission} t2
         inner join {assignsubmission_onlinetext} t3 on t2.id = t3.submission 
         left join {assignfeedback_recitannotation} t1 on t2.id = t1.submission
-        where t2.assignment = ? and t2.userid = ?";
+        where t2.assignment = ? and t2.userid = ? and $whereStmt ";
 
-        $rst = $this->getRecordsSQL($query, [$assignmentId, $userId]);
+        $rst = $this->getRecordsSQL($query, $vars);
 
         $rst = array_pop($rst);
 
