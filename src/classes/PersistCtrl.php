@@ -234,20 +234,21 @@ class PersistCtrl extends MoodlePersistCtrl
 
     public function deleteCriterion($id){
         try{
-            $query = "select * from {assignfeedback_recitannot_comment} 
+            /*$query = "select * from {assignfeedback_recitannot_comment} 
                 where criterionid = ?";
 
             $result = $this->getRecordsSQL($query, array($id));
 
             if(count($result) > 0){
                 throw new Exception(get_string('foreign_key', 'assignfeedback_recitannotation'));
-            }
-
+            }*/            
             $current = $this->mysqlConn->get_record('assignfeedback_recitannot_crit', ['id' => $id], '*', MUST_EXIST);
 
-            $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['id' => $id]);
-           
-            $this->resequenceSortOrder($current->assignment);
+            if($current){
+                $this->mysqlConn->delete_records("assignfeedback_recitannot_comment", ['criterionid' => $id]);
+                $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['id' => $id]);
+                $this->resequenceSortOrder($current->assignment);
+            }
 
             return true;
         }

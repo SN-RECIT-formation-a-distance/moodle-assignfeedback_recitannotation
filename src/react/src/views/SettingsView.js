@@ -137,7 +137,8 @@ class CriterionView extends Component{
             $glVars.webApi.deleteCriterion(id, $glVars.moodleData.assignment, callback);
         }
 
-        DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_deletion, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
+        let msg = `${$glVars.i18n.msg_confirm_deletion}<br/><br/>${$glVars.i18n.delete_criterion}`;
+        DlgConfirm.render($glVars.i18n.pluginname, msg, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
     onAdd(){
