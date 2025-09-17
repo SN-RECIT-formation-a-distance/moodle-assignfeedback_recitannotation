@@ -214,7 +214,7 @@ export class AnnotationView extends Component {
         }
     }
 
-    refresh(){
+    async refresh(){
         this.initTooltips();
         this.updateCounters();
     }
@@ -229,6 +229,8 @@ export class AnnotationView extends Component {
         }
 
         this.setState({counter: counter, updatedCounters: true});
+
+        return counter;
     }   
 
     initTooltips() {
@@ -277,7 +279,7 @@ export class AnnotationView extends Component {
         this.setState({stack: stack});
     }
 
-    save(){
+    async save(){
         let that = this;
         let callback = function(result){
             if(!result.success){
@@ -293,12 +295,12 @@ export class AnnotationView extends Component {
             }
         } 
         
+        await this.refresh(); 
         let data = {};
         Object.assign(data, this.state.data);
         data.annotation = this.refAnnotation.current.innerHTML;
         data.occurrences = {}; // force new object
         Object.assign(data.occurrences, this.state.counter);
-        this.refresh();     
 
         $glVars.webApi.saveAnnotation(data, $glVars.moodleData.assignment, callback);
     }

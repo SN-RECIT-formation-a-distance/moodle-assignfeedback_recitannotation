@@ -160,7 +160,7 @@ export class WebApi
 
     showLoadingFeedback(){
         if(this.domVisualFeedback === null){ return; }
-        this.domVisualFeedback.style.display = "block";
+        this.domVisualFeedback.style.display = "flex";
     }
 
     hideLoadingFeedback(){
