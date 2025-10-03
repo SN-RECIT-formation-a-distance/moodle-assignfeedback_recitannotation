@@ -416,6 +416,7 @@ class QuickAnnotateForm extends Component{
 
         this.state = {
             data: {},
+            dataChanged: false,
             dropdownList: {
                 commentList: []
             },
@@ -489,8 +490,7 @@ class QuickAnnotateForm extends Component{
     onDocumentClick(event){        
         const isClickInside = this.ref.current.contains(event.target);
         if (!isClickInside) {
-            // if any comment was selected, it closes and saves
-            if(this.state.data.comment.length > 0){
+            if(this.state.dataChanged){
                 this.onSave();
             }
             else{
@@ -513,7 +513,7 @@ class QuickAnnotateForm extends Component{
         let main = 
             <div ref={this.ref} className='floating-input card shadow' onKeyDown={this.onKeyDown}>
                 <div className="card-body p-2">
-                    <ComboBoxPlus ref={this.refComboBox} isClearable={true} placeholder={`${$glVars.i18n.search_comment}...`} name="comment" value={this.state.data.comment} options={commentList} onChange={this.onDataChange} />
+                    <ComboBoxPlus ref={this.refComboBox} placeholder={`${$glVars.i18n.search_comment}...`} name="comment" value={this.state.data.comment} options={commentList} onChange={this.onDataChange} />
                     {!this.state.isNewNote && 
                         <ButtonGroup className='mt-2 w-100'  >
                             <Button size='sm' variant='danger'  onClick={() => this.onDelete(true)}>
@@ -540,7 +540,7 @@ class QuickAnnotateForm extends Component{
             data.comment = event.target.data.comment;
         }
         
-        this.setState({data: data});
+        this.setState({data: data, dataChanged: true});
     }
 
     onDelete(){
