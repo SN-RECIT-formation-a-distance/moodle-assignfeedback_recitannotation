@@ -253,7 +253,7 @@ class PersistCtrl extends MoodlePersistCtrl
                     FROM {assignfeedback_recitannot_comment} as t1
                     inner join {assignfeedback_recitannot_crit} as t2 on t1.criterionid = t2.id
                     where t2.assignment = ?
-                    order by t2.description, comment";
+                    order by t2.sortorder, comment";
 
         $result = $this->getRecordsSQL($query, array($assignment));
 

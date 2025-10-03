@@ -397,8 +397,18 @@ class CommentsView extends Component{
             <Table striped bordered size='sm'>
                 <thead>
                     <tr>
-                        <th>{$glVars.i18n.criterion}</th>
-                        <th>{$glVars.i18n.comment}</th>
+                        <th>
+                            <div className='d-flex align-items-center'>
+                                <span>{$glVars.i18n.criterion}</span>
+                                <SortColumn className='ml-2' dataProvider={commentList} field='name' onSort={() => this.forceUpdate()}/>
+                            </div>
+                        </th>
+                        <th >
+                            <div  className='d-flex align-items-center'>
+                                <span>{$glVars.i18n.comment}</span>
+                                <SortColumn className='ml-2' dataProvider={commentList} field='comment'  onSort={() => this.forceUpdate()}/>
+                            </div>
+                        </th>
                         <th style={{width: 70}}></th>
                     </tr>
                 </thead>
@@ -461,6 +471,55 @@ class CommentsView extends Component{
         if(refresh){
             this.props.refresh();
         }
+    }
+}
+
+class SortColumn extends Component{
+    static defaultProps = {        
+        dataProvider: [],
+        field: "",
+        className: "",
+        onSort: null
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onClick = this.onClick.bind(this);
+        this.state = {direction: true};
+    }
+
+    render(){
+        let aToZ = <i className="fa-solid fa-arrow-down-a-z"></i>;
+        let zToa = <i className="fa-solid fa-arrow-down-z-a"></i>;
+
+        let main = <Button className={this.props.className} onClick={this.onClick} variant="outline-primary" size='sm'>{(this.state.direction ? aToZ : zToa)}</Button>
+        return main;
+    }
+
+    onClick(){
+        let that = this;
+        let sortFunc = function(a, b){
+            let item1 = b;
+            let item2 = a;
+            if(!that.state.direction){
+                item1 = a;
+                item2 = b;
+            }
+
+            try{
+                return item1[that.props.field].localeCompare(item2[that.props.field]);
+            }
+            catch(error){
+                console.log(error);
+            }
+        };
+
+        this.props.dataProvider.sort(sortFunc);
+
+        this.setState({direction: !this.state.direction});
+
+        this.props.onSort();
     }
 }
 
