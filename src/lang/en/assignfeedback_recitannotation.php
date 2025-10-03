@@ -71,3 +71,4 @@ $string['only_lowercase'] = 'Please enter only lowercase letters without spaces.
 $string['add_edit_criterion'] = 'Add/Edit Criteria';
 $string['foreign_key'] = 'A foreign key constraint prevents deletion to ensure data integrity. Please delete or modify the associated items first.';
 $string['delete_criterion'] = 'If there are comments linked to this criterion, they’ll be deleted too.';
+$string['quick_annotation_method'] = 'Quick Method';

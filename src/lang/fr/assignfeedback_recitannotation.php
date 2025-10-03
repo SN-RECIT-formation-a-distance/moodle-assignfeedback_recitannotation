@@ -71,3 +71,4 @@ $string['only_lowercase'] = 'Veuillez saisir uniquement des lettres minuscules s
 $string['add_edit_criterion'] = 'Ajouter/Modifier un critère';
 $string['foreign_key'] = 'Une contrainte de clé étrangère empêche la suppression afin de garantir l\'intégrité des données. Veuillez d\'abord supprimer ou modifier les éléments associés.';
 $string['delete_criterion'] = 'Si des commentaires sont associés à ce critère, ils seront également supprimés.';
+$string['quick_annotation_method'] = 'Méthode rapide';

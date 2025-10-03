@@ -257,6 +257,11 @@ export default class Utils{
         sanitize(container);
         return container.innerHTML;
     }
+
+    static isMobileDevice() {   
+        const aTester = [/Android/i, /webOS/i, /iPhone/i, /iPad/i, /iPod/i, /BlackBerry/i, /Windows Phone/i ]; 
+        return aTester.some((regex) => regex.test(navigator.userAgent)); 
+    }
 }
 
 export class UtilsMoodle

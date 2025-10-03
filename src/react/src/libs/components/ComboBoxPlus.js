@@ -22,6 +22,13 @@ export class ComboBoxPlus extends Component {
         super(props);
         
         this.onChange = this.onChange.bind(this);
+        this.focus = this.focus.bind(this);
+
+        this.ref = React.createRef();
+    }
+
+    focus(){
+        this.ref.current.focus();
     }
     
     render() { 
@@ -29,6 +36,7 @@ export class ComboBoxPlus extends Component {
 
         let selectedItem = null;
         let value = this.props.value || "";
+
         for (let o of options){
             //o.label = o.text;
             if (o.value.toString() === value.toString()){
@@ -49,7 +57,7 @@ export class ComboBoxPlus extends Component {
         }
 
         let main = 
-            <Select {...spreadAttr} onChange={this.onChange} value={selectedItem} placeholder={this.props.placeholder}>
+            <Select ref={this.ref} {...spreadAttr} onChange={this.onChange} value={selectedItem} placeholder={this.props.placeholder}>
             </Select>;            
         return (main);
     }   
@@ -57,9 +65,12 @@ export class ComboBoxPlus extends Component {
     onChange(event){
         let value = "";
         let text = "";
+        let data = null;
+
         if(event !== null){
             value = event.value;
             text = event.label;
+            data = event.data;
         }   
         
         this.setState({value:value});
@@ -68,6 +79,6 @@ export class ComboBoxPlus extends Component {
             value = event;
         }
 
-        this.props.onChange({target:{name: this.props.name, value: value, text: text, data: event.data}});
+        this.props.onChange({target:{name: this.props.name, value: value, text: text, data: data}});
     }   
 }

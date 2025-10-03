@@ -20,11 +20,12 @@ export class AnnotationView extends Component {
 
     static currentRange = null;
     static selectedElement = null;
+    static refAnnotation = null
 
     constructor(props) {
         super(props);
 
-        this.onMouseUp = this.onMouseUp.bind(this);
+        this.onSelectionChange = this.onSelectionChange.bind(this);
         this.positionFloatingButton = this.positionFloatingButton.bind(this);
         this.onAnnotate = this.onAnnotate.bind(this);
         this.onAskIA = this.onAskIA.bind(this);
@@ -34,6 +35,7 @@ export class AnnotationView extends Component {
         this.save = this.save.bind(this);        
         this.getData = this.getData.bind(this);
         this.setAnnotationText = this.setAnnotationText.bind(this);
+        this.createNewAnnotation = this.createNewAnnotation.bind(this);
 
         this.onUndo = this.onUndo.bind(this);
         this.onRedo = this.onRedo.bind(this);
@@ -51,15 +53,22 @@ export class AnnotationView extends Component {
             stack: {
                 undo: [],
                 redo: []
-            }
+            },
+            quickAnnotationMethod: false
         };
 
-        this.refAnnotation = React.createRef();
+        AnnotationView.refAnnotation = React.createRef();
         this.refFloatingMenu = React.createRef();
     }
 
     componentDidMount(){
         this.getData();
+
+        document.addEventListener("contextmenu", (event) => {
+            if(Utils.isMobileDevice()){
+                event.preventDefault(); // blocks the browser’s default context menu. 
+            }
+        });
     }
     
     componentDidUpdate(prevProps){
@@ -86,10 +95,10 @@ export class AnnotationView extends Component {
     }
 
     setAnnotationText(value){
-        this.refAnnotation.current.innerHTML = value;
+        AnnotationView.refAnnotation.current.innerHTML = value;
 
-        // Gérer le double-clic sur le texte surligné
-        let elements = this.refAnnotation.current.querySelectorAll(`[data-criterion]`);
+        // Gérer le clic sur le texte surligné
+        let elements = AnnotationView.refAnnotation.current.querySelectorAll(`[data-criterion]`);
         for(let el of elements){
             el.addEventListener('click', this.onClick);  
         }
@@ -118,15 +127,23 @@ export class AnnotationView extends Component {
                                         <FontAwesomeIcon icon={faRedo}/>
                                     </Button>
                                 </ButtonGroup>
-                                <ButtonGroup>
+                                <ButtonGroup className='mr-2'>
                                     <Button size='sm' onClick={this.onCleanHtml} title={$glVars.i18n.clean_student_production}>
                                         <FontAwesomeIcon icon={faBroom}/>
+                                    </Button>
+                                </ButtonGroup>
+
+                                <ButtonGroup>
+                                    <Button size='sm'  variant={(this.state.quickAnnotationMethod ? 'primary' : 'outline-primary')}
+                                        onClick={() => this.setState({quickAnnotationMethod: !this.state.quickAnnotationMethod})} 
+                                        title={$glVars.i18n.quick_annotation_method}>
+                                        {$glVars.i18n.quick_annotation_method}
                                     </Button>
                                 </ButtonGroup>
                             </div>
                             
                         </div>
-                        <div ref={this.refAnnotation} onMouseUp={this.onMouseUp} className='p-3'></div>
+                        <div ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange} className='p-3'></div>
 
                         <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
                             <Button size='sm' onClick={this.onAnnotate}>
@@ -135,8 +152,7 @@ export class AnnotationView extends Component {
                             <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi}>
                                 <FontAwesomeIcon icon={faChalkboard}/>{` ${$glVars.i18n.ask_ai}`}
                             </Button>
-                        </ButtonGroup>
-                        
+                        </ButtonGroup>                        
                     </Col>
                     <Col md={4} >
                         <div className='d-flex align-items-baseline'>
@@ -165,9 +181,16 @@ export class AnnotationView extends Component {
                             </tbody>
                         </Table>
                     </Col>
-                    {this.state.showModalAnnotate && <ModalAnnotateForm onClose={this.onClose} onClick={this.onClick} 
-                                criteriaList={criteriaList} commentList={commentList}/>}
+                    {!this.state.quickAnnotationMethod &&  this.state.showModalAnnotate && 
+                        <ModalAnnotateForm onClose={this.onClose} createNewAnnotation={this.createNewAnnotation} 
+                                commentList={commentList} criteriaList={criteriaList} />
+                    }                  
                     
+                    {this.state.quickAnnotationMethod && this.state.showModalAnnotate && 
+                        <QuickAnnotateForm onClose={this.onClose} createNewAnnotation={this.createNewAnnotation} 
+                                commentList={commentList} />
+                    }   
+
                     {this.state.showModalAskIA && <ModalAskIA onClose={this.onClose}/>}
                 </Row>
             </div>;
@@ -175,14 +198,22 @@ export class AnnotationView extends Component {
         return (main);
     }  
 
-    onMouseUp(event){
+    onSelectionChange(event){                     
         const selection = window.getSelection();
-        if (selection.rangeCount > 0 && selection.toString().length > 0) {
-            AnnotationView.currentRange = selection.getRangeAt(0);
-            this.positionFloatingButton(AnnotationView.currentRange);
-        } else {
+
+        if (selection.rangeCount === 0 || selection.toString().length === 0) {
             AnnotationView.currentRange = null;
             this.positionFloatingButton(null); // Hide button
+            return;
+        }
+
+        AnnotationView.currentRange = selection.getRangeAt(0);
+
+        if(this.state.quickAnnotationMethod){
+            this.onAnnotate();
+        }
+        else{
+            this.positionFloatingButton(AnnotationView.currentRange);
         }
     }
 
@@ -256,7 +287,7 @@ export class AnnotationView extends Component {
             // Adjust the positioning here to move the button further away
 
             //get position of eleve-text
-            const eleveTextRect = this.refAnnotation.current.getBoundingClientRect();
+            const eleveTextRect = AnnotationView.refAnnotation.current.getBoundingClientRect();
             
             floatingMenu.style.top = (rect.bottom + window.scrollY - eleveTextRect.top + 10) + 'px'; // Below the selection
             floatingMenu.style.left = (rect.right + window.scrollX - eleveTextRect.left + 10) + 'px'; // A bit to the right
@@ -268,7 +299,7 @@ export class AnnotationView extends Component {
 
     beforeDataChange(){
         let stack = this.state.stack;
-        stack.undo.push(this.refAnnotation.current.innerHTML);
+        stack.undo.push(AnnotationView.refAnnotation.current.innerHTML);
         stack.redo = []; // Clear redo stack on new input
         this.setState({stack: stack});
     }
@@ -298,7 +329,7 @@ export class AnnotationView extends Component {
         await this.refresh(); 
         let data = {};
         Object.assign(data, this.state.data);
-        data.annotation = this.refAnnotation.current.innerHTML;
+        data.annotation = AnnotationView.refAnnotation.current.innerHTML;
         data.occurrences = {}; // force new object
         Object.assign(data.occurrences, this.state.counter);
 
@@ -312,7 +343,7 @@ export class AnnotationView extends Component {
             if (stack.redo.length > 25) {
                 stack.redo.shift(); // Remove the oldest state
             }
-            stack.redo.push(this.refAnnotation.current.innerHTML);
+            stack.redo.push(AnnotationView.refAnnotation.current.innerHTML);
             this.setAnnotationText(stack.undo.pop());
             this.setState({stack: stack}, this.save);
         }
@@ -324,7 +355,7 @@ export class AnnotationView extends Component {
             if (stack.undo.length > 25) {
                 stack.undo.shift(); // Remove the oldest state
             }
-            stack.undo.push(this.refAnnotation.current.innerHTML);
+            stack.undo.push(AnnotationView.refAnnotation.current.innerHTML);
             this.setAnnotationText(stack.redo.pop());
             this.setState({stack: stack}, this.save);
         }
@@ -334,17 +365,217 @@ export class AnnotationView extends Component {
         let that = this;
         let onApply = function(){
             that.beforeDataChange();
-            that.setAnnotationText(Utils.cleanHTML(that.refAnnotation.current.innerHTML));
+            that.setAnnotationText(Utils.cleanHTML(AnnotationView.refAnnotation.current.innerHTML));
             that.save();
         }
         DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_clean_html_code, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
+    }
+
+    createNewAnnotation(el, criterion, comment){
+        if(el === null){
+            el = document.createElement('span');
+
+            try {
+                AnnotationView.currentRange.surroundContents(el);
+                el.addEventListener('click', this.onClick);  // Gérer le clic sur le texte surligné
+            }catch (error) {
+                let msg = $glVars.i18n.msg_error_highlighting;
+                alert(msg);
+                console.log(msg, error);
+            }
+        }
+        
+        el.dataset.toggle = "tooltip";
+        el.setAttribute('title', comment);
+        el.dataset.criterion = criterion;
+        el.dataset.comment = comment;
+        el.dataset.placement = 'auto';
+        el.dataset.originalTitle = comment;
+        el.style.backgroundColor = JsNx.getItem(this.props.criteriaList, 'name', criterion, null).backgroundcolor;
+
+        return el;
+    }
+}
+
+class QuickAnnotateForm extends Component{
+    static defaultProps = {        
+        onClose: null,
+        createNewAnnotation: null,
+        commentList: []
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onDelete = this.onDelete.bind(this);
+        this.onClose = this.onClose.bind(this);
+        this.onDataChange = this.onDataChange.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onDocumentClick = this.onDocumentClick.bind(this);
+
+        this.state = {
+            data: {},
+            dropdownList: {
+                commentList: []
+            },
+            isNewNote: true
+        };
+
+        this.ref = React.createRef();
+        this.refComboBox = React.createRef();
+
+        this.originalData = {criterion: "", comment: ""};
+        
+        Object.assign(this.state.data, this.originalData);
+
+        for(let item of props.commentList){
+            this.state.dropdownList.commentList.push({value: item.comment, label: item.comment, data: item});
+        }
+    }
+
+    componentDidMount(){
+        if(AnnotationView.selectedElement && AnnotationView.selectedElement.dataset.criterion !== null){
+            this.setState({
+                data: {
+                    // it ensures that the criterion defined previously in the DOM still exists in the criteria list
+                    criterion: JsNx.getItem(this.props.commentList, 'name', AnnotationView.selectedElement.dataset.criterion, {name: ''}).criterionid, 
+                    comment: AnnotationView.selectedElement.dataset.comment
+                },
+                isNewNote: false
+            })
+        }
+
+        setTimeout(() => {
+            window.document.addEventListener("click", this.onDocumentClick)
+        }, 500);
+
+        this.positionFloatingInput();
+    }
+
+    componentWillUnmount(){
+        window.document.removeEventListener("click", this.onDocumentClick);
+    }
+
+    positionFloatingInput() {
+        if(this.ref === null){ return null;}
+        if(this.ref.current === null){ return null;}
+
+        let floatingMenu = this.ref.current;
+
+        let rect = null;
+        if(AnnotationView.selectedElement !== null){
+            rect = AnnotationView.selectedElement.getBoundingClientRect();
+        }
+        //Ensure that something is selected
+        else if(AnnotationView.currentRange !== null && AnnotationView.currentRange.toString().length > 0){
+            rect = AnnotationView.currentRange.getBoundingClientRect();
+        }
+        
+        if(rect === null){
+            return;
+        }
+
+        //get position of eleve-text
+        const eleveTextRect = AnnotationView.refAnnotation.current.getBoundingClientRect();
+        
+        floatingMenu.style.top = (rect.bottom + window.scrollY - eleveTextRect.top + 50) + 'px'; // Below the selection
+        floatingMenu.style.left = (rect.left + window.scrollX - eleveTextRect.left) + 'px'; 
+        floatingMenu.style.display = 'inline-flex';
+
+        this.refComboBox.current.focus();
+    }
+
+    onDocumentClick(event){        
+        const isClickInside = this.ref.current.contains(event.target);
+        if (!isClickInside) {
+            // if any comment was selected, it closes and saves
+            if(this.state.data.comment.length > 0){
+                this.onSave();
+            }
+            else{
+                this.onClose(false);
+            }
+        }
+    }
+
+    onKeyDown(e){
+        if(e.key === 'Enter') {
+            this.onSave();
+        }
+    }
+
+    render(){
+        let commentList = this.state.dropdownList.commentList;
+
+        this.positionFloatingInput();
+
+        let main = 
+            <div ref={this.ref} className='floating-input card shadow' onKeyDown={this.onKeyDown}>
+                <div className="card-body p-2">
+                    <ComboBoxPlus ref={this.refComboBox} isClearable={true} placeholder={`${$glVars.i18n.search_comment}...`} name="comment" value={this.state.data.comment} options={commentList} onChange={this.onDataChange} />
+                    {!this.state.isNewNote && 
+                        <ButtonGroup className='mt-2 w-100'  >
+                            <Button size='sm' variant='danger'  onClick={() => this.onDelete(true)}>
+                                    <FontAwesomeIcon icon={faTrash}/>{` ${$glVars.i18n.delete}`}
+                            </Button>
+                        </ButtonGroup>
+                    }
+                </div>
+                
+            </div>;
+ 
+        return main;
+    }
+
+    onDataChange(event){
+        let data = this.state.data;
+
+        if((event.target.data === null) || (event.target === null)){
+            data.criterion = "";
+            data.comment = ""; 
+        }
+        else{
+            data.criterion = event.target.data.name;
+            data.comment = event.target.data.comment;
+        }
+        
+        this.setState({data: data});
+    }
+
+    onDelete(){
+        if (AnnotationView.selectedElement) {
+            if (AnnotationView.selectedElement.dataset.criterion.length > 0) {
+                // Remove the highlighted span and return its text content
+                const textContent = AnnotationView.selectedElement.textContent;
+                AnnotationView.selectedElement.outerHTML = textContent;
+            }
+        }
+
+        this.onClose(true);
+    }
+
+    onSave(){
+        if(this.state.data.comment.length === 0){ return; }
+
+        let el = (this.state.isNewNote ? null : AnnotationView.selectedElement);
+        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment);
+
+        this.onClose(true);
+    }
+
+    onClose(refresh){       
+        let data = {};
+        Object.assign(data, this.originalData);
+        this.setState({data: data, isNewNote: true});
+        this.props.onClose(refresh);
     }
 }
 
 class ModalAnnotateForm extends Component{
     static defaultProps = {        
         onClose: null,
-        onClick: null,
+        createNewAnnotation: null,
         criteriaList: [],
         commentList: []
     };
@@ -403,26 +634,25 @@ class ModalAnnotateForm extends Component{
             }
         }
 
-        let body = 
-        <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>
-            <Form.Group className='mb-3' >
-                <Form.Label>{$glVars.i18n.criterion}</Form.Label>
-                <ComboBoxPlus placeholder={`${$glVars.i18n.select_item}...`} name="criterion" value={this.state.data.criterion} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
-            </Form.Group>
-            <Form.Group >
-                <Form.Label>{$glVars.i18n.comment}</Form.Label>
-                <ComboBoxPlus isClearable={true} placeholder={`${$glVars.i18n.search_comment}...`} name="commentSearch" value={this.state.data.search} options={commentList} onChange={this.onDataChange} />
-                <InputTextArea className="mt-1" name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} 
-                    maxLength={350}/>
-            </Form.Group>
-        </Form>;
-
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
                     <Modal.Title>{$glVars.i18n.add_edit_comment}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>{body}</Modal.Body>
+                <Modal.Body>
+                    <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>
+                        <Form.Group className='mb-3' >
+                            <Form.Label>{$glVars.i18n.criterion}</Form.Label>
+                            <ComboBoxPlus placeholder={`${$glVars.i18n.select_item}...`} name="criterion" value={this.state.data.criterion} options={this.state.dropdownList.criteriaList} onChange={this.onDataChange} />
+                        </Form.Group>
+                        <Form.Group >
+                            <Form.Label>{$glVars.i18n.comment}</Form.Label>
+                            <ComboBoxPlus isClearable={true} placeholder={`${$glVars.i18n.search_comment}...`} name="commentSearch" value={this.state.data.search} options={commentList} onChange={this.onDataChange} />
+                            <InputTextArea className="mt-1" name="comment" as="textarea" value={this.state.data.comment} onChange={this.onDataChange} rows={4} 
+                                maxLength={350}/>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
                 <Modal.Footer>
                     <ButtonToolbar className='justify-content-between w-100'>
                         <ButtonGroup  >
@@ -438,8 +668,7 @@ class ModalAnnotateForm extends Component{
                                 <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.save}`}
                             </Button>
                         </ButtonGroup>
-                    </ButtonToolbar>
-                    
+                    </ButtonToolbar>                    
                 </Modal.Footer>
             </Modal>;
  
@@ -485,32 +714,8 @@ class ModalAnnotateForm extends Component{
             return;
         }
 
-        let el = null;
-        if (this.state.isNewNote) {
-            el = document.createElement('span');
-            el.dataset.toggle = "tooltip";
-
-            try {
-                AnnotationView.currentRange.surroundContents(el);
-               // el.appendChild(MainView.currentRange.extractContents());
-               // MainView.currentRange.insertNode(el);
-
-                el.addEventListener('click', this.props.onClick);  // Gérer le clic sur le texte surligné
-            }catch (error) {
-                let msg = $glVars.i18n.msg_error_highlighting;
-                alert(msg);
-                console.log(msg, error);
-            }
-        }else {
-            el = AnnotationView.selectedElement;
-        }
-
-        el.setAttribute('title', this.state.data.comment);
-        el.dataset.criterion = this.state.data.criterion;
-        el.dataset.comment = this.state.data.comment;
-        el.dataset.placement = 'auto';
-        el.dataset.originalTitle = this.state.data.comment;
-        el.style.backgroundColor = JsNx.getItem(this.props.criteriaList, 'name', this.state.data.criterion, null).backgroundcolor;
+        let el = (this.state.isNewNote ? null : AnnotationView.selectedElement);
+        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment);
 
         this.onClose(true);
     }
