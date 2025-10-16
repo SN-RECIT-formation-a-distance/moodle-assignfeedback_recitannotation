@@ -88,10 +88,10 @@ class PersistCtrl extends MoodlePersistCtrl
 
         $result = RecitAnnotation::create($rst);
 
-        // clean html tags
-        /*if($result->id == 0){
+        // clean html tags if text has no annotation
+        if($result->id == 0){
             $result->annotation = strip_tags($result->annotation, ['<br>', '<p>']);
-        }*/
+        }
         
         return $result;
     }

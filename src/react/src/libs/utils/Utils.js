@@ -262,6 +262,24 @@ export default class Utils{
         const aTester = [/Android/i, /webOS/i, /iPhone/i, /iPad/i, /iPod/i, /BlackBerry/i, /Windows Phone/i ]; 
         return aTester.some((regex) => regex.test(navigator.userAgent)); 
     }
+
+    static isNodePartiallySelected(range) {
+         const fragment = range.cloneContents();
+        const childNodes = fragment.childNodes;
+
+        for (let i = 0; i < childNodes.length; i++) {
+            const node = childNodes[i];
+
+            // Ignore text nodes
+            if (node.nodeType === Node.TEXT_NODE) continue;
+
+            // Check if range fully contains the node
+            if (!range.isPointInRange(node, 0) || !range.isPointInRange(node, node.textContent?.length || 0)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 export class UtilsMoodle

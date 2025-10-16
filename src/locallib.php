@@ -105,7 +105,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                     'back_annotation_view' => '', 'criteria_list' => '', 'comment_list' => '', 'add_new_item' => '', 'import_criteria' => '', 
                     'export_criteria' => '', 'name' => '', 'description' => '', 'color' => '', 'edit' => '', 
                     'move_up' => '', 'move_down' => '', 'only_lowercase' => '', 'add_edit_criterion' => '', 'ok' => '', 'delete_criterion' => '',
-                    'quick_annotation_method' => '');
+                    'quick_annotation_method' => '', 'add_edit_annotation' => '');
         
         foreach($strings as $key => $value){
             $strings[$key] = get_string($key, 'assignfeedback_recitannotation');

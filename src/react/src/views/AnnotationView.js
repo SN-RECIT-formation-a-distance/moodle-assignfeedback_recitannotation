@@ -219,6 +219,12 @@ export class AnnotationView extends Component {
 
     onAnnotate(event){
         if (AnnotationView.currentRange) {
+            if(Utils.isNodePartiallySelected(AnnotationView.currentRange)){
+                let msg = $glVars.i18n.msg_error_highlighting;
+                $glVars.feedback.showError($glVars.i18n.pluginname, msg);
+                return;
+            }
+
             this.setState({showModalAnnotate: true});// Open modal for a new comment
             this.beforeDataChange();
         }
@@ -380,8 +386,8 @@ export class AnnotationView extends Component {
                 el.addEventListener('click', this.onClick);  // Gérer le clic sur le texte surligné
             }catch (error) {
                 let msg = $glVars.i18n.msg_error_highlighting;
-                alert(msg);
-                console.log(msg, error);
+                $glVars.feedback.showError($glVars.i18n.pluginname, msg);
+                console.log(error);
             }
         }
         
@@ -637,7 +643,7 @@ class ModalAnnotateForm extends Component{
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
-                    <Modal.Title>{$glVars.i18n.add_edit_comment}</Modal.Title>
+                    <Modal.Title>{$glVars.i18n.add_edit_annotation}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>

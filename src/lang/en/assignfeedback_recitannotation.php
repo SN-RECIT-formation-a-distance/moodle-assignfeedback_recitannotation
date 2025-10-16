@@ -47,6 +47,7 @@ $string['select_item'] = 'Select an item';
 $string['comment'] = 'Comment';
 $string['search_comment'] = 'Search for a comment';
 $string['add_edit_comment'] = 'Add/Modify a Comment';
+$string['add_edit_annotation'] = 'Add/Modify an annotation';
 $string['delete'] = 'Delete';
 $string['cancel'] = 'Cancel';
 $string['save'] = 'Save';
