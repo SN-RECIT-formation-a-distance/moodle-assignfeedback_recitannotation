@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import { faArrowRight, faBroom, faChalkboard, faCog, faComment, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faBroom, faChalkboard, faCog, faComment, faPrint, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
@@ -160,6 +160,10 @@ export class AnnotationView extends Component {
                             <Button size='sm' variant='link' className='ml-1' onClick={() => this.props.onChangeView('settings')}>
                                 <FontAwesomeIcon icon={faCog}/>
                             </Button>
+                            <a className='btn btn-sm btn-link' title={$glVars.i18n.print_comment_list} 
+                                href={`${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=${$glVars.urlParams.id}&assignment=${$glVars.moodleData.assignment}`} target="_blank">
+                                <FontAwesomeIcon icon={faPrint}/>
+                            </a>
                         </div>
 
                         <Table striped bordered size='sm'>

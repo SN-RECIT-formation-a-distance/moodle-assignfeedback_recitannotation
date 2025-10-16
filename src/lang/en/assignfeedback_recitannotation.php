@@ -73,3 +73,6 @@ $string['add_edit_criterion'] = 'Add/Edit Criteria';
 $string['foreign_key'] = 'A foreign key constraint prevents deletion to ensure data integrity. Please delete or modify the associated items first.';
 $string['delete_criterion'] = 'If there are comments linked to this criterion, they’ll be deleted too.';
 $string['quick_annotation_method'] = 'Quick Method';
+$string['print_comment_list'] = 'Print the list of comments';
+$string['no_data'] = 'This page currently has no data to display.';
+$string['printed_on'] = "Printed on";
