@@ -46,7 +46,7 @@ $persistCtrl = PersistCtrl::getInstance($DB, $USER);
 $isTeacher = $persistCtrl->hasTeacherAccess($assignment);
 
 if(!$isTeacher){
-    throw new Exception(get_string('access_denied', 'assignfeedback_recitannotation'));
+    throw new \moodle_exception(get_string('access_denied', 'assignfeedback_recitannotation'));
 }
 
 $commentList = $persistCtrl->getCommentList($assignment);

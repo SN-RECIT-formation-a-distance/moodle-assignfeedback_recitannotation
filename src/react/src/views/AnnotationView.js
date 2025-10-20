@@ -116,8 +116,8 @@ export class AnnotationView extends Component {
             <div className="container">
                 <Row className='p-3 main-view'>
                     <Col md={8}>
-                        <div className='d-flex'>
-                            <span className='h5 mb-0 mr-3'>{$glVars.i18n.student_production}</span>
+                        <div>
+                            <div className='h5'>{$glVars.i18n.student_production}</div>
                             <div>
                                 <ButtonGroup className='mr-2'>
                                     <Button size='sm' onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
@@ -133,11 +133,17 @@ export class AnnotationView extends Component {
                                     </Button>
                                 </ButtonGroup>
 
-                                <ButtonGroup>
+                                <ButtonGroup  className='mr-2'>
                                     <Button size='sm'  variant={(this.state.quickAnnotationMethod ? 'primary' : 'outline-primary')}
                                         onClick={() => this.setState({quickAnnotationMethod: !this.state.quickAnnotationMethod})} 
                                         title={$glVars.i18n.quick_annotation_method}>
                                         {$glVars.i18n.quick_annotation_method}
+                                    </Button>
+                                </ButtonGroup>
+                                
+                                <ButtonGroup>
+                                    <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
+                                        <FontAwesomeIcon icon={faChalkboard}/>
                                     </Button>
                                 </ButtonGroup>
                             </div>
@@ -148,10 +154,7 @@ export class AnnotationView extends Component {
                         <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
                             <Button size='sm' onClick={this.onAnnotate}>
                                 <FontAwesomeIcon icon={faComment}/>{` ${$glVars.i18n.annotate}`}
-                            </Button>
-                            <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi}>
-                                <FontAwesomeIcon icon={faChalkboard}/>{` ${$glVars.i18n.ask_ai}`}
-                            </Button>
+                            </Button>                            
                         </ButtonGroup>                        
                     </Col>
                     <Col md={4} >
@@ -195,7 +198,7 @@ export class AnnotationView extends Component {
                                 commentList={commentList} />
                     }   
 
-                    {this.state.showModalAskIA && <ModalAskIA onClose={this.onClose}/>}
+                    {this.state.showModalAskIA && <ModalAskIA onClose={this.onClose} commentList={commentList} createNewAnnotation={this.createNewAnnotation}/>}
                 </Row>
             </div>;
 
@@ -235,9 +238,7 @@ export class AnnotationView extends Component {
     }
 
     onAskIA(event){
-        if (AnnotationView.currentRange) {
-            this.setState({showModalAskIA: true});
-        }
+        this.setState({showModalAskIA: true});
     }
 
     onClose(refresh){
@@ -740,7 +741,9 @@ class ModalAnnotateForm extends Component{
 
 class ModalAskIA extends Component{
     static defaultProps = {        
-        onClose: null
+        onClose: null,
+        commentList: [],
+        createNewAnnotation: null
     };
 
     constructor(props){
@@ -752,22 +755,53 @@ class ModalAskIA extends Component{
 
         this.state = {
             data: {
-                prompt: ""
+                prompt: `Rôle : Enseignant 
+Province : Québec 
+Pays : Canada 
+Matière : Français 
+Année : secondaire 3 
+Tâche : analyser le texte de l'élève et identifier tous les mots qui nécessitent un commentaire. Le critère et le commentaire seront fournis par moi.
+
+Pour chaque mot à commenter : 
+- regrouper toutes ses occurrences dans un **seul objet**, 
+- pour chaque occurrence, indiquer : - "start" : position globale du mot depuis le début du texte (en nombre de caractères), - "offset" : nombre de caractères du mot à surligner. 
+
+Instructions supplémentaires pour l'IA : 
+1. Ne retourner que du JSON valide, sans texte explicatif supplémentaire. 
+2. Chaque mot doit apparaître **une seule fois** dans le JSON, avec toutes ses positions dans l'array positions. 
+3. Respecter strictement le format JSON suivant : { "criterion": "", "comment": "", "positions": [ {"start": 0, "offset": 0} ...] } ]`
+            },
+            dropdownList: {
+                commentList: []
             },
         };
+
+        this.originalData = {criterion: "", comment: ""};
+        
+        Object.assign(this.state.data, this.originalData);
+
+        for(let item of props.commentList){
+            this.state.dropdownList.commentList.push({value: item.comment, label: item.comment, data: item});
+        }
     }
 
     render(){
+        let commentList = this.state.dropdownList.commentList;
+
         let body = 
         <Form onSubmit={this.onSubmit}>
-            <Form.Group >
-                <div className='p-2 text-muted bg-light rounded'>{window.getSelection().toString()}</div>
-                <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={5} />
+            <Form.Group className='mb-3'>
+                <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={10} />
             </Form.Group>
+            <Form.Group >
+                <Form.Label>{$glVars.i18n.comment}</Form.Label>
+                <ComboBoxPlus placeholder={`${$glVars.i18n.search_comment}...`} name="comment" value={this.state.data.comment} options={commentList} onChange={this.onDataChange} />
+            </Form.Group>
+            
         </Form>;
 
         let main = 
-            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
+            <Modal show={true} onHide={() => this.onClose(false)} size="lg" backdrop='static' tabIndex="-1">
                 <Modal.Header closeButton>
                     <Modal.Title>{$glVars.i18n.ask_ai}</Modal.Title>
                 </Modal.Header>
@@ -791,32 +825,104 @@ class ModalAskIA extends Component{
 
     onDataChange(event){
         let data = this.state.data;
-        data[event.target.name] = event.target.value;
+
+        if(event.target.name === 'comment'){
+            data.criterion = event.target.data.name;
+            data.comment = event.target.data.comment;
+        }
+        else{
+            data[event.target.name] = event.target.value;
+        }
+        
         this.setState({data: data});
     }
 
     onSubmit(event){
         event.preventDefault();
         event.stopPropagation();
-           
-        let that = this;
-        let callback = function(result){
-            console.log(result);
 
+        if(this.state.data.comment.length === 0){
+            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.comment), 3);
+            return;
+        }
+        
+        let that = this;
+        let callback = function(result){            
             if(!result.success){
                 $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                 return;
             }
-            else{
-                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
-                that.onClose(true);
-            }        
+
+            let data = (result.data &&  result.data.choices ? result.data.choices.pop() : null);
+                
+            if(data === null){
+                $glVars.feedback.showError($glVars.i18n.pluginname, "Une erreur est survenue.");
+                return;
+            }
+
+            data = data.message.content.toString().replace('```json', '');
+            data = data.replace('```', '');
+            data = JSON.parse(data);
+
+            for(let pos of data.positions){
+                let range = that.getRangeByIndex(pos.start, pos.offset);
+                console.log(range, data);
+                if(range !== null){
+                    AnnotationView.currentRange = range;
+                    that.props.createNewAnnotation(null, data.criterion, data.comment);
+                }
+            }
+
+            $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
+            that.onClose(true);
         }
         
-        $glVars.webApi.callAzureAI(this.state.data.prompt, $glVars.moodleData.assignment, callback);
+        let prompt = this.state.data.prompt;
+        prompt += `
+        Voici mon json d'entrée: {"criterion": "${this.state.data.criterion}", "comment": "${this.state.data.comment}", "positions": []}
+        `;
+        prompt += `
+        Texte de l'élève: ${AnnotationView.refAnnotation.current.innerText}
+        `;
+
+        $glVars.webApi.callAzureAI(prompt, $glVars.moodleData.assignment, callback);
+    }
+
+    getRangeByIndex(startIndex, length) {
+        const container = AnnotationView.refAnnotation.current;
+        const endIndex = startIndex + length;
+
+        let currentIndex = 0;
+
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+        let node;
+
+        let range = null;
+        while ((node = walker.nextNode())) {
+            const nodeTextLength = node.textContent.length;
+
+            if (currentIndex + nodeTextLength >= startIndex) {
+                range = document.createRange();
+
+                const startOffset = startIndex - currentIndex;
+                const endOffset = Math.min(nodeTextLength, endIndex - currentIndex);
+
+                range.setStart(node, startOffset);
+                range.setEnd(node, endOffset);
+
+                break;
+            }
+
+            currentIndex += nodeTextLength;
+        }
+
+        return range;
     }
 
     onClose(refresh){
+        let data = {};
+        Object.assign(data, this.originalData);
+        this.setState({data: data});
         this.props.onClose(refresh);
     }
 }

@@ -119,10 +119,9 @@ export class AppWebApi extends WebApi
     }
 
     callAzureAI(prompt, assignment, onSuccess){
-        let payload = {
+        /*let payload = {
             messages: [
-        //    { role: "system", content: "You are a helpful assistant." },
-            { role: "user", content: "Tell me a joke." }
+            { role: "user", content: prompt }
             ],
             temperature: 0.7,
             max_tokens: 100
@@ -137,6 +136,101 @@ export class AppWebApi extends WebApi
         };
 
         let options = {payload: payload, assignment: assignment, service: "callAzureAI"};
-        this.post(this.gateway, options, onSuccessTmp, null, true);
+        this.post(this.gateway, options, onSuccessTmp, null, true);*/
+        let result = {
+            "success": true,
+            "data": {
+            "choices": [
+            {
+                "content_filter_results": {
+                "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                },
+                "protected_material_code": {
+                    "filtered": false,
+                    "detected": false
+                },
+                "protected_material_text": {
+                    "filtered": false,
+                    "detected": false
+                },
+                "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                },
+                "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                },
+                "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                }
+                },
+                "finish_reason": "stop",
+                "index": 0,
+                "logprobs": null,
+                "message": {
+                "annotations": [],
+                "content": "```json\n{\n  \"criterion\": \"laccordduverbe\",\n  \"comment\": \"L'accord du verbe\",\n  \"positions\": [\n    { \"start\": 70, \"offset\": 3 },\n    { \"start\": 140, \"offset\": 3 },\n    { \"start\": 310, \"offset\": 3 },\n    { \"start\": 414, \"offset\": 3 }\n  ]\n}\n```",
+                "refusal": null,
+                "role": "assistant"
+                }
+            }
+            ],
+            "created": 1760975796,
+            "id": "chatcmpl-CSmXM7FYhB2b4vZz2UwfK5hWCtdp1",
+            "model": "gpt-4o-2024-11-20",
+            "object": "chat.completion",
+            "prompt_filter_results": [
+            {
+                "prompt_index": 0,
+                "content_filter_results": {
+                "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                },
+                "jailbreak": {
+                    "filtered": false,
+                    "detected": false
+                },
+                "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                },
+                "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                },
+                "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                }
+                }
+            }
+            ],
+            "system_fingerprint": "fp_b54fe76834",
+            "usage": {
+            "completion_tokens": 92,
+            "completion_tokens_details": {
+                "accepted_prediction_tokens": 0,
+                "audio_tokens": 0,
+                "reasoning_tokens": 0,
+                "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens": 379,
+            "prompt_tokens_details": {
+                "audio_tokens": 0,
+                "cached_tokens": 0
+            },
+            "total_tokens": 471
+            }
+            },
+            "msg": "",
+            "contentType": "json"
+        }
+
+        onSuccess(result);
     }
 };

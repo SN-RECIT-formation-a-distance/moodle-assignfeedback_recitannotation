@@ -280,7 +280,7 @@ class WebApi extends MoodleApi
 
             curl_close($ch);
 
-            return new WebApiResult(true, $response);
+            return new WebApiResult(true, json_decode($response));
         }
         catch(Exception $ex){
             return new WebApiResult(false, null, $ex->GetMessage());
