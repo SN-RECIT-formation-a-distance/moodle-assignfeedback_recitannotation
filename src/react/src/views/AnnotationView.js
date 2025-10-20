@@ -141,8 +141,8 @@ export class AnnotationView extends Component {
                                     </Button>
                                 </ButtonGroup>
                                 
-                                <ButtonGroup>
-                                    <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
+                                <ButtonGroup >
+                                    <Button className='invisible' size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
                                         <FontAwesomeIcon icon={faChalkboard}/>
                                     </Button>
                                 </ButtonGroup>
