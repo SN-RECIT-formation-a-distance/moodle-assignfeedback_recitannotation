@@ -31,6 +31,15 @@ $cmid = required_param('cmid', PARAM_INT);
 
 require_login();
 
+// Get the course module
+$cm = get_coursemodule_from_id(null, $cmid, 0, false, MUST_EXIST);
+
+// Get the course that corresponds to the course module
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+
+// Set the page context
+$PAGE->set_cm($cm, $course);
+
 $PAGE->set_context(\context_module::instance($cmid));
 
 $theme = \theme_config::load($PAGE->theme->name);
