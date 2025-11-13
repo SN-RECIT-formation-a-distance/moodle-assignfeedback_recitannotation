@@ -142,7 +142,7 @@ export class AnnotationView extends Component {
                                 </ButtonGroup>
                                 
                                 <ButtonGroup >
-                                    <Button className='invisible' size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
+                                    <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
                                         <FontAwesomeIcon icon={faChalkboard}/>
                                     </Button>
                                 </ButtonGroup>
@@ -752,28 +752,41 @@ class ModalAskIA extends Component{
         this.onClose = this.onClose.bind(this);
         this.onDataChange = this.onDataChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
+        this.onReply = this.onReply.bind(this);
 
         this.state = {
             data: {
-                prompt: `Rôle : Enseignant 
-Province : Québec 
-Pays : Canada 
-Matière : Français 
-Année : secondaire 3 
+                prompt: `Rôle : Enseignant  
+Province : Québec  
+Pays : Canada  
+Matière : Français  
+Année : secondaire 3  
 Tâche : analyser le texte de l'élève et identifier tous les mots qui nécessitent un commentaire. Le critère et le commentaire seront fournis par moi.
 
-Pour chaque mot à commenter : 
-- regrouper toutes ses occurrences dans un **seul objet**, 
-- pour chaque occurrence, indiquer : - "start" : position globale du mot depuis le début du texte (en nombre de caractères), - "offset" : nombre de caractères du mot à surligner. 
+Pour chaque mot à commenter :  
+- Regrouper toutes ses occurrences dans un **seul objet JSON**,  
+- "criterion" et "comment" apparaissent une seule fois,  
+- Toutes les occurrences doivent être listées dans le même tableau "positions".  
+- Pour chaque occurrence, indiquer :  
+  - "start" : position globale du mot depuis le début du texte (en nombre de caractères),  
+  - "offset" : nombre de caractères du mot à surligner.  
 
-Instructions supplémentaires pour l'IA : 
-1. Ne retourner que du JSON valide, sans texte explicatif supplémentaire. 
-2. Chaque mot doit apparaître **une seule fois** dans le JSON, avec toutes ses positions dans l'array positions. 
-3. Respecter strictement le format JSON suivant : { "criterion": "", "comment": "", "positions": [ {"start": 0, "offset": 0} ...] } ]`
+Instructions supplémentaires :  
+1. Ne retourner que du JSON valide, sans texte explicatif supplémentaire.  
+2. Ne pas répéter plusieurs objets, mettre toutes les positions dans le même array.  
+3. Respecter strictement le format JSON suivant :  
+{
+  "criterion": "",
+  "comment": "",
+  "positions": [
+    {"start": 0, "offset": 0}
+  ]
+}`
             },
             dropdownList: {
                 commentList: []
             },
+            waiting: false
         };
 
         this.originalData = {criterion: "", comment: ""};
@@ -812,7 +825,7 @@ Instructions supplémentaires pour l'IA :
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>
                                  <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
                             </Button>
-                            <Button  variant='success' onClick={this.onSubmit}>
+                            <Button disabled={this.state.waiting}  variant='success' onClick={this.onSubmit}>
                                 <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask}`}
                             </Button>
                         </ButtonGroup>
@@ -846,37 +859,6 @@ Instructions supplémentaires pour l'IA :
             return;
         }
         
-        let that = this;
-        let callback = function(result){            
-            if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
-                return;
-            }
-
-            let data = (result.data &&  result.data.choices ? result.data.choices.pop() : null);
-                
-            if(data === null){
-                $glVars.feedback.showError($glVars.i18n.pluginname, "Une erreur est survenue.");
-                return;
-            }
-
-            data = data.message.content.toString().replace('```json', '');
-            data = data.replace('```', '');
-            data = JSON.parse(data);
-
-            for(let pos of data.positions){
-                let range = that.getRangeByIndex(pos.start, pos.offset);
-                console.log(range, data);
-                if(range !== null){
-                    AnnotationView.currentRange = range;
-                    that.props.createNewAnnotation(null, data.criterion, data.comment);
-                }
-            }
-
-            $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
-            that.onClose(true);
-        }
-        
         let prompt = this.state.data.prompt;
         prompt += `
         Voici mon json d'entrée: {"criterion": "${this.state.data.criterion}", "comment": "${this.state.data.comment}", "positions": []}
@@ -885,7 +867,61 @@ Instructions supplémentaires pour l'IA :
         Texte de l'élève: ${AnnotationView.refAnnotation.current.innerText}
         `;
 
-        $glVars.webApi.callAzureAI(prompt, $glVars.moodleData.assignment, callback);
+        $glVars.webApi.callAzureAI(prompt, $glVars.moodleData.assignment, this.onReply);
+        this.setState({waiting: true});
+    }
+
+    onReply(result){
+        this.setState({waiting: false});
+
+        if(!result.success){
+            $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
+            return;
+        }
+
+        let data = (result.data &&  result.data.choices ? result.data.choices.pop() : null);
+                
+        if(data === null){
+            $glVars.feedback.showError($glVars.i18n.pluginname, "Une erreur est survenue.");
+            console.log(result.data);
+            return;
+        }
+
+        try{
+            data = data.message.content.toString().replace('```json', '');
+            data = data.replace('```', '');
+            data = JSON.parse(data);
+        }
+        catch(error){
+            $glVars.feedback.showError($glVars.i18n.pluginname, error);
+            console.log(error, data);
+            return;
+        }
+            
+
+       /* data = {
+  "criterion": "laccordduverbe",
+  "comment": "L'accord du verbe",
+  "positions": [
+    { "start": 12, "offset": 4 },
+    { "start": 71, "offset": 7 },
+    { "start": 116, "offset": 6 },
+    { "start": 163, "offset": 6 }
+  ]
+}*/
+
+        for(let pos of data.positions){
+            let range = this.getRangeByIndex(pos.start, pos.offset);
+            console.log(range, data);
+            if(range !== null){
+                AnnotationView.currentRange = range;
+                this.props.createNewAnnotation(null, data.criterion, data.comment);
+            }
+        }
+
+        $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
+
+        this.onClose(true);
     }
 
     getRangeByIndex(startIndex, length) {
