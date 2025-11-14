@@ -1,6 +1,6 @@
 {
   "name": "recitannotation",
-  "version": "1.0.10-beta",
+  "version": "1.0.11-beta",
   "description": "RÉCIT Annotation",
   "main": "index.js",
   "scripts": {

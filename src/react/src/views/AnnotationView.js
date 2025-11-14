@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
+import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Tab, Table, Tabs} from 'react-bootstrap';
 import { faArrowRight, faBroom, faChalkboard, faCog, faComment, faPrint, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
@@ -753,9 +753,13 @@ class ModalAskIA extends Component{
         this.onDataChange = this.onDataChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
         this.onReply = this.onReply.bind(this);
+        this.onApply = this.onApply.bind(this);
 
         this.state = {
             data: {
+                criterion: '',
+                comment: '',
+                result: '',
                 prompt: `Rôle : Enseignant  
 Province : Québec  
 Pays : Canada  
@@ -781,17 +785,16 @@ Instructions supplémentaires :
   "positions": [
     {"start": 0, "offset": 0}
   ]
-}`
+}
+Texte de l'élève: ${AnnotationView.refAnnotation.current.innerText}
+`
             },
             dropdownList: {
                 commentList: []
             },
-            waiting: false
+            waiting: false,
+            tab: '0'
         };
-
-        this.originalData = {criterion: "", comment: ""};
-        
-        Object.assign(this.state.data, this.originalData);
 
         for(let item of props.commentList){
             this.state.dropdownList.commentList.push({value: item.comment, label: item.comment, data: item});
@@ -802,16 +805,28 @@ Instructions supplémentaires :
         let commentList = this.state.dropdownList.commentList;
 
         let body = 
-        <Form onSubmit={this.onSubmit}>
-            <Form.Group className='mb-3'>
-                <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={10} />
-            </Form.Group>
-            <Form.Group >
-                <Form.Label>{$glVars.i18n.comment}</Form.Label>
-                <ComboBoxPlus placeholder={`${$glVars.i18n.search_comment}...`} name="comment" value={this.state.data.comment} options={commentList} onChange={this.onDataChange} />
-            </Form.Group>
-            
-        </Form>;
+        <Tabs activeKey={this.state.tab} onSelect={(tab) => this.setState({tab: tab})}>
+            <Tab eventKey="0" title={$glVars.i18n.input} className='p-3'>
+                <Form onSubmit={this.onSubmit}>
+                    <Form.Group >
+                        <Form.Label>{$glVars.i18n.comment}</Form.Label>
+                        <ComboBoxPlus placeholder={`${$glVars.i18n.search_comment}...`} name="comment" value={this.state.data.comment} options={commentList} onChange={this.onDataChange} />
+                    </Form.Group>
+                    <Form.Group className='mb-3'>
+                        <Form.Label>{$glVars.i18n.prompt}</Form.Label>
+                        <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={15} />
+                    </Form.Group>
+                </Form>
+            </Tab>
+            <Tab eventKey="1" title={$glVars.i18n.output} className='p-3'>
+                <Form >
+                    <Form.Group className='mb-3'>
+                        <Form.Label>{$glVars.i18n.result}</Form.Label>
+                        <InputTextArea name="result" as="textarea" value={this.state.data.result} onChange={this.onDataChange} rows={15} />
+                    </Form.Group>
+                </Form>
+            </Tab>
+        </Tabs>;
 
         let main = 
             <Modal show={true} onHide={() => this.onClose(false)} size="lg" backdrop='static' tabIndex="-1">
@@ -825,8 +840,11 @@ Instructions supplémentaires :
                             <Button variant='secondary'  onClick={() => this.onClose(false)}>
                                  <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
                             </Button>
-                            <Button disabled={this.state.waiting}  variant='success' onClick={this.onSubmit}>
+                            <Button disabled={this.state.waiting}  variant='primary' onClick={this.onSubmit}>
                                 <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask}`}
+                            </Button>
+                             <Button variant='primary' onClick={this.onApply}>
+                                <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.apply}`}
                             </Button>
                         </ButtonGroup>
                     </ButtonToolbar>
@@ -842,6 +860,7 @@ Instructions supplémentaires :
         if(event.target.name === 'comment'){
             data.criterion = event.target.data.name;
             data.comment = event.target.data.comment;
+            data.prompt += `Voici mon json d'entrée: {"criterion": "${data.criterion}", "comment": "${data.comment}", "positions": []}`;
         }
         else{
             data[event.target.name] = event.target.value;
@@ -859,15 +878,7 @@ Instructions supplémentaires :
             return;
         }
         
-        let prompt = this.state.data.prompt;
-        prompt += `
-        Voici mon json d'entrée: {"criterion": "${this.state.data.criterion}", "comment": "${this.state.data.comment}", "positions": []}
-        `;
-        prompt += `
-        Texte de l'élève: ${AnnotationView.refAnnotation.current.innerText}
-        `;
-
-        $glVars.webApi.callAzureAI(prompt, $glVars.moodleData.assignment, this.onReply);
+        $glVars.webApi.callAzureAI(this.state.data.prompt, $glVars.moodleData.assignment, this.onReply);
         this.setState({waiting: true});
     }
 
@@ -887,41 +898,10 @@ Instructions supplémentaires :
             return;
         }
 
-        try{
-            data = data.message.content.toString().replace('```json', '');
-            data = data.replace('```', '');
-            data = JSON.parse(data);
-        }
-        catch(error){
-            $glVars.feedback.showError($glVars.i18n.pluginname, error);
-            console.log(error, data);
-            return;
-        }
-            
-
-       /* data = {
-  "criterion": "laccordduverbe",
-  "comment": "L'accord du verbe",
-  "positions": [
-    { "start": 12, "offset": 4 },
-    { "start": 71, "offset": 7 },
-    { "start": 116, "offset": 6 },
-    { "start": 163, "offset": 6 }
-  ]
-}*/
-
-        for(let pos of data.positions){
-            let range = this.getRangeByIndex(pos.start, pos.offset);
-            console.log(range, data);
-            if(range !== null){
-                AnnotationView.currentRange = range;
-                this.props.createNewAnnotation(null, data.criterion, data.comment);
-            }
-        }
-
+        let stateData = this.state.data;
+        stateData.result = JSON.stringify(data);
+        this.setState({data: stateData, tab: '1'});
         $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
-
-        this.onClose(true);
     }
 
     getRangeByIndex(startIndex, length) {
@@ -953,6 +933,30 @@ Instructions supplémentaires :
         }
 
         return range;
+    }
+
+    onApply(){
+        let data = this.state.data.result;
+
+        try{
+            data = JSON.parse(data);
+        }
+        catch(error){
+            $glVars.feedback.showError($glVars.i18n.pluginname, error);
+            console.log(error, data);
+            return;
+        }
+
+        for(let pos of data.positions){
+            let range = this.getRangeByIndex(pos.start, pos.offset);
+            
+            if(range !== null){
+                AnnotationView.currentRange = range;
+                this.props.createNewAnnotation(null, data.criterion, data.comment);
+            }
+        }
+
+        this.onClose(true);
     }
 
     onClose(refresh){
