@@ -32,10 +32,32 @@
         display: inline-flex; justify-content: center;    align-items: center;
     }
 
-    span[data-criterion]{cursor: pointer;     text-decoration: underline;}
+    span[data-criterion]{cursor: pointer;}
+    
+    .ai-icon {
+        width: 14px;
+        height: 14px;
+        vertical-align: text-top;
+        margin-left: 2px;
+        color: #6c757d;
+        opacity: 0.8;
+        pointer-events: none;
+    }
 }
 
+ /* Target all Bootstrap tooltips */
+div[role="tooltip"] {
+    max-width: 350px;
+    text-align: left;
+   // padding: 12px;
+  //  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  //  background-color: #212529;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.9rem;
+}
 
+/* Target the arrow specifically */
+div[role="tooltip"] .arrow::before { border-top-color: #212529; }
 /**********************************************************
 / tablets layout
 /*********************************************************/

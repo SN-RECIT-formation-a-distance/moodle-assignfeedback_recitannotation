@@ -58,6 +58,33 @@ export class MainView extends Component {
                 criteriaList: result.data.criteriaList,
                 commentList: result.data.commentList
             }
+
+            for(let item of dropdownList.criteriaList){
+                item.instruction_ai = "";
+            }
+
+            dropdownList.criteriaList.push(
+                {
+                    assignment: $glVars.moodleData.assignment,
+                    backgroundcolor: "#f8d7da",
+                    description: "Orthographe grammaticale",
+                    id: "-1",
+                    name: "orthographegrammaticale",
+                    sortorder: "-10",
+                    instruction_ai: "Accords dans le groupe nominal (GN), accords sujet-verbe, conjugaisons et terminaisons de verbes, confusions homophoniques"
+                }
+            );
+            dropdownList.criteriaList.push(
+                {
+                    assignment: $glVars.moodleData.assignment,
+                    backgroundcolor: "#fff3cd",
+                    description: "Orthographe d'usage",
+                    id: "-2",
+                    name: "orthographeusage",
+                    sortorder: "-9",
+                    instruction_ai: "La graphie des mots, y compris l'emploi correct ou l'absence des accents, des traits d'union, des cédilles ou des abréviations"
+                }
+            );
             that.setState({dropdownList: dropdownList});         
         }
         
