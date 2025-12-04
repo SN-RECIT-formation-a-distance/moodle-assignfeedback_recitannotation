@@ -294,8 +294,8 @@ Format de réponse attendu est un objet JSON et son structure est passé comme p
     }
 
     onApply(){
-        //let data = this.state.data.result;
-        let data = {
+        let data = this.state.data.result;
+       /* let data = {
             "annotatedText": "Les enfants [[e1:joue]] dans le jardin et ils courent vite. La mère et le père [[e2:prépare]] le dîner pendant que les voisins [[e3:arrive]]. Tout le monde se réjouit, mais les oiseaux [[e4:chante]] trop fort.",
             "generalFeedback": "Bravo pour votre effort dans l'écriture de ce texte. Quelques ajustements mineurs sur les accords et les conjugaisons amélioreront encore sa qualité.",
             "corrections": [
@@ -328,7 +328,7 @@ Format de réponse attendu est un objet JSON et son structure est passé comme p
             "criterion": "orthographegrammaticale"
             }
             ]
-        }
+        }*/
         AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
 
         let corrections = [];
