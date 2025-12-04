@@ -1,19 +1,18 @@
 
 import React, { Component } from 'react';
-import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Tab, Table, Tabs} from 'react-bootstrap';
-import { faArrowRight, faBroom, faChalkboard, faCog, faComment, faPrint, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
+import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
+import {  faBroom, faChalkboard, faCog, faComment, faPrint, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
-import {ComboBoxPlus, ToggleButtons} from '../libs/components/Components';
+import {ComboBoxPlus} from '../libs/components/Components';
 import { $glVars } from '../common/common';
 import Utils, { JsNx, UtilsString } from '../libs/utils/Utils';
 import $ from 'jquery';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // includes tooltip
 import { DlgConfirm } from '../libs/components/DlgConfirm';
+import { ModalAskAi } from './AiView';
 
 export class AnnotationView extends Component {
-    static AI_ICON_SVG = `<svg class="ai-icon" fill="currentColor" aria-hidden="true" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 2c.28 0 .5.22.5.5V3h.5a.5.5 0 0 1 0 1H17v.5a.5.5 0 0 1-1 0V4h-.5a.5.5 0 0 1 0-1h.5v-.5c0-.28.22-.5.5-.5Zm-13 13c.28 0 .5.22.5.5v.5h.5a.5.5 0 0 1 0 1H4v.5a.5.5 0 0 1-1 0V17h-.5a.5.5 0 0 1 0-1H3v-.5c0-.28.22-.5.5-.5Zm4-13c-.65 0-1.12.51-1.24 1.06-.11.55-.4 1.37-1.11 2.09-.72.71-1.54 1-2.09 1.11C2.51 6.37 2 6.86 2 7.5c0 .65.52 1.13 1.06 1.24.55.11 1.37.4 2.09 1.11.71.72 1 1.54 1.11 2.1.12.54.59 1.05 1.24 1.05s1.13-.51 1.24-1.06c.11-.55.4-1.37 1.11-2.09.72-.71 1.54-1 2.1-1.11.54-.11 1.05-.59 1.05-1.24s-.51-1.13-1.06-1.24a4.14 4.14 0 0 1-2.09-1.11c-.71-.72-1-1.54-1.11-2.1C8.63 2.52 8.15 2 7.5 2ZM7 15v-1.06a2.13 2.13 0 0 0 1 0V15c0 1.1.9 2 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-1.06a2.13 2.13 0 0 0 0-1H15a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3Zm3-1.5c0-.28.22-.5.5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm.5-2.5a.5.5 0 0 0 0 1H15a.5.5 0 0 0 0-1h-4.5Z" fill="currentColor"></path></svg>`;
-
     static defaultProps = {
         onChangeView: null,
         criteriaList: [],
@@ -200,7 +199,7 @@ export class AnnotationView extends Component {
                                 commentList={commentList} />
                     }   
 
-                    {this.state.showModalAskIA && <ModalAskIA onClose={this.onClose} criteriaList={criteriaList} createNewAnnotation={this.createNewAnnotation}/>}
+                    {this.state.showModalAskIA && <ModalAskAi onClose={this.onClose} criteriaList={criteriaList} createNewAnnotation={this.createNewAnnotation} />}
                 </Row>
          </div>;
 
@@ -259,7 +258,7 @@ export class AnnotationView extends Component {
     }
 
     async refresh(){
-        this.initTooltips();
+       // this.initTooltips();
         this.updateCounters();
     }
 
@@ -277,13 +276,19 @@ export class AnnotationView extends Component {
         return counter;
     }   
 
-    initTooltips() {
-        $('[data-toggle="tooltip"]').tooltip({
-            trigger: 'hover',
-            placement: 'auto', // Ajout de la position automatique,
-        }); 
-        console.log("4")
-    }
+    /*initTooltips() {
+        // This ensures only one tooltip instance exists.
+        $('[data-toggle="tooltip"]').each(function () {
+            const $el = $(this);
+
+            if (!$el.data('bs.tooltip')) {   // Only initialize if not already initialized
+                $el.tooltip({
+                    trigger: 'hover',
+                    placement: 'auto', // Ajout de la position automatique,
+                });
+            }
+        });
+    }*/
 
     onClick(event){
         event.preventDefault(); // Empêche d'autres actions de clic
@@ -385,7 +390,7 @@ export class AnnotationView extends Component {
         DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_clean_html_code, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
-    createNewAnnotation(el, criterionName, suggestion, explanation, strategy){
+    createNewAnnotation(el, criterionName, explanation, suggestion = '', strategy = '', aiFeedback = false){
         if(el === null){
             el = document.createElement('span');
 
@@ -398,38 +403,54 @@ export class AnnotationView extends Component {
                 console.log(error);
             }
         }
-        
-        const commentTemplate = `
-        <div class='text-start '>
-            <div class='mb-2 pb-1 border-bottom border-secondary'>
-                <span class='badge me-2 text-uppercase text-white' >[[CRITERION]]</span>
-                <strong class='text-white fs-6'>[[SUGGESTION]]</strong>
-            </div>
-            <div class='mb-2 text-light' style='font-weight: 100;'>[[EXPLANATION]]</div>
-            <div class='p-2 bg-black border border-secondary rounded small text-warning font-italic'>
-                <i class='fa-solid fa-lightbulb me-1'></i> [[STRATEGY]]
-            </div>
-        </div>`;
-
+                
         let criterion = JsNx.getItem(this.props.criteriaList, 'name', criterionName, null);
 
-        if(criterion){
-            el.dataset.toggle = "tooltip";
-            el.dataset.criterion = criterionName;
-            el.dataset.comment = explanation;
-            //el.dataset.placement = 'auto';
-            el.dataset.title = commentTemplate.replace('[[CRITERION]]', criterion.description);
-            el.dataset.title = el.dataset.title.replace('[[SUGGESTION]]', suggestion);
-            el.dataset.title = el.dataset.title.replace('[[EXPLANATION]]', explanation);
-            el.dataset.title = el.dataset.title.replace('[[STRATEGY]]', strategy);
-            el.dataset.html = "true";
-            el.style.borderBottom = `3px solid ${criterion.backgroundcolor}`;
-
-            return el;
-        }
-        else{
+        if(criterion === null){
             throw new Error(`The criterion "${criterionName}" was not found.`);
         }
+        
+        el.dataset.toggle = "tooltip";
+        el.dataset.criterion = criterionName;
+        el.dataset.explanation = explanation;
+        el.dataset.suggestion = suggestion;
+        el.dataset.strategy = strategy;
+        el.dataset.html = "true";
+        el.style.borderBottom = `3px solid ${criterion.backgroundcolor}`;
+
+        if(aiFeedback){
+            el.dataset.aiFeedback = "true";
+        }
+        else{
+            el.removeAttribute("data-ai-feedback");
+        }
+
+        //el.dataset.placement = 'auto';
+        el.dataset.originalTitle = `
+            <div class='text-start '>
+                <div class='mb-2 pb-1 border-bottom border-secondary'>
+                    <span class='badge me-2 text-uppercase text-white' >${criterion.description}</span>
+        `;
+
+        if(suggestion.length > 0){
+            el.dataset.originalTitle += `<strong class='text-white fs-6'>${suggestion}</strong>`;
+        }
+           
+        el.dataset.originalTitle += `
+            </div>
+            <div class='mb-2 text-light' style='font-weight: 100;'>${explanation}</div>
+            `;
+
+        if(strategy.length > 0){
+            el.dataset.originalTitle += `
+            <div class='p-2 bg-black border border-secondary rounded small text-warning font-italic'>
+                <i class='fa-solid fa-lightbulb me-1'></i> ${strategy}
+            </div>`
+        }
+        
+        el.dataset.originalTitle += `</div>`;   
+        
+        return el;
     }
 }
 
@@ -462,7 +483,7 @@ class QuickAnnotateForm extends Component{
         this.ref = React.createRef();
         this.refComboBox = React.createRef();
 
-        this.originalData = {criterion: "", comment: ""};
+        this.originalData = {criterion: "", comment: "", suggestion: "", strategy:""};
         
         Object.assign(this.state.data, this.originalData);
 
@@ -477,7 +498,9 @@ class QuickAnnotateForm extends Component{
                 data: {
                     // it ensures that the criterion defined previously in the DOM still exists in the criteria list
                     criterion: JsNx.getItem(this.props.commentList, 'name', AnnotationView.selectedElement.dataset.criterion, {name: ''}).criterionid, 
-                    comment: AnnotationView.selectedElement.dataset.comment
+                    comment: AnnotationView.selectedElement.dataset.explanation,
+                    suggestion: AnnotationView.selectedElement.dataset.suggestion,
+                    strategy: AnnotationView.selectedElement.dataset.strategy,
                 },
                 isNewNote: false
             })
@@ -595,7 +618,7 @@ class QuickAnnotateForm extends Component{
         if(this.state.data.comment.length === 0){ return; }
 
         let el = (this.state.isNewNote ? null : AnnotationView.selectedElement);
-        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment);
+        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false);
 
         this.onClose(true);
     }
@@ -633,7 +656,7 @@ class ModalAnnotateForm extends Component{
             isNewNote: true
         };
 
-        this.originalData = {criterion: "", comment: "", search: null};
+        this.originalData = {criterion: "", comment: "", suggestion: "", strategy: "", search: null};
         
         Object.assign(this.state.data, this.originalData);
 
@@ -648,7 +671,9 @@ class ModalAnnotateForm extends Component{
                 data: {
                     // it ensures that the criterion defined previously in the DOM still exists in the criteria list
                     criterion: JsNx.getItem(this.props.criteriaList, 'name', AnnotationView.selectedElement.dataset.criterion, {name: ''}).name, 
-                    comment: AnnotationView.selectedElement.dataset.comment
+                    comment: AnnotationView.selectedElement.dataset.explanation,
+                    suggestion: AnnotationView.selectedElement.dataset.suggestion,
+                    strategy: AnnotationView.selectedElement.dataset.strategy,
                 },
                 isNewNote: false
             })
@@ -751,7 +776,7 @@ class ModalAnnotateForm extends Component{
         }
 
         let el = (this.state.isNewNote ? null : AnnotationView.selectedElement);
-        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment);
+        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false);
 
         this.onClose(true);
     }
@@ -760,361 +785,6 @@ class ModalAnnotateForm extends Component{
         let data = {};
         Object.assign(data, this.originalData);
         this.setState({data: data, isNewNote: true});
-        this.props.onClose(refresh);
-    }
-}
-
-class ModalAskIA extends Component{
-    static defaultProps = {        
-        onClose: null,
-        criteriaList: [],
-        createNewAnnotation: null
-    };
-
-    constructor(props){
-        super(props);
-
-        this.onClose = this.onClose.bind(this);
-        this.onDataChange = this.onDataChange.bind(this);
-        this.onCallIA = this.onCallIA.bind(this);
-        this.onReply = this.onReply.bind(this);
-        this.onApply = this.onApply.bind(this);
-        this.onReviewPrompt = this.onReviewPrompt.bind(this);
-
-        this.state = {
-            data: {
-                criteriaList: [],
-                result: '',
-                prompt: `Agis comme un assistant pédagogique bienveillant.
-Voici un texte écrit par un élève :
-<<<
-PLACEHOLDER_STUDENT_TEXT
->>>
-
-Ton objectif est d'identifier les erreurs pour aider l'élève à progresser.
-Analyse le texte en vérifiant STRICTEMENT les 2 critères suivantes :
-
-<<<
-PLACEHOLDER_CRITERIA_LIST
->>>
-
-Format de réponse attendu est un objet JSON et son structure est passé comme paramètre dans la requête.
-`
-            },
-            dropdownList: {
-                criteriaList: []
-            },
-            waiting: false,
-            tab: '0'
-        };
-
-        for(let item of props.criteriaList){
-            this.state.dropdownList.criteriaList.push({value: item.id.toString(), text: item.description});
-        }
-    }
-
-    render(){
-        let body = 
-        <Tabs activeKey={this.state.tab} onSelect={(tab) => this.setState({tab: tab})}>
-            <Tab eventKey="0" title={'Sélectionnez vos critères'}  className=' p-3' disabled>
-                <Form>
-                    <Form.Group >
-                        <Form.Label>{'Critères disponibles'}</Form.Label>
-                        <ToggleButtons name="criteriaList" onChange={this.onDataChange} type="checkbox" value={this.state.data.criteriaList} options={this.state.dropdownList.criteriaList}/>
-                    </Form.Group>                    
-                </Form>
-            </Tab>
-            <Tab eventKey="1" title={'Réviser le prompt'} className=' p-3' disabled>
-                <Form >
-                    <Form.Group className='mb-3'>
-                        <Form.Label>{$glVars.i18n.prompt}</Form.Label>
-                        <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={15} />
-                    </Form.Group>
-                </Form>
-            </Tab>
-            <Tab eventKey="2" title={$glVars.i18n.result} className=' p-3'>
-                <Form >
-                    <Form.Group className='mb-3'>
-                        <div id="placeholderReplyAi"></div>                    
-                    </Form.Group>
-                </Form>
-            </Tab>
-        </Tabs>;
-
-        let main = 
-            <Modal show={true} onHide={() => this.onClose(false)} size="xl" backdrop='static' tabIndex="-1">
-                <Modal.Header closeButton>
-                    <Modal.Title>{$glVars.i18n.ask_ai}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>{body}</Modal.Body>
-                <Modal.Footer>
-                    <ButtonToolbar>
-                        <ButtonGroup >
-                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
-                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
-                            </Button>
-                            {this.state.tab === '0' && 
-                                <Button variant='primary' onClick={this.onReviewPrompt}>
-                                    <FontAwesomeIcon icon={faArrowRight}/>{` Générer le prompt`}
-                                </Button>
-                            }
-                            {this.state.tab === '1' &&  
-                                <Button disabled={this.state.waiting}  variant='primary' onClick={this.onCallIA}>
-                                    <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask_ai}`}
-                                </Button>
-                            }
-                            {this.state.tab === '2' &&
-                                <Button variant='primary' onClick={this.onApply}>
-                                    <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.apply}`}
-                                </Button>
-                            }
-                        </ButtonGroup>
-                    </ButtonToolbar>
-                </Modal.Footer>
-            </Modal>;
- 
-        return main;
-    }
-
-    onReviewPrompt(){
-        if(this.state.data.criteriaList.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.criteriaList), 3);
-            return;
-        }
-
-        let data = this.state.data;
-        data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerText);
-
-        let criteriaList = [];
-        for(let item of this.state.data.criteriaList){
-            let crit = JsNx.getItem(this.props.criteriaList, 'id', item, null);
-            if(crit){
-                criteriaList.push(`${criteriaList.length + 1}. ${crit.description} (ID=${crit.name}): ${crit.instruction_ai}`);
-            }
-        }
-
-        data.prompt = data.prompt.replace("PLACEHOLDER_CRITERIA_LIST", criteriaList.join("\n"));
-
-        this.setState({data: data, tab: '1'})
-    }
-
-    onDataChange(event){
-        let data = this.state.data;
-        data[event.target.name] = event.target.value;
-        this.setState({data: data});
-    }
-
-    onCallIA(event){
-        event.preventDefault();
-        event.stopPropagation();
-
-        if(this.state.data.prompt.length === 0){
-            $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.prompt), 3);
-            return;
-        }
-        
-        let payload = {
-            messages: [
-                { role: "user", content: this.state.data.prompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 5000,
-            response_format: {
-                type: "json_schema",
-                json_schema: {
-                    name: "AnnotatedTextObject",
-                    schema: {
-                        type: "object",
-                        properties: {
-                            annotatedText: { 
-                                type: "string",
-                                description: "Le texte complet où chaque erreur est entourée ainsi : [[id:mot_fautif]].  Il est crucial de laisser la faute de l'élève entre les crochets. Exemple : 'Il a [[e1:manjé]]' (et non 'mangé')" 
-                            },
-                            generalFeedback: { 
-                                type: "string",
-                                description: "Un conseil global encourageant"
-                            },
-                            corrections: { 
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { 
-                                            type: "string",
-                                            description: "e1"
-                                        },
-                                        suggestion: { 
-                                            type: "string", 
-                                            description: "correction"
-                                        },
-                                        explanation: { 
-                                            type: "string",
-                                            description: "Explication courte"
-                                        },
-                                        strategy: { 
-                                            type: "string",
-                                            description: "Astuce pour retenir"
-                                        },
-                                        criterion: { 
-                                            type: "string",
-                                            description: "L'identificateur du critère. La liste de critères sera passée dans le prompt. Chaque critère aura dans sa description (ID=) qui sera l'identificateur à ajouter dans ce champ."
-                                        }
-                                    },
-                                    required: ["id", "suggestion", "explanation", "strategy", "criterion"],
-                                    additionalProperties: false
-                                }
-                            }
-                        },
-                        required: ["annotatedText", "generalFeedback", "corrections"],
-                        additionalProperties: false
-                    },
-                    strict: true
-                }
-            }
-        };
-        
-        $glVars.webApi.callAzureAI(payload, $glVars.moodleData.assignment, this.onReply);
-        this.setState({waiting: true});
-    }
-
-    onReply(result){
-        this.setState({waiting: false});
-
-        if(!result.success){
-            $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
-            return;
-        }
-
-        if(result.data.hasOwnProperty('error')){
-            $glVars.feedback.showError($glVars.i18n.pluginname, result.data.error.message);
-            console.log(result.data);
-            return;
-        }
-
-        if(!(result.data.hasOwnProperty('choices')) || !(Array.isArray(result.data.choices))){
-            $glVars.feedback.showError($glVars.i18n.pluginname, "Une erreur est survenue.");
-            console.log(result.data);
-            return;
-        }
-        
-        try{
-            let data= this.state.data;
-            data.result = JSON.parse(result.data.choices.pop().message.content);
-            document.getElementById("placeholderReplyAi").innerText = JSON.stringify(data.result, null, 2); // 2 = indent size;
-            this.setState({data: data, tab: '2'});
-            $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
-        }
-        catch(error){
-            $glVars.feedback.showError($glVars.i18n.pluginname, error);
-            console.log(error);
-            return;
-        }
-    }
-
-    getRangeByIndex(startIndex, length) {
-        const container = AnnotationView.refAnnotation.current;
-        const endIndex = startIndex + length;
-
-        let currentIndex = 0;
-
-        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-        let node;
-
-        let range = null;
-        while ((node = walker.nextNode())) {
-            const nodeTextLength = node.textContent.length;
-
-            if (currentIndex + nodeTextLength >= startIndex) {
-                range = document.createRange();
-
-                const startOffset = startIndex - currentIndex;
-                const endOffset = Math.min(nodeTextLength, endIndex - currentIndex);
-
-                range.setStart(node, startOffset);
-                range.setEnd(node, endOffset);
-
-                break;
-            }
-
-            currentIndex += nodeTextLength;
-        }
-
-        return range;
-    }
-
-    onApply(){
-        let data = this.state.data.result;
-        /*let data = {
-            "annotatedText": "Les enfants [[e1:joue]] dans le jardin et ils courent vite. La mère et le père [[e2:prépare]] le dîner pendant que les voisins [[e3:arrive]]. Tout le monde se réjouit, mais les oiseaux [[e4:chante]] trop fort.",
-            "generalFeedback": "Bravo pour votre effort dans l'écriture de ce texte. Quelques ajustements mineurs sur les accords et les conjugaisons amélioreront encore sa qualité.",
-            "corrections": [
-            {
-            "id": "e1",
-            "suggestion": "jouent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'Les enfants'.",
-            "strategy": "Souvenez-vous que les sujets pluriels entraînent une terminaison en '-ent' pour les verbes.",
-            "criterion": "orthographegrammaticale"
-            },
-            {
-            "id": "e2",
-            "suggestion": "préparent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'La mère et le père'.",
-            "strategy": "Identifiez tous les éléments du sujet pour choisir la bonne terminaison.",
-            "criterion": "orthographegrammaticale"
-            },
-            {
-            "id": "e3",
-            "suggestion": "arrivent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'les voisins'.",
-            "strategy": "Vérifiez si le sujet est pluriel ou singulier pour accorder le verbe.",
-            "criterion": "orthographegrammaticale"
-            },
-            {
-            "id": "e4",
-            "suggestion": "chantent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'les oiseaux'.",
-            "strategy": "Ajoutez '-ent' aux verbes dont le sujet est pluriel.",
-            "criterion": "orthographegrammaticale"
-            }
-            ]
-        }*/
-        AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
-
-        let corrections = [];
-        for(let item of data.corrections){
-            const regex = new RegExp(`\\[\\[${item.id}:([^\\]]*)\\]\\]`);
-            const match = data.annotatedText.match(regex);
-
-            if(match){
-                corrections.push({
-                    suggestion: item.suggestion,
-                    explanation: item.explanation,
-                    strategy: item.strategy,
-                    criterion: item.criterion,
-                    start:  match.index,
-                    offset: match[0].length,
-                    innerText: match[1]
-                });
-            }
-        }
-
-        for(let item of corrections){
-            let range = this.getRangeByIndex(item.start, item.offset);
-            
-            if(range !== null){
-                AnnotationView.currentRange = range;
-                item.el = this.props.createNewAnnotation(null, item.criterion, item.suggestion, item.explanation, item.strategy);
-            }
-        }
-
-        for(let item of corrections){
-            item.el.innerHTML = item.innerText + AnnotationView.AI_ICON_SVG;
-        }
-
-        this.onClose(true);
-    }
-
-    onClose(refresh){
         this.props.onClose(refresh);
     }
 }
