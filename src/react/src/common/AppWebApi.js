@@ -54,10 +54,10 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess);
     } 
 
-    getCriteriaList(assignment, onSuccess){
+   /* getCriteriaList(assignment, onSuccess){
         let data = {assignment: assignment, service: "getCriteriaList"};
         this.post(this.gateway, data, onSuccess);
-    } 
+    } */
 
     deleteCriterion(id, assignment, onSuccess){
         let data = {id: id, assignment: assignment, service: "deleteCriterion"};
@@ -115,6 +115,19 @@ export class AppWebApi extends WebApi
         };
 
         let options = {data: data, assignment: assignment, service: "saveComment"};
+        this.post(this.gateway, options, onSuccessTmp, null, true);
+    }
+
+    savePromptAi(data, onSuccess){
+        let that = this;
+        let onSuccessTmp = function(result){     
+            onSuccess(result);
+            if(result.success){
+                that.notifyObservers('savePromptAi');
+            }
+        };
+
+        let options = {data: data, service: "savePromptAi"};
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 

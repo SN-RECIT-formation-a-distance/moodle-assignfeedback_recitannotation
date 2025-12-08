@@ -1,15 +1,17 @@
 
 import React, { Component } from 'react';
-import { Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
+import { Badge, Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
 import { faArrowDown, faArrowLeft,  faArrowUp,  faCheckCircle,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ComboBoxPlus, DlgConfirm, InputColor, InputTextArea} from '../libs/components/Components';
 import { $glVars, Options } from '../common/common';
 import { TextInput } from '../libs/components/TextInput';
 import { UtilsString } from '../libs/utils/Utils';
+import { PromptAiView } from './AiView';
 
 export class SettingsView extends Component{
     static defaultProps = {
+        promptAi: null,
         onChangeView: null,
         criteriaList: [],
         commentList: [],
@@ -28,7 +30,7 @@ export class SettingsView extends Component{
 
         let main = 
         <div className='p-2'>
-            <Button onClick={this.props.onChangeView} className='mb-5'>
+            <Button variant='link' onClick={this.props.onChangeView} className='mb-5'>
                 <FontAwesomeIcon icon={faArrowLeft}/>{` ${$glVars.i18n.back_annotation_view}`}
             </Button>
 
@@ -38,6 +40,9 @@ export class SettingsView extends Component{
                 </Tab>
                 <Tab eventKey="1" title={$glVars.i18n.comment_list}  className='p-3'>
                     <CommentsView  criteriaList={criteriaList} commentList={commentList} refresh={this.props.refresh}/>
+                </Tab>
+                <Tab eventKey="2" title={"Prompt IA"}  className='p-3'>
+                    <PromptAiView data={this.props.promptAi} refresh={this.props.refresh}/>
                 </Tab>
             </Tabs>
         </div>;
@@ -76,12 +81,12 @@ class CriterionView extends Component{
     render(){
         let criteriaList = this.props.criteriaList;
 
-        let main = 
+        let main =  
             <>
-                <ButtonGroup className='d-block justify-content-end mb-4'>
-                    <Button  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{` ${$glVars.i18n.add_new_item}`}</Button>
-                    <Button onClick={this.onSelectFile}><FontAwesomeIcon icon={faUpload}/>{` ${$glVars.i18n.import_criteria}`}</Button>
-                    <a className='btn btn-primary' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
+                <ButtonGroup className='d-block text-right'>
+                    <Button variant='link'  onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{` ${$glVars.i18n.add_new_item}`}</Button>
+                    <Button variant='link' onClick={this.onSelectFile}><FontAwesomeIcon icon={faUpload}/>{` ${$glVars.i18n.import_criteria}`}</Button>
+                    <a className='btn btn-link' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
                         <FontAwesomeIcon icon={faDownload}/>{` ${$glVars.i18n.export_criteria}`}
                     </a>
                 </ButtonGroup>
@@ -91,6 +96,7 @@ class CriterionView extends Component{
                         <tr>
                             <th>{$glVars.i18n.name}</th>
                             <th  style={{width: 100}}>{$glVars.i18n.color}</th>
+                            <th>{"Instruction à l'IA"}</th>
                             <th style={{width: 80}}></th>
                         </tr>
                     </thead>
@@ -99,13 +105,16 @@ class CriterionView extends Component{
                             let row = 
                                 <tr key={index}>
                                     <td title={item.name}>{item.description}</td>
-                                    <td style={{backgroundColor: item.backgroundcolor}}></td>
+                                    <td className='text-center align-middle'>
+                                        <Badge className='p-2 text-white ' style={{backgroundColor: item.backgroundcolor}}>{item.backgroundcolor}</Badge>
+                                    </td>
+                                    <td>{item.instruction_ai}</td>
                                     <td className='text-center'>
                                         <ButtonGroup>
-                                            <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title={$glVars.i18n.edit}/></Button>
-                                            <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title={$glVars.i18n.delete}/></Button>
-                                            <Button disabled={item.sortorder.toString() === "1"} onClick={() => this.changeCriterionSortOrder(item.id, 'up')} size='sm'><FontAwesomeIcon icon={faArrowUp} title={$glVars.i18n.move_up}/></Button>
-                                            <Button disabled={criteriaList.length.toString() === item.sortorder.toString()} onClick={() => this.changeCriterionSortOrder(item.id, 'down')} size='sm'><FontAwesomeIcon icon={faArrowDown} title={$glVars.i18n.move_down}/></Button>
+                                            <Button variant='link' onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title={$glVars.i18n.edit}/></Button>
+                                            <Button variant='link' onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title={$glVars.i18n.delete}/></Button>
+                                            <Button variant='link' disabled={item.sortorder.toString() === "1"} onClick={() => this.changeCriterionSortOrder(item.id, 'up')} size='sm'><FontAwesomeIcon icon={faArrowUp} title={$glVars.i18n.move_up}/></Button>
+                                            <Button variant='link' disabled={criteriaList.length.toString() === item.sortorder.toString()} onClick={() => this.changeCriterionSortOrder(item.id, 'down')} size='sm'><FontAwesomeIcon icon={faArrowDown} title={$glVars.i18n.move_down}/></Button>
                                         </ButtonGroup>
                                     </td>
                                 </tr>
@@ -244,7 +253,10 @@ class ModalCriterionForm extends Component{
                 description: '',
                 backgroundcolor: "#cce5ff",
                 sortorder: props.nbItems + 1
-            }
+            },
+            colorList: ["#dc3545", "#0d6efd", "#6c757d", "#198754", "#d63384",
+                        "#6610f2", "#fd7e14", "#20c997", "#795548", "#c2185b"
+            ]
         };
 
         if(props.data !== null){
@@ -275,33 +287,22 @@ class ModalCriterionForm extends Component{
                 <Form.Group >
                     <Form.Label>{$glVars.i18n.color}</Form.Label>
                     <div>
-                        <Button variant='link' className='btn-color-picker' style={{backgroundColor: "#cce5ff",}} 
-                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#cce5ff"}})}>
-                            {this.state.data.backgroundcolor === "#cce5ff" && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
-                        </Button>
-                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#d4edda"}}
-                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#d4edda"}})}>
-                            {this.state.data.backgroundcolor === '#d4edda' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
-                        </Button>
-                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#f8d7da"}}
-                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#f8d7da"}})}>
-                            {this.state.data.backgroundcolor === '#f8d7da' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
-                        </Button>
-                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#fff3cd"}} 
-                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#fff3cd"}})}>
-                            {this.state.data.backgroundcolor === '#fff3cd' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
-                        </Button>
-                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#d1ecf1"}} 
-                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#d1ecf1"}})}>
-                            {this.state.data.backgroundcolor === '#d1ecf1' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
-                        </Button>
-                        <Button  variant='link' className='btn-color-picker' style={{backgroundColor: "#e2e3e5"}} 
-                            onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: "#e2e3e5"}})}>
-                            {this.state.data.backgroundcolor === '#e2e3e5' && <FontAwesomeIcon icon={faCheckCircle} className='text-dark'/>}
-                        </Button>
-                        <InputColor className="m-2" name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
+                        {this.state.colorList.map((item, index) => {
+                            let color = 
+                                <Button key={index} variant='link' className='btn-color-picker' style={{backgroundColor: item}} 
+                                    onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: item}})}>
+                                    {this.state.data.backgroundcolor === item && <FontAwesomeIcon icon={faCheckCircle} className='text-white'/>}
+                                </Button>
+                            return color;
+                        })}
+                        
+                        <InputColor showRemoveFormat={false} className="m-2" name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
                     </div>
                     
+                </Form.Group>
+                <Form.Group className='mb-3' >
+                    <Form.Label>{"Instruction à l'IA"}</Form.Label>
+                    <InputTextArea name="instruction_ai" as="textarea" value={this.state.data.instruction_ai} onChange={this.onDataChange} rows={5} />
                 </Form.Group>
             </Form>;
 
@@ -393,7 +394,7 @@ class CommentsView extends Component{
 
         let main = 
         <>
-            <Button className='d-block ml-auto mb-4' onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{` ${$glVars.i18n.add_new_item}`}</Button>
+            <Button variant='link' className='d-block ml-auto mb-4' onClick={this.onAdd}><FontAwesomeIcon icon={faPlus}/>{` ${$glVars.i18n.add_new_item}`}</Button>
             <Table striped bordered size='sm'>
                 <thead>
                     <tr>
@@ -420,8 +421,8 @@ class CommentsView extends Component{
                                 <td>{item.comment}</td>
                                 <td className='text-center'>
                                         <ButtonGroup>
-                                            <Button onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title={$glVars.i18n.edit}/></Button>
-                                            <Button onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title={$glVars.i18n.delete}/></Button>
+                                            <Button variant='link' onClick={() => this.onEdit(item)} size='sm'><FontAwesomeIcon icon={faPencilAlt} title={$glVars.i18n.edit}/></Button>
+                                            <Button variant='link' onClick={() => this.onDelete(item.id)} size='sm'><FontAwesomeIcon icon={faTrash} title={$glVars.i18n.delete}/></Button>
                                         </ButtonGroup>
                                     </td>
                             </tr>

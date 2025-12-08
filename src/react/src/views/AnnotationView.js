@@ -7,13 +7,14 @@ import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus} from '../libs/components/Components';
 import { $glVars } from '../common/common';
 import Utils, { JsNx, UtilsString } from '../libs/utils/Utils';
-import $ from 'jquery';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // includes tooltip
 import { DlgConfirm } from '../libs/components/DlgConfirm';
 import { ModalAskAi } from './AiView';
 
 export class AnnotationView extends Component {
     static defaultProps = {
+        data: null,
+        promptAi: null,
         onChangeView: null,
         criteriaList: [],
         commentList: []
@@ -34,7 +35,6 @@ export class AnnotationView extends Component {
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
         this.save = this.save.bind(this);        
-        this.getData = this.getData.bind(this);
         this.setAnnotationText = this.setAnnotationText.bind(this);
         this.createNewAnnotation = this.createNewAnnotation.bind(this);
 
@@ -49,6 +49,7 @@ export class AnnotationView extends Component {
             showModalAnnotate: false,
             showModalAskIA: false,
             data: null,
+            dataReady: false,
             counter: {},
             updatedCounters: false,
             stack: {
@@ -63,8 +64,6 @@ export class AnnotationView extends Component {
     }
 
     componentDidMount(){
-        this.getData();
-
         document.addEventListener("contextmenu", (event) => {
             if(Utils.isMobileDevice()){
                 event.preventDefault(); // blocks the browser’s default context menu. 
@@ -76,26 +75,19 @@ export class AnnotationView extends Component {
         if((prevProps.criteriaList.length !== this.props.criteriaList.length) || (!this.state.updatedCounters)){
             this.updateCounters();
         }
-    }
 
-    getData(){
-        let that = this;
-
-         let callback = function(result){
-            if(!result.success){
-                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
-                return;
-            }
-            
-            that.setState({data: result.data}, () => {
-                that.setAnnotationText(result.data.annotation);
-            }); 
+        if(this.state.data === null){
+            this.setState({data: this.props.data});
         }
-        
-        $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.attemptnumber, $glVars.moodleData.userid, callback);
+
+        if(!this.state.dataReady){
+            this.setAnnotationText(this.props.data.annotation);
+        }
     }
 
     setAnnotationText(value){
+        if(AnnotationView.refAnnotation.current === null){ return; }
+
         AnnotationView.refAnnotation.current.innerHTML = value;
 
         // Gérer le clic sur le texte surligné
@@ -105,6 +97,8 @@ export class AnnotationView extends Component {
         }
 
         this.refresh();
+
+        this.setState({dataReady: true});
     }
 
     render() {
@@ -199,7 +193,7 @@ export class AnnotationView extends Component {
                                 commentList={commentList} />
                     }   
 
-                    {this.state.showModalAskIA && <ModalAskAi onClose={this.onClose} criteriaList={criteriaList} createNewAnnotation={this.createNewAnnotation} />}
+                    {this.state.showModalAskIA && <ModalAskAi promptAi={this.props.promptAi} onClose={this.onClose} criteriaList={criteriaList} createNewAnnotation={this.createNewAnnotation} />}
                 </Row>
          </div>;
 

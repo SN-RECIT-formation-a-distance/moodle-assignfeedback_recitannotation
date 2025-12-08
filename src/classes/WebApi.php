@@ -64,7 +64,11 @@ class WebApi extends MoodleApi
 
             $this->canUserAccess('a', $assignment);
 
-            $result = $this->ctrl->getAnnotation($assignment, $userid, $attemptnumber);
+            $result = new stdClass();
+            $result->annotation = $this->ctrl->getAnnotation($assignment, $userid, $attemptnumber);
+            $result->criteriaList = $this->ctrl->getCriteriaList($assignment);
+            $result->commentList = $this->ctrl->getCommentList($assignment);
+            $result->promptAi = $this->ctrl->getPromptAi($assignment);
             $this->prepareJson($result);
             return new WebApiResult(true, $result);
         }
@@ -73,7 +77,7 @@ class WebApi extends MoodleApi
         }
     }
 
-    public function getCriteriaList($request){
+   /* public function getCriteriaList($request){
         try{            
             $assignment = clean_param($request['assignment'], PARAM_INT);
 
@@ -88,7 +92,7 @@ class WebApi extends MoodleApi
         catch(Exception $ex){
             return new WebApiResult(false, false, $ex->GetMessage());
         }
-    }
+    }*/
 
     public function saveCriterion($request){
         try{            
@@ -284,6 +288,21 @@ class WebApi extends MoodleApi
         }
         catch(Exception $ex){
             return new WebApiResult(false, null, $ex->GetMessage());
+        }
+    }
+
+    public function savePromptAi($request){
+        try{
+            $data = json_decode(json_encode($request['data']), FALSE);
+
+            $this->canUserAccess('a', $data->assignment);
+
+            $result = $this->ctrl->savePromptAi($data);
+
+            return new WebApiResult(true, $result);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
         }
     }
 }

@@ -48,16 +48,19 @@ abstract class APersistCtrl
         return $result;
     }
 
-    public function getRecordsSQL($sql, $params = array()){
+    public function getRecordsSQL($sql, $params = array(), $ignoreUnderscore = false){
         $result = $this->mysqlConn->get_records_sql($sql, $params);
         
         foreach($result as $item){
             foreach((array)$item as $k => $v){
-                if (strpos($k, '_') != false){
-                    $key = preg_replace_callback("/_[a-z]?/", function($matches) {return strtoupper(ltrim($matches[0], "_"));}, $k);
-                    $item->$key = $v;
-                    unset($item->$k);
+                if(!$ignoreUnderscore){
+                    if (strpos($k, '_') != false){
+                        $key = preg_replace_callback("/_[a-z]?/", function($matches) {return strtoupper(ltrim($matches[0], "_"));}, $k);
+                        $item->$key = $v;
+                        unset($item->$k);
+                    }
                 }
+                
             }
         }
         return array_values($result);

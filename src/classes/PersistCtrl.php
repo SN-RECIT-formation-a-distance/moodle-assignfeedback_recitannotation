@@ -167,14 +167,6 @@ class PersistCtrl extends MoodlePersistCtrl
         catch(Exception $ex){
             throw $ex;
         }
-        /*$DB->delete_records('assignfeedback_recitannot_comment',
-                            array('criterionid'=>$this->assignment->get_instance()->id));
-
-        $DB->delete_records('assignfeedback_recitannot_crit',
-                            array('assignment'=>$this->assignment->get_instance()->id));
-                            
-        $DB->delete_records('assignfeedback_recitannotation',
-                            array('assignment'=>$this->assignment->get_instance()->id));*/
     }
 
     public function saveCriterion($data){
@@ -185,6 +177,7 @@ class PersistCtrl extends MoodlePersistCtrl
             $record->description = $data->description;
             $record->backgroundcolor = $data->backgroundcolor;
             $record->sortorder = $data->sortorder;
+            $record->instruction_ai = $data->instruction_ai;
 
             if($data->id == 0){
                 if (!$this->mysqlConn->record_exists('assignfeedback_recitannot_crit', ['name' => $record->name, 'assignment' => $record->assignment])) {
@@ -214,11 +207,11 @@ class PersistCtrl extends MoodlePersistCtrl
     }
 
     public function getCriteriaList($assignment){
-        $query = "select * from {assignfeedback_recitannot_crit} 
+        $query = "select id, assignment, name, description, backgroundcolor, sortorder, coalesce(instruction_ai, '') as instruction_ai from {assignfeedback_recitannot_crit} 
                 where assignment = ?
                 order by sortorder asc";
 
-        $result = $this->getRecordsSQL($query, array($assignment));
+        $result = $this->getRecordsSQL($query, array($assignment), true);
 
         return $result;
     }
@@ -318,6 +311,10 @@ class PersistCtrl extends MoodlePersistCtrl
                 $criterion->description = (string) $item->description;
                 $criterion->backgroundcolor = (string) $item->backgroundcolor;
                 $criterion->sortorder = ++$sortOrderObj->sortorder;
+
+                if(isset($item->instruction_ai)){
+                    $criterion->instruction_ai = (string) $item->instruction_ai;
+                }
                 
                 $criterion = $this->saveCriterion($criterion);
 
@@ -376,6 +373,39 @@ class PersistCtrl extends MoodlePersistCtrl
             $i++;
         }
     }
+
+    public function getPromptAi($assignment){
+        $query = "SELECT * 
+                    FROM {assignfeedback_recitannot_promptai} 
+                    where assignment = ?";
+
+        $result = $this->getRecordsSQL($query, array($assignment), true);
+
+        return (count($result) > 0 ? array_shift($result) : new TablePromptAi());
+    }
+
+    public function savePromptAi($data){
+        try{	
+            $record = new TablePromptAi();
+            $record->assignment = $data->assignment;
+            $record->prompt_ai = $data->prompt_ai;
+
+            if($data->id == 0){
+                if (!$this->mysqlConn->record_exists('assignfeedback_recitannot_promptai', ['assignment' => $record->assignment])) {
+                    $this->mysqlConn->insert_record("assignfeedback_recitannot_promptai", $record);
+                }
+            }
+            else{
+                $record->id = $data->id;
+                $this->mysqlConn->update_record("assignfeedback_recitannot_promptai", $record);
+            }
+
+            return true;
+        }
+        catch(\Exception $ex){
+            throw $ex;
+        }
+    }
 }
 
 class RecitAnnotation{
@@ -410,10 +440,17 @@ class TableCriterion{
     public $description = "";
     public $backgroundcolor = "";
     public $sortorder = 0;
+    public $instruction_ai = "";
 }
 
 class TableComment{
     public $id = 0;
     public $criterionid = 0;
     public $comment = "";
+}
+
+class TablePromptAi{
+    public $id = 0;
+    public $assignment = 0;
+    public $prompt_ai = "";
 }

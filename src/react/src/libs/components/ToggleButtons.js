@@ -23,7 +23,7 @@ export class ToggleButtons extends Component {
     render() {       
         let main = 
             <ButtonToolbar style={this.props.style} data-read-only={(this.props.disabled ? 1 : 0)}>                        
-                <ToggleButtonGroup size={this.props.bsSize} type={this.props.type} name={this.props.name} defaultValue={this.props.defaultValue} value={this.props.value} onChange={this.onChange}>                                
+                <ToggleButtonGroup className='flex-wrap' size={this.props.bsSize} type={this.props.type} name={this.props.name} defaultValue={this.props.defaultValue} value={this.props.value} onChange={this.onChange}>                                
                     {this.props.options.map((item, index) => {   
                         let onClick = (this.props.disabled ? null : (e) => this.onClick(item.value, e));
                         

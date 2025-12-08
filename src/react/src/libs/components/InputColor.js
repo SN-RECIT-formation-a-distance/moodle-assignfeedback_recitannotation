@@ -33,7 +33,8 @@ export class InputColor extends Component {
         onChange: null,
         disabled: false,
         size: "",
-        className: ""
+        className: "",
+        showRemoveFormat: true
     };
     
     constructor(props){
@@ -99,9 +100,9 @@ export class InputColor extends Component {
 
         let main = 
             <div style={{display: "inline-flex", width: '100%'}} className={this.props.className}>
-                <Form.Control size={this.props.size} name={this.props.name} type="color" value={value} 
+                <Form.Control className='w-100' size={this.props.size} name={this.props.name} type="color" value={value} 
                                 onChange={this.onChange} onBlur={this.onBlur} disabled={this.props.disabled} style={{width: "80px"}}/>
-                <Button className="ml-1" size='sm' variant={'primary'} onClick={this.onReset} title={"Enlever format"}><FontAwesomeIcon icon={faRemoveFormat}/></Button>
+                {this.props.showRemoveFormat && <Button className="ml-1" size='sm' variant={'link'} onClick={this.onReset} title={"Enlever format"}><FontAwesomeIcon icon={faRemoveFormat}/></Button>}
             </div>
         return (main);
     }   

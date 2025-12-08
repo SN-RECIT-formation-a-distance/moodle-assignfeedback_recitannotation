@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Tabs} from 'react-bootstrap';
-import { faArrowRight,  faSave, faTimes,} from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight,  faPencilAlt,  faSave, faTimes} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import { ToggleButtons} from '../libs/components/Components';
@@ -10,7 +10,8 @@ import { JsNx, UtilsString } from '../libs/utils/Utils';
 import { AnnotationView } from './AnnotationView';
 
 export class ModalAskAi extends Component{
-    static defaultProps = {        
+    static defaultProps = {  
+        promptAi: null,      
         onClose: null,
         criteriaList: [],
         createNewAnnotation: null
@@ -30,21 +31,7 @@ export class ModalAskAi extends Component{
             data: {
                 criteriaList: [],
                 result: '',
-                prompt: `Agis comme un assistant pédagogique bienveillant.
-Voici un texte écrit par un élève :
-<<<
-PLACEHOLDER_STUDENT_TEXT
->>>
-
-Ton objectif est d'identifier les erreurs pour aider l'élève à progresser.
-Analyse le texte en vérifiant STRICTEMENT les 2 critères suivantes :
-
-<<<
-PLACEHOLDER_CRITERIA_LIST
->>>
-
-Format de réponse attendu est un objet JSON et son structure est passé comme paramètre dans la requête.
-`
+                prompt: props.promptAi.prompt_ai
             },
             dropdownList: {
                 criteriaList: []
@@ -359,10 +346,152 @@ Format de réponse attendu est un objet JSON et son structure est passé comme p
         }
 
         for(let item of corrections){
-            item.el.innerHTML = item.innerText; //+ '<i>' + AnnotationView.AI_ICON_SVG + '</i>';
+            item.el.innerHTML = item.innerText; 
         }
 
         this.onClose(true);
+    }
+
+    onClose(refresh){
+        this.props.onClose(refresh);
+    }
+}
+
+export class PromptAiView extends Component{
+    static defaultProps = {
+        data: null,
+        refresh: null
+    };
+
+    constructor(props) {
+        super(props);
+
+        this.onEdit = this.onEdit.bind(this);
+        this.onClose = this.onClose.bind(this);
+
+        this.state = {showModal: false};
+    }
+
+    render(){
+        let promptAi = (this.props.data ? this.props.data.prompt_ai.replace(/\n/g, "<br>") : "");
+
+        let style = {
+            fontFamily: "Fira Code, Courier New, monospace",   
+            fontSize: "14px",
+            backgroundColor: "#f5f5f5",
+            color: "#333",
+            borderRadius: "4px",
+            padding: "1rem"
+        };
+
+        let main = 
+        <>
+            <Button variant='link' className='d-block ml-auto mb-4' onClick={this.onEdit}><FontAwesomeIcon icon={faPencilAlt}/>{` ${$glVars.i18n.edit}`}</Button>
+            <div style={style}  dangerouslySetInnerHTML={{ __html: promptAi }}></div>
+            {this.state.showModal && <ModalPromptAiForm onClose={this.onClose} data={this.state.data}/>}
+        </>;
+
+        return main;
+    }
+
+    onEdit(){
+        let data = {};
+        Object.assign(data, this.props.data);
+        this.setState({showModal: true, data: data});
+    }
+
+    onClose(refresh){
+        this.setState({showModal: false, data: null});
+
+        if(refresh){
+            this.props.refresh();
+        }
+    }
+}
+
+class ModalPromptAiForm extends Component{
+    static defaultProps = {
+        data: null,        
+        onClose: null
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onDataChange = this.onDataChange.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.onClose = this.onClose.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+
+        this.state = {
+            data: props.data
+        };
+
+        if(this.state.data.id === 0){
+            this.state.data.assignment = $glVars.moodleData.assignment;
+        }
+    }
+
+    onKeyDown(e){
+        if(e.key === 'Enter' && e.target.type !== 'textarea') {
+            e.preventDefault();
+        }
+    }
+
+    render(){
+        let body = 
+            <Form onSubmit={this.onSubmit} onKeyDown={this.onKeyDown}>
+                <Form.Group className='mb-3' >
+                    <Form.Label>{"Prompt à l'IA"}</Form.Label>
+                    <InputTextArea name="prompt_ai" as="textarea" value={this.state.data.prompt_ai} onChange={this.onDataChange} rows={10} />
+                </Form.Group>
+                
+            </Form>;
+
+        let main = 
+            <Modal show={true} onHide={() => this.onClose(false)} size="md" backdrop='static' tabIndex="-1">
+                <Modal.Header closeButton>
+                    <Modal.Title>{"Ajouter/Modifier le Prompt à l'IA"}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{body}</Modal.Body>
+                <Modal.Footer>
+                    <ButtonToolbar>
+                        <ButtonGroup >
+                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
+                            </Button>
+                            <Button  variant='success' onClick={this.onSave}>
+                                <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.save}`}
+                            </Button>
+                        </ButtonGroup>
+                    </ButtonToolbar>
+                    
+                </Modal.Footer>
+            </Modal>;
+ 
+        return main;
+    }
+
+    onDataChange(event){
+        let data = this.state.data;
+        data[event.target.name] = event.target.value;
+        this.setState({data: data});
+    }
+
+    onSave(){
+        let that = this;
+        let callback = function(result){
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
+                return;
+            }
+            else{
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
+                that.onClose(true);
+            }        
+        }
+
+        $glVars.webApi.savePromptAi(this.state.data, callback);
     }
 
     onClose(refresh){
