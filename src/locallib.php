@@ -113,7 +113,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         }
 
         $html .= html_writer::script("
-           // require(['recitannotation'], function () {
+            require(['recitannotation'], function () {
                 if (window.loadRecitAnnotationReactApp) {
                     window.loadRecitAnnotationReactApp({
                         assignment: " . json_encode($grade->assignment) . ",
@@ -124,7 +124,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                     },
                     ". json_encode($strings) .");
                 }
-            //});            
+            });            
         ");
 
         $group[] = $mform->createElement('static', '', '', $html);

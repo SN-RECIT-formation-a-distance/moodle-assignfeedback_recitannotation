@@ -161,6 +161,7 @@ export class WebApi
     showLoadingFeedback(){
         if(this.domVisualFeedback === null){ return; }
         this.domVisualFeedback.style.display = "flex";
+        document.body.appendChild(this.domVisualFeedback);
     }
 
     hideLoadingFeedback(){
