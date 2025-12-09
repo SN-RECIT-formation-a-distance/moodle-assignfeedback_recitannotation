@@ -114,52 +114,45 @@ export class AnnotationView extends Component {
 
         let main =
             <div className="container">
-                <Row className='p-3 main-view'>
-                    <Col md={8}>
-                        <div>
-                            <div className='h5'>{$glVars.i18n.student_production}</div>
-                            <div>
-                                <ButtonGroup className='mr-2'>
-                                    <Button variant='link'  onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
-                                        <FontAwesomeIcon icon={faUndo}/>
-                                    </Button>
-                                    <Button variant='link'  onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
-                                        <FontAwesomeIcon icon={faRedo}/>
-                                    </Button>
-                                </ButtonGroup>
-                                <ButtonGroup className='mr-2'>
-                                    <Button variant='link'  onClick={this.onResetAnnotation} title={'Réinitialiser l’annotation'}>
-                                        <FontAwesomeIcon icon={faTrash}/>
-                                    </Button>
-                                </ButtonGroup>
+                <Row className=' main-view'>
+                    <div className='p-1 w-100 bg-dark  d-flex justify-content-between'>
+                        <ButtonGroup className='mr-2'>
+                            <Button variant='link' className='text-white'  onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
+                                <FontAwesomeIcon icon={faUndo}/>
+                            </Button>
+                            <Button variant='link' className='text-white' onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
+                                <FontAwesomeIcon icon={faRedo}/>
+                            </Button>
+                            <Button variant='link' className='text-white' onClick={this.onResetAnnotation} title={'Réinitialiser l’annotation'}>
+                                <FontAwesomeIcon icon={faTrash}/>
+                            </Button>
+                        </ButtonGroup>
 
-                                <ButtonGroup  className='mr-2'>
-                                    <Button  variant={(this.state.quickAnnotationMethod ? 'primary' : 'outline-primary')}
-                                        onClick={() => this.setState({quickAnnotationMethod: !this.state.quickAnnotationMethod})} 
-                                        title={$glVars.i18n.quick_annotation_method}>
-                                        {$glVars.i18n.quick_annotation_method}
-                                    </Button>
-                                </ButtonGroup>
-                                
-                                <ButtonGroup >
-                                    <Button variant='link'  onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
-                                        <FontAwesomeIcon icon={faChalkboard}/>
-                                    </Button>
-                                </ButtonGroup>
 
-                                
-                                <a className='btn  btn-link' title={$glVars.i18n.print_comment_list} 
-                                    href={`${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=${$glVars.urlParams.id}&assignment=${$glVars.moodleData.assignment}`} target="_blank">
-                                    <FontAwesomeIcon icon={faPrint}/>
-                                </a>
-
-                                <Button  variant='link' className='ml-1' onClick={() => this.props.onChangeView('settings')}>
-                                    <FontAwesomeIcon icon={faCog}/>
-                                </Button>
+                        <div className='mr-2 d-flex align-items-center'>
+                            <div className="custom-control custom-switch d-inline">
+                                <input onClick={() => this.setState({quickAnnotationMethod: !this.state.quickAnnotationMethod})} type="checkbox" className="custom-control-input text-white" id="quick_annotation_method"/>
+                                <label className="custom-control-label text-white" htmlFor="quick_annotation_method">{$glVars.i18n.quick_annotation_method}</label>
                             </div>
-                            
-                        </div>
-                        <div ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange} className='p-3'></div>
+                            <Button variant='link' className='text-white'  onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
+                                <FontAwesomeIcon icon={faChalkboard}/>
+                            </Button>
+                        </div >
+
+                        <span >
+                            <a className='btn  btn-link text-white' title={$glVars.i18n.print_comment_list} 
+                                href={`${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=${$glVars.urlParams.id}&assignment=${$glVars.moodleData.assignment}`} target="_blank">
+                                <FontAwesomeIcon icon={faPrint}/>
+                            </a>
+
+                            <Button  variant='link' className='ml-1 text-white' onClick={() => this.props.onChangeView('settings')}>
+                                <FontAwesomeIcon icon={faCog}/>
+                            </Button>
+                        </span>
+                        
+                    </div>
+                    <Col className='p-3' md={8}>
+                        <div className='p-3 border rounded' ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange}></div>
 
                         <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
                             <Button size='sm' onClick={this.onAnnotate}>
@@ -167,7 +160,7 @@ export class AnnotationView extends Component {
                             </Button>                            
                         </ButtonGroup>                        
                     </Col>
-                    <Col md={4} >
+                    <Col className='p-3' md={4} >
                         {criteriaList.map((item, index) => {
                             let badge = 
                                 <span key={index} className='font-weight-bold d-block p-2 m-2 rounded text-white' style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}>
