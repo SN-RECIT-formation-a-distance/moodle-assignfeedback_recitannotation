@@ -99,9 +99,9 @@ export class InputColor extends Component {
         let value = this.RGBToHex(this.state.value);
 
         let main = 
-            <div style={{display: "inline-flex", width: '100%'}} className={this.props.className}>
+            <div className={this.props.className}>
                 <Form.Control className='w-100' size={this.props.size} name={this.props.name} type="color" value={value} 
-                                onChange={this.onChange} onBlur={this.onBlur} disabled={this.props.disabled} style={{width: "80px"}}/>
+                                onChange={this.onChange} onBlur={this.onBlur} disabled={this.props.disabled} />
                 {this.props.showRemoveFormat && <Button className="ml-1" size='sm' variant={'link'} onClick={this.onReset} title={"Enlever format"}><FontAwesomeIcon icon={faRemoveFormat}/></Button>}
             </div>
         return (main);

@@ -252,7 +252,8 @@ class ModalCriterionForm extends Component{
                 name: '',
                 description: '',
                 backgroundcolor: "#cce5ff",
-                sortorder: props.nbItems + 1
+                sortorder: props.nbItems + 1,
+                instruction_ai: ""
             },
             colorList: ["#dc3545", "#0d6efd", "#6c757d", "#198754", "#d63384",
                         "#6610f2", "#fd7e14", "#20c997", "#795548", "#c2185b"

@@ -191,6 +191,7 @@ class WebApi extends MoodleApi
                 $criterion->appendChild($doc->createElement('description', $criterionData->description));
                 $criterion->appendChild($doc->createElement('backgroundcolor', $criterionData->backgroundcolor));
                 $criterion->appendChild($doc->createElement('sortorder', $criterionData->sortorder));
+                $criterion->appendChild($doc->createElement('instruction_ai', $criterionData->instruction_ai));
                 $root->appendChild($criterion);
 
                 $comments = $doc->createElement('comments');

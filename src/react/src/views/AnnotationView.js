@@ -48,7 +48,7 @@ export class AnnotationView extends Component {
         this.state = {
             showModalAnnotate: false,
             showModalAskIA: false,
-            data: null,
+            data: props.data,
             dataReady: false,
             counter: {},
             updatedCounters: false,
@@ -69,6 +69,10 @@ export class AnnotationView extends Component {
                 event.preventDefault(); // blocks the browser’s default context menu. 
             }
         });
+
+        if(!this.state.dataReady){
+            this.setAnnotationText(this.props.data.annotation);
+        }
     }
     
     componentDidUpdate(prevProps){
