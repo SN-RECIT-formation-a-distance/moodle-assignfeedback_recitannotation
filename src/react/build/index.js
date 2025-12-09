@@ -74308,7 +74308,6 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
         className: "mr-2"
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "link",
-        size: "sm",
         onClick: this.onUndo,
         title: _common.$glVars.i18n.undo,
         disabled: this.state.stack.undo.length === 0
@@ -74316,7 +74315,6 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
         icon: _freeSolidSvgIcons.faUndo
       })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "link",
-        size: "sm",
         onClick: this.onRedo,
         title: _common.$glVars.i18n.redo,
         disabled: this.state.stack.redo.length === 0
@@ -74326,7 +74324,6 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
         className: "mr-2"
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "link",
-        size: "sm",
         onClick: this.onResetAnnotation,
         title: 'Réinitialiser l’annotation'
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
@@ -74334,7 +74331,6 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
       }))), /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonGroup, {
         className: "mr-2"
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
-        size: "sm",
         variant: this.state.quickAnnotationMethod ? 'primary' : 'outline-primary',
         onClick: function onClick() {
           return _this3.setState({
@@ -74344,13 +74340,27 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
         title: _common.$glVars.i18n.quick_annotation_method
       }, _common.$glVars.i18n.quick_annotation_method)), /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonGroup, null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "link",
-        size: "sm",
         onClick: this.onAskIA,
         disabled: !_common.$glVars.moodleData.aiApi,
         title: _common.$glVars.i18n.ask_ai
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
         icon: _freeSolidSvgIcons.faChalkboard
-      }))))), /*#__PURE__*/_react.default.createElement("div", {
+      }))), /*#__PURE__*/_react.default.createElement("a", {
+        className: "btn  btn-link",
+        title: _common.$glVars.i18n.print_comment_list,
+        href: "".concat(_common.$glVars.moodleData.wwwroot, "/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=").concat(_common.$glVars.urlParams.id, "&assignment=").concat(_common.$glVars.moodleData.assignment),
+        target: "_blank"
+      }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
+        icon: _freeSolidSvgIcons.faPrint
+      })), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
+        variant: "link",
+        className: "ml-1",
+        onClick: function onClick() {
+          return _this3.props.onChangeView('settings');
+        }
+      }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
+        icon: _freeSolidSvgIcons.faCog
+      })))), /*#__PURE__*/_react.default.createElement("div", {
         ref: AnnotationView.refAnnotation,
         onMouseUp: this.onSelectionChange,
         onTouchEnd: this.onSelectionChange,
@@ -74365,40 +74375,19 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
         icon: _freeSolidSvgIcons.faComment
       }), " ".concat(_common.$glVars.i18n.annotate)))), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Col, {
         md: 4
-      }, /*#__PURE__*/_react.default.createElement("div", {
-        className: "d-flex align-items-baseline"
-      }, /*#__PURE__*/_react.default.createElement("span", {
-        className: "h5"
-      }, _common.$glVars.i18n.occurrences), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
-        size: "sm",
-        variant: "link",
-        className: "ml-1",
-        onClick: function onClick() {
-          return _this3.props.onChangeView('settings');
-        }
-      }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
-        icon: _freeSolidSvgIcons.faCog
-      })), /*#__PURE__*/_react.default.createElement("a", {
-        className: "btn btn-sm btn-link",
-        title: _common.$glVars.i18n.print_comment_list,
-        href: "".concat(_common.$glVars.moodleData.wwwroot, "/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=").concat(_common.$glVars.urlParams.id, "&assignment=").concat(_common.$glVars.moodleData.assignment),
-        target: "_blank"
-      }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
-        icon: _freeSolidSvgIcons.faPrint
-      }))), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Table, {
-        striped: true,
-        bordered: true,
-        size: "sm"
-      }, /*#__PURE__*/_react.default.createElement("thead", null, /*#__PURE__*/_react.default.createElement("tr", null, /*#__PURE__*/_react.default.createElement("th", null, _common.$glVars.i18n.criterion), /*#__PURE__*/_react.default.createElement("th", null, _common.$glVars.i18n.count))), /*#__PURE__*/_react.default.createElement("tbody", null, criteriaList.map(function (item, index) {
-        var row = /*#__PURE__*/_react.default.createElement("tr", {
-          key: index
-        }, /*#__PURE__*/_react.default.createElement("td", {
+      }, criteriaList.map(function (item, index) {
+        var badge = /*#__PURE__*/_react.default.createElement("span", {
+          key: index,
+          className: "font-weight-bold d-block p-2 m-2 rounded text-white",
           style: {
-            backgroundColor: item.backgroundcolor
+            backgroundColor: item.backgroundcolor,
+            borderColor: item.backgroundcolor
           }
-        }, item.description), /*#__PURE__*/_react.default.createElement("td", null, _this3.state.counter.hasOwnProperty(item.name) ? _this3.state.counter[item.name] : 0));
-        return row;
-      })))), !this.state.quickAnnotationMethod && this.state.showModalAnnotate && /*#__PURE__*/_react.default.createElement(ModalAnnotateForm, {
+        }, /*#__PURE__*/_react.default.createElement("span", null, item.description), /*#__PURE__*/_react.default.createElement("span", {
+          className: "bg-white text-dark rounded-pill pl-1 pr-1 ml-1 small"
+        }, _this3.state.counter.hasOwnProperty(item.name) ? _this3.state.counter[item.name] : 0));
+        return badge;
+      })), !this.state.quickAnnotationMethod && this.state.showModalAnnotate && /*#__PURE__*/_react.default.createElement(ModalAnnotateForm, {
         onClose: this.onClose,
         createNewAnnotation: this.createNewAnnotation,
         commentList: commentList,

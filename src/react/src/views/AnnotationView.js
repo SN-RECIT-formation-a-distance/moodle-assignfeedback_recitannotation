@@ -120,21 +120,21 @@ export class AnnotationView extends Component {
                             <div className='h5'>{$glVars.i18n.student_production}</div>
                             <div>
                                 <ButtonGroup className='mr-2'>
-                                    <Button variant='link' size='sm' onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
+                                    <Button variant='link'  onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
                                         <FontAwesomeIcon icon={faUndo}/>
                                     </Button>
-                                    <Button variant='link' size='sm' onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
+                                    <Button variant='link'  onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
                                         <FontAwesomeIcon icon={faRedo}/>
                                     </Button>
                                 </ButtonGroup>
                                 <ButtonGroup className='mr-2'>
-                                    <Button variant='link' size='sm' onClick={this.onResetAnnotation} title={'Réinitialiser l’annotation'}>
+                                    <Button variant='link'  onClick={this.onResetAnnotation} title={'Réinitialiser l’annotation'}>
                                         <FontAwesomeIcon icon={faTrash}/>
                                     </Button>
                                 </ButtonGroup>
 
                                 <ButtonGroup  className='mr-2'>
-                                    <Button size='sm'  variant={(this.state.quickAnnotationMethod ? 'primary' : 'outline-primary')}
+                                    <Button  variant={(this.state.quickAnnotationMethod ? 'primary' : 'outline-primary')}
                                         onClick={() => this.setState({quickAnnotationMethod: !this.state.quickAnnotationMethod})} 
                                         title={$glVars.i18n.quick_annotation_method}>
                                         {$glVars.i18n.quick_annotation_method}
@@ -142,10 +142,20 @@ export class AnnotationView extends Component {
                                 </ButtonGroup>
                                 
                                 <ButtonGroup >
-                                    <Button variant='link' size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
+                                    <Button variant='link'  onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
                                         <FontAwesomeIcon icon={faChalkboard}/>
                                     </Button>
                                 </ButtonGroup>
+
+                                
+                                <a className='btn  btn-link' title={$glVars.i18n.print_comment_list} 
+                                    href={`${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=${$glVars.urlParams.id}&assignment=${$glVars.moodleData.assignment}`} target="_blank">
+                                    <FontAwesomeIcon icon={faPrint}/>
+                                </a>
+
+                                <Button  variant='link' className='ml-1' onClick={() => this.props.onChangeView('settings')}>
+                                    <FontAwesomeIcon icon={faCog}/>
+                                </Button>
                             </div>
                             
                         </div>
@@ -158,35 +168,14 @@ export class AnnotationView extends Component {
                         </ButtonGroup>                        
                     </Col>
                     <Col md={4} >
-                        <div className='d-flex align-items-baseline'>
-                            <span className='h5'>{$glVars.i18n.occurrences}</span>
-                            <Button size='sm' variant='link' className='ml-1' onClick={() => this.props.onChangeView('settings')}>
-                                <FontAwesomeIcon icon={faCog}/>
-                            </Button>
-                            <a className='btn btn-sm btn-link' title={$glVars.i18n.print_comment_list} 
-                                href={`${$glVars.moodleData.wwwroot}/mod/assign/feedback/recitannotation/classes/print-comment-list.php?cmid=${$glVars.urlParams.id}&assignment=${$glVars.moodleData.assignment}`} target="_blank">
-                                <FontAwesomeIcon icon={faPrint}/>
-                            </a>
-                        </div>
-
-                        <Table striped bordered size='sm'>
-                            <thead>
-                                <tr>
-                                    <th>{$glVars.i18n.criterion}</th>
-                                    <th>{$glVars.i18n.count}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {criteriaList.map((item, index) => {
-                                    let row = 
-                                        <tr key={index}>
-                                            <td style={{backgroundColor: item.backgroundcolor}}>{item.description}</td>
-                                            <td>{(this.state.counter.hasOwnProperty(item.name) ? this.state.counter[item.name] : 0)}</td>
-                                        </tr>;
-                                    return row;
-                                })}
-                            </tbody>
-                        </Table>
+                        {criteriaList.map((item, index) => {
+                            let badge = 
+                                <span key={index} className='font-weight-bold d-block p-2 m-2 rounded text-white' style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}>
+                                    <span>{item.description}</span>
+                                    <span className="bg-white text-dark rounded-pill pl-1 pr-1 ml-1 small">{(this.state.counter.hasOwnProperty(item.name) ? this.state.counter[item.name] : 0)}</span>
+                                </span>
+                            return badge;
+                        })}
                     </Col>
                     {!this.state.quickAnnotationMethod &&  this.state.showModalAnnotate && 
                         <ModalAnnotateForm onClose={this.onClose} createNewAnnotation={this.createNewAnnotation} 
