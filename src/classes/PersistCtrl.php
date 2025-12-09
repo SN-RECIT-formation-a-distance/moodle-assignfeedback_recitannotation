@@ -121,6 +121,16 @@ class PersistCtrl extends MoodlePersistCtrl
         }
     }
 
+    public function deleteAnnotation($id){
+        try{
+            $this->mysqlConn->delete_records("assignfeedback_recitannotation", ['id' => $id]);
+            return true;
+        }
+        catch(Exception $ex){
+            throw $ex;
+        }
+    }
+
     public function deletePluginData($assignment){
         global $DB;
 

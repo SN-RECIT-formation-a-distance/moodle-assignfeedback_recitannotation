@@ -14,15 +14,16 @@ export class MainView extends Component {
 
         this.onChangeView = this.onChangeView.bind(this);
         this.getData = this.getData.bind(this);
+        this.refreshData = this.refreshData.bind(this);
         
         this.state = {
             view: '',
-            annotation: {},
+            annotation: null,
             dropdownList: {
                 criteriaList: [],
                 commentList: []
             },
-            promptAi: {}
+            promptAi: null
         };
     }
 
@@ -67,6 +68,10 @@ export class MainView extends Component {
         $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.attemptnumber, $glVars.moodleData.userid, callback);
     }
 
+    refreshData(){
+        this.getData();
+    }
+
     render(){
         let main = null;
 
@@ -76,7 +81,7 @@ export class MainView extends Component {
                         commentList={this.state.dropdownList.commentList} refresh={this.getData} />;
                 break;
             default:
-                main = <AnnotationView onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
+                main = <AnnotationView refreshData={this.refreshData} onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
                         commentList={this.state.dropdownList.commentList} />
                 break;
            

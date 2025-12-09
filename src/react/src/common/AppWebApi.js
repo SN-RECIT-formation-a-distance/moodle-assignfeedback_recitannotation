@@ -54,6 +54,11 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess);
     } 
 
+    deleteAnnotation(id, assignment, onSuccess){
+        let data = {id: id, assignment: assignment, service: "deleteAnnotation"};
+        this.post(this.gateway, data, onSuccess);
+    }
+
    /* getCriteriaList(assignment, onSuccess){
         let data = {assignment: assignment, service: "getCriteriaList"};
         this.post(this.gateway, data, onSuccess);

@@ -17,7 +17,8 @@ export class AnnotationView extends Component {
         promptAi: null,
         onChangeView: null,
         criteriaList: [],
-        commentList: []
+        commentList: [],
+        refreshData: null
     };
 
     static currentRange = null;
@@ -42,7 +43,7 @@ export class AnnotationView extends Component {
         this.onRedo = this.onRedo.bind(this);
         this.cancelDataChange = this.cancelDataChange.bind(this);
         this.beforeDataChange = this.beforeDataChange.bind(this);
-        this.onCleanHtml = this.onCleanHtml.bind(this);
+        this.onResetAnnotation = this.onResetAnnotation.bind(this);
         this.refresh = this.refresh.bind(this);
 
         this.state = {
@@ -70,8 +71,8 @@ export class AnnotationView extends Component {
             }
         });
 
-        if(!this.state.dataReady){
-            this.setAnnotationText(this.props.data.annotation);
+        if((this.state.data !== null) && (!this.state.dataReady)){
+            this.setAnnotationText(this.state.data.annotation);
         }
     }
     
@@ -81,11 +82,11 @@ export class AnnotationView extends Component {
         }
 
         if(this.state.data === null){
-            this.setState({data: this.props.data});
-        }
-
-        if(!this.state.dataReady){
-            this.setAnnotationText(this.props.data.annotation);
+            this.setState({data: this.props.data}, () => {
+                if(!this.state.dataReady){
+                    this.setAnnotationText(this.state.data.annotation);
+                }
+            });
         }
     }
 
@@ -119,16 +120,16 @@ export class AnnotationView extends Component {
                             <div className='h5'>{$glVars.i18n.student_production}</div>
                             <div>
                                 <ButtonGroup className='mr-2'>
-                                    <Button size='sm' onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
+                                    <Button variant='link' size='sm' onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
                                         <FontAwesomeIcon icon={faUndo}/>
                                     </Button>
-                                    <Button size='sm' onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
+                                    <Button variant='link' size='sm' onClick={this.onRedo} title={$glVars.i18n.redo} disabled={(this.state.stack.redo.length === 0)}>
                                         <FontAwesomeIcon icon={faRedo}/>
                                     </Button>
                                 </ButtonGroup>
                                 <ButtonGroup className='mr-2'>
-                                    <Button size='sm' onClick={this.onCleanHtml} title={$glVars.i18n.clean_student_production}>
-                                        <FontAwesomeIcon icon={faBroom}/>
+                                    <Button variant='link' size='sm' onClick={this.onResetAnnotation} title={'Réinitialiser l’annotation'}>
+                                        <FontAwesomeIcon icon={faTrash}/>
                                     </Button>
                                 </ButtonGroup>
 
@@ -141,7 +142,7 @@ export class AnnotationView extends Component {
                                 </ButtonGroup>
                                 
                                 <ButtonGroup >
-                                    <Button size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
+                                    <Button variant='link' size='sm' onClick={this.onAskIA} disabled={!$glVars.moodleData.aiApi} title={$glVars.i18n.ask_ai}>
                                         <FontAwesomeIcon icon={faChalkboard}/>
                                     </Button>
                                 </ButtonGroup>
@@ -378,14 +379,24 @@ export class AnnotationView extends Component {
         }
     }
 
-    onCleanHtml(){
+    onResetAnnotation(){
         let that = this;
         let onApply = function(){
             that.beforeDataChange();
-            that.setAnnotationText(Utils.cleanHTML(AnnotationView.refAnnotation.current.innerHTML));
-            that.save();
+            $glVars.webApi.deleteAnnotation(that.state.data.id, $glVars.moodleData.assignment, (result) => {
+                if(!result.success){
+                    $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
+                    return;
+                }
+                else{
+                    $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
+                    that.setState({data: null, dataReady: false});
+                    that.props.refreshData();
+                    return; 
+                }
+            });
         }
-        DlgConfirm.render($glVars.i18n.pluginname, $glVars.i18n.msg_confirm_clean_html_code, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
+        DlgConfirm.render($glVars.i18n.pluginname, `Souhaitez-vous vraiment réinitialiser l’annotation ?\n\nCette action supprimera toutes les annotations que vous avez ajoutées.`, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
     createNewAnnotation(el, criterionName, explanation, suggestion = '', strategy = '', aiFeedback = false){
@@ -492,11 +503,19 @@ class QuickAnnotateForm extends Component{
 
     componentDidMount(){
         if(AnnotationView.selectedElement && AnnotationView.selectedElement.dataset.criterion !== null){
+            let comment = "";
+            if(AnnotationView.selectedElement.hasAttribute('data-explanation')){
+                comment = AnnotationView.selectedElement.dataset.explanation;
+            }
+            else if(AnnotationView.selectedElement.hasAttribute('data-comment')){
+                comment = AnnotationView.selectedElement.dataset.comment;
+            }
+
             this.setState({
                 data: {
                     // it ensures that the criterion defined previously in the DOM still exists in the criteria list
                     criterion: JsNx.getItem(this.props.commentList, 'name', AnnotationView.selectedElement.dataset.criterion, {name: ''}).criterionid, 
-                    comment: AnnotationView.selectedElement.dataset.explanation,
+                    comment: comment,
                     suggestion: AnnotationView.selectedElement.dataset.suggestion,
                     strategy: AnnotationView.selectedElement.dataset.strategy,
                 },
@@ -665,11 +684,19 @@ class ModalAnnotateForm extends Component{
 
     componentDidMount(){
         if(AnnotationView.selectedElement && AnnotationView.selectedElement.dataset.criterion !== null){
+            let comment = "";
+            if(AnnotationView.selectedElement.hasAttribute('data-explanation')){
+                comment = AnnotationView.selectedElement.dataset.explanation;
+            }
+            else if(AnnotationView.selectedElement.hasAttribute('data-comment')){
+                comment = AnnotationView.selectedElement.dataset.comment;
+            }
+
             this.setState({
                 data: {
                     // it ensures that the criterion defined previously in the DOM still exists in the criteria list
                     criterion: JsNx.getItem(this.props.criteriaList, 'name', AnnotationView.selectedElement.dataset.criterion, {name: ''}).name, 
-                    comment: AnnotationView.selectedElement.dataset.explanation,
+                    comment: comment,
                     suggestion: AnnotationView.selectedElement.dataset.suggestion,
                     strategy: AnnotationView.selectedElement.dataset.strategy,
                 },

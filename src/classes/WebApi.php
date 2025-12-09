@@ -77,6 +77,21 @@ class WebApi extends MoodleApi
         }
     }
 
+    public function deleteAnnotation($request){
+        try{
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+            $id = clean_param($request['id'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
+
+            $this->ctrl->deleteAnnotation($id);
+            return new WebApiResult(true);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
    /* public function getCriteriaList($request){
         try{            
             $assignment = clean_param($request['assignment'], PARAM_INT);
