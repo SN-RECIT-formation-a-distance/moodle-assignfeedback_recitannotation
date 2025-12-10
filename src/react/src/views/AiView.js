@@ -444,6 +444,9 @@ class ModalPromptAiForm extends Component{
                 <Form.Group className='mb-3' >
                     <Form.Label>{"Prompt à l'IA"}</Form.Label>
                     <InputTextArea name="prompt_ai" as="textarea" value={this.state.data.prompt_ai} onChange={this.onDataChange} rows={10} />
+                    <Form.Text>
+                        Veuillez utiliser les variables suivantes pour le remplacement automatique lors de la création du prompt : <strong>PLACEHOLDER_STUDENT_TEXT</strong>, <strong>PLACEHOLDER_CRITERIA_LIST</strong>
+                    </Form.Text>
                 </Form.Group>
                 
             </Form>;
