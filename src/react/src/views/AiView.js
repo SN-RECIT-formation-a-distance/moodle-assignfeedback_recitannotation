@@ -121,6 +121,7 @@ export class ModalAskAi extends Component{
         }
 
         let data = this.state.data;
+
         data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerText);
 
         let criteriaList = [];
@@ -211,7 +212,7 @@ export class ModalAskAi extends Component{
             }
         };
         
-        $glVars.webApi.callAzureAI(payload, $glVars.moodleData.assignment, this.onReply);
+        $glVars.webApi.callAzureAI(payload, $glVars.moodleData.assignment, this.onReply, 120000);
         this.setState({waiting: true});
     }
 
@@ -316,11 +317,13 @@ export class ModalAskAi extends Component{
             }
             ]
         }*/
+        // set innerHTML here to be allow creating nodes and have selectable ranges
         AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
 
         let corrections = [];
         for(let item of data.corrections){
             const regex = new RegExp(`\\[\\[${item.id}:([^\\]]*)\\]\\]`);
+            // perform match on text not HTML dom
             const match = data.annotatedText.match(regex);
 
             if(match){
@@ -346,6 +349,7 @@ export class ModalAskAi extends Component{
         }
 
         for(let item of corrections){
+            // replace the [[e1:abc]] with the old word
             item.el.innerHTML = item.innerText; 
         }
 

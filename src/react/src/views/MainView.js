@@ -4,9 +4,9 @@ import { $glVars } from '../common/common';
 import { AnnotationView } from './AnnotationView';
 import { SettingsView } from './SettingsView';
 
-
 export class MainView extends Component {
     static defaultProps = {
+        appMounted: false
     };
 
     constructor(props) {
@@ -32,6 +32,12 @@ export class MainView extends Component {
         this.getData();
     }
 
+    componentDidUpdate(){
+        if(this.state.annotation === null){
+            this.getData();
+        }
+    }
+
     integrateAppReactWithMoodle(){
         let panelGrade = window.document.querySelector("[data-region='grade-panel']");
         let recitAnnotation = window.document.getElementById("recitannotation_appreact_placeholder");    
@@ -50,6 +56,8 @@ export class MainView extends Component {
     }
 
     getData(){
+        if(!this.props.appMounted){ return ;}
+
         let that = this;
 
         let callback = function(result){

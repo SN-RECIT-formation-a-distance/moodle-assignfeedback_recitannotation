@@ -14,7 +14,6 @@ export class HttpRequest
 
     constructor(){
         this.useCORS = false;
-        this.timeout = 0; // in ms
         this.inProgress = false;
 
         this.onLoad = this.onLoad.bind(this);
@@ -35,7 +34,7 @@ export class HttpRequest
         this.responseDataType = null;
     }
 
-    send(method, url, data, onSuccess, onError, onComplete, contentType, responseDataType){
+    send(method, url, data, onSuccess, onError, onComplete, contentType, responseDataType, timeout = 0){
         // force to await in order to execute one call at time (multiples calls causes the slowness on PHP)
         if(this.inProgress){
             setTimeout(() => this.send(method, url, data, onSuccess, onError, onComplete, contentType, responseDataType), 500);
@@ -67,8 +66,8 @@ export class HttpRequest
         }
         
         // In Internet Explorer, the timeout property can only be used after the open () method has been invoked and before the send () method is called.
-        if(this.timeout > 0){ 
-            this.xhr.timeout = this.timeout; 
+        if(timeout > 0){ 
+            this.xhr.timeout = timeout; 
         }
 
         this.inProgress = true;
@@ -140,27 +139,28 @@ export class WebApi
         console.log(jqXHR);
     };
     
-    post(url, data, callbackSuccess, callbackError, showFeedback){
+    post(url, data, callbackSuccess, callbackError, showFeedback = true, timeout = 30000){
         showFeedback = (typeof showFeedback === 'undefined' ? true : showFeedback);
         
         if(showFeedback){
-            this.showLoadingFeedback();
+            this.showLoadingFeedback(timeout);
         }
         
         callbackError = callbackError || this.onError;
         data.sesskey = this.sesskey;
         data = JSON.stringify(data);
 
-        this.http.send("post", url, data, callbackSuccess, callbackError, this.onComplete, HttpRequest.contentType.json, HttpRequest.responseType.json);
+        this.http.send("post", url, data, callbackSuccess, callbackError, this.onComplete, HttpRequest.contentType.json, HttpRequest.responseType.json, timeout);
     }
 
     onComplete(){
         this.hideLoadingFeedback();
     }
 
-    showLoadingFeedback(){
+    showLoadingFeedback(timeout){
         if(this.domVisualFeedback === null){ return; }
         this.domVisualFeedback.style.display = "flex";
+        this.domVisualFeedback.dataset.timeout = timeout / 1000;
         document.body.appendChild(this.domVisualFeedback);
     }
 

@@ -23,12 +23,13 @@ class App extends Component {
         //$glVars.signedUser = this.props.signedUser;
         $glVars.urlParams = Utils.getUrlVars();
 
-        this.state = {};
+        this.state = {appMounted: false};
     }
 
     componentDidMount(){
         $glVars.feedback.addObserver("App", this.onFeedback);
         console.log(' | v' + Options.appVersion());
+        this.setState({appMounted: true});
     }
 
     componentWillUnmount(){
@@ -40,7 +41,7 @@ class App extends Component {
 
         let main =
             <div>
-                <MainView />                
+                <MainView appMounted={this.state.appMounted}/>                
                 <Loading webApi={$glVars.webApi}><FontAwesomeIcon icon={faSpinner} spin/></Loading>
             </div>
 

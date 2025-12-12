@@ -81,10 +81,12 @@ export class AnnotationView extends Component {
             this.updateCounters();
         }
 
-        if(!this.state.dataReady){
-            this.setState({data: this.props.data}, () => {
-                this.setAnnotationText(this.state.data.annotation);
-            });
+        if(this.props.data !== null && this.state.data === null){
+            this.setState({data: this.props.data});
+        }
+
+        if(!this.state.dataReady && this.state.data !== null){
+            this.setAnnotationText(this.state.data.annotation);
         }
     }
 
@@ -109,15 +111,13 @@ export class AnnotationView extends Component {
     }
 
     render() {
-        if(this.state.data === null){ return null;}
-
         let criteriaList = this.props.criteriaList;
         let commentList = this.props.commentList;
 
         let main =
             <div className="container-fluid">
-                <div className=' main-view'>
-                    <div style={{height: "45px"}} className='position-absolute p-1 w-100 bg-light d-flex justify-content-between'>
+                <div className=' annotation-view'>
+                    <div style={{minHeight: "45px", maxHeight: "45px"}} className='p-1 w-100 bg-light d-flex justify-content-between'>
                         <ButtonGroup className='mr-2'>
                             <Button variant='link'   onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
                                 <FontAwesomeIcon icon={faUndo}/>
@@ -153,7 +153,7 @@ export class AnnotationView extends Component {
                         </span>
                         
                     </div>
-                    <div className='d-flex flex-wrap w-100' style={{marginTop: "3.5rem"}}>
+                    <div className='d-flex flex-wrap w-100'>
                         <Col className='p-2' md={8}>
                             <div className='p-3 border rounded' ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange}></div>
 
@@ -377,7 +377,7 @@ export class AnnotationView extends Component {
                 }
                 else{
                     $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
-                    that.setState({dataReady: false});
+                    that.setState({data: null, dataReady: false});
                     that.props.refreshData();
                     return; 
                 }

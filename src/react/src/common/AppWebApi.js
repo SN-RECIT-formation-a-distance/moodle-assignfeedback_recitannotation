@@ -136,7 +136,7 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, options, onSuccessTmp, null, true);
     }
 
-    callAzureAI(payload, assignment, onSuccess){
+    callAzureAI(payload, assignment, onSuccess, timeout = 0){
         let that = this;
         let onSuccessTmp = function(result){     
             onSuccess(result);
@@ -146,6 +146,6 @@ export class AppWebApi extends WebApi
         };
 
         let options = {payload: payload, assignment: assignment, service: "callAzureAI"};
-        this.post(this.gateway, options, onSuccessTmp, null, true);
+        this.post(this.gateway, options, onSuccessTmp, null, true, timeout);
     }
 };
