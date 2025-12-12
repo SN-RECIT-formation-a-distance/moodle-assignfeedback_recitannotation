@@ -91,6 +91,10 @@ export class AnnotationView extends Component {
     setAnnotationText(value){
         if(AnnotationView.refAnnotation.current === null){ return; }
 
+        if(value.length === 0){
+            value = "<span class='text-muted'>Le travail remis par l’élève s’affichera ici.</span>";
+        }
+        
         AnnotationView.refAnnotation.current.innerHTML = value;
 
         // Gérer le clic sur le texte surligné
@@ -113,7 +117,7 @@ export class AnnotationView extends Component {
         let main =
             <div className="container-fluid">
                 <div className=' main-view'>
-                    <div style={{height: "45px"}} className='p-1 w-100 bg-light d-flex justify-content-between'>
+                    <div style={{height: "45px"}} className='position-absolute p-1 w-100 bg-light d-flex justify-content-between'>
                         <ButtonGroup className='mr-2'>
                             <Button variant='link'   onClick={this.onUndo} title={$glVars.i18n.undo} disabled={(this.state.stack.undo.length === 0)}>
                                 <FontAwesomeIcon icon={faUndo}/>
@@ -149,8 +153,8 @@ export class AnnotationView extends Component {
                         </span>
                         
                     </div>
-                    <div className='d-flex flex-wrap p-3'>
-                        <Col className='p-3' md={8}>
+                    <div className='d-flex flex-wrap w-100' style={{marginTop: "3.5rem"}}>
+                        <Col className='p-2' md={8}>
                             <div className='p-3 border rounded' ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange}></div>
 
                             <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
@@ -159,12 +163,12 @@ export class AnnotationView extends Component {
                                 </Button>                            
                             </ButtonGroup>                        
                         </Col>
-                        <Col className='p-3' md={4} >
+                        <Col className='p-2' md={4} >
                             {criteriaList.map((item, index) => {
                                 let badge = 
-                                    <span key={index} className='font-weight-bold d-block p-2 m-2 rounded' style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}>
-                                        <span style={{ color: "white"}}>{item.description}</span>
-                                        <span className="bg-white text-dark small rounded-pill  ml-2" style={{padding: ".2rem .5rem"}}>{(this.state.counter.hasOwnProperty(item.name) ? this.state.counter[item.name] : 0)}</span>
+                                    <span key={index} className='d-flex justify-between align-items-center p-2 m-1 rounded' style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}>
+                                        <span className='text-white mr-2'>{item.description}</span>
+                                        <span className="bg-white text-dark small rounded-pill  ml-auto" style={{padding: ".2rem .5rem"}}>{(this.state.counter.hasOwnProperty(item.name) ? this.state.counter[item.name] : 0)}</span>
                                     </span>
                                 return badge;
                             })}
