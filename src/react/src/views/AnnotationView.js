@@ -18,7 +18,8 @@ export class AnnotationView extends Component {
         onChangeView: null,
         criteriaList: [],
         commentList: [],
-        refreshData: null
+        refreshData: null,
+        className: ""
     };
 
     static currentRange = null;
@@ -115,7 +116,7 @@ export class AnnotationView extends Component {
         let commentList = this.props.commentList;
 
         let main =
-            <div className="container-fluid">
+            <div className={this.props.className + " container-fluid"}>
                 <div className=' annotation-view'>
                     <div style={{minHeight: "45px", maxHeight: "45px"}} className='p-1 w-100 bg-light d-flex justify-content-between'>
                         <ButtonGroup className='mr-2'>

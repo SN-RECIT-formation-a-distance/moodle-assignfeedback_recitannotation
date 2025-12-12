@@ -17,7 +17,7 @@ export class MainView extends Component {
         this.refreshData = this.refreshData.bind(this);
         
         this.state = {
-            view: '', // annotation, settings
+            view: 'annotation', // annotation, settings
             annotation: null,
             dropdownList: {
                 criteriaList: [],
@@ -89,7 +89,7 @@ export class MainView extends Component {
                         commentList={this.state.dropdownList.commentList} refresh={this.getData} />
             }
 
-            <AnnotationView  className={(this.state.view === 'annotation' ? '' : 'invisible')} refreshData={this.refreshData} onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
+            <AnnotationView  className={(this.state.view === 'annotation' ? '' : 'd-none')} refreshData={this.refreshData} onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
                         commentList={this.state.dropdownList.commentList} />
         </>
 
