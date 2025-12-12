@@ -17,7 +17,7 @@ export class MainView extends Component {
         this.refreshData = this.refreshData.bind(this);
         
         this.state = {
-            view: '',
+            view: '', // annotation, settings
             annotation: null,
             dropdownList: {
                 criteriaList: [],
@@ -81,19 +81,17 @@ export class MainView extends Component {
     }
 
     render(){
-        let main = null;
+        // do not unmount AnnotationView because it uses references direct in the DOM and unmouting it causes problems with React
+        let main = 
+        <>
+            {this.state.view === 'settings' && 
+                <SettingsView onChangeView={this.onChangeView} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
+                        commentList={this.state.dropdownList.commentList} refresh={this.getData} />
+            }
 
-        switch(this.state.view){
-            case 'settings':
-                main = <SettingsView onChangeView={this.onChangeView} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
-                        commentList={this.state.dropdownList.commentList} refresh={this.getData} />;
-                break;
-            default:
-                main = <AnnotationView refreshData={this.refreshData} onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
+            <AnnotationView  className={(this.state.view === 'annotation' ? '' : 'invisible')} refreshData={this.refreshData} onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
                         commentList={this.state.dropdownList.commentList} />
-                break;
-           
-        }
+        </>
 
         return main;
     }

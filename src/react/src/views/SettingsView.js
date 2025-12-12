@@ -28,9 +28,9 @@ export class SettingsView extends Component{
         let criteriaList = this.props.criteriaList;
         let commentList = this.props.commentList;
 
-        let main = 
+        let main =         
         <div className='p-2'>
-            <Button variant='link' onClick={this.props.onChangeView} className='mb-5'>
+            <Button variant='link' onClick={() => this.props.onChangeView('annotation')} className='mb-5'>
                 <FontAwesomeIcon icon={faArrowLeft}/>{` ${$glVars.i18n.back_annotation_view}`}
             </Button>
 
