@@ -18,8 +18,9 @@ export class AnnotationView extends Component {
         onChangeView: null,
         criteriaList: [],
         commentList: [],
-        refreshData: null,
-        className: ""
+        refresh: null,
+        className: "",
+        onAnnotationChange: null
     };
 
     static currentRange = null;
@@ -37,7 +38,6 @@ export class AnnotationView extends Component {
         this.onClose = this.onClose.bind(this);
         this.updateCounters = this.updateCounters.bind(this);
         this.save = this.save.bind(this);        
-        this.setAnnotationText = this.setAnnotationText.bind(this);
         this.createNewAnnotation = this.createNewAnnotation.bind(this);
 
         this.onUndo = this.onUndo.bind(this);
@@ -50,10 +50,8 @@ export class AnnotationView extends Component {
         this.state = {
             showModalAnnotate: false,
             showModalAskIA: false,
-            data: props.data,
-            dataReady: false,
             counter: {},
-            updatedCounters: false,
+            unsavedData: false,
             stack: {
                 undo: [],
                 redo: []
@@ -72,43 +70,24 @@ export class AnnotationView extends Component {
             }
         });
 
-        if((this.state.data !== null) && (!this.state.dataReady)){
-            this.setAnnotationText(this.state.data.annotation);
-        }
+        this.refresh();
     }
     
-    componentDidUpdate(prevProps){
-        if((prevProps.criteriaList.length !== this.props.criteriaList.length) || (!this.state.updatedCounters)){
-            this.updateCounters();
+    componentDidUpdate(prevProps, prevState){
+        if(this.props.data === null){ return;}
+
+        // first time it passed here
+        if(prevProps.data === null && typeof this.props.data === "object"){
+            this.refresh();
         }
-
-        if(this.props.data !== null && this.state.data === null){
-            this.setState({data: this.props.data});
+        // when annotation has changed by user, undo, redo, or AskAI
+        else if(prevProps.data.annotation !== this.props.data.annotation){
+            this.refresh(); 
         }
-
-        if(!this.state.dataReady && this.state.data !== null){
-            this.setAnnotationText(this.state.data.annotation);
+        // after set annotation.innerHTML, or updatedCounter, then it triggers saveData.
+        else if(this.state.unsavedData){
+            this.save();
         }
-    }
-
-    setAnnotationText(value){
-        if(AnnotationView.refAnnotation.current === null){ return; }
-
-        if(value.length === 0){
-            value = "<span class='text-muted'>Le travail remis par l’élève s’affichera ici.</span>";
-        }
-        
-        AnnotationView.refAnnotation.current.innerHTML = value;
-
-        // Gérer le clic sur le texte surligné
-        let elements = AnnotationView.refAnnotation.current.querySelectorAll(`[data-criterion]`);
-        for(let el of elements){
-            el.addEventListener('click', this.onClick);  
-        }
-
-        this.refresh();
-
-        this.setState({dataReady: true});
     }
 
     render() {
@@ -156,7 +135,9 @@ export class AnnotationView extends Component {
                     </div>
                     <div className='d-flex flex-wrap w-100'>
                         <Col className='p-2' md={8}>
-                            <div className='p-3 border rounded' ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange}></div>
+                            {this.props.data !== null && 
+                                <div className='p-3 border rounded' ref={AnnotationView.refAnnotation} onMouseUp={this.onSelectionChange} onTouchEnd={this.onSelectionChange}
+                                dangerouslySetInnerHTML={{ __html: this.props.data.annotation }}></div>}
 
                             <ButtonGroup ref={this.refFloatingMenu} className='floating-menu'>
                                 <Button size='sm' onClick={this.onAnnotate}>
@@ -186,7 +167,10 @@ export class AnnotationView extends Component {
                                 commentList={commentList} />
                     }   
 
-                    {this.state.showModalAskIA && <ModalAskAi promptAi={this.props.promptAi} onClose={this.onClose} criteriaList={criteriaList} createNewAnnotation={this.createNewAnnotation} />}
+                    {this.state.showModalAskIA && 
+                                <ModalAskAi promptAi={this.props.promptAi} 
+                                    onClose={this.onClose} criteriaList={criteriaList} 
+                                    createNewAnnotation={this.createNewAnnotation} onAnnotationChange={this.props.onAnnotationChange}/>}
                 </div>
          </div>;
 
@@ -236,20 +220,31 @@ export class AnnotationView extends Component {
         AnnotationView.currentRange = null;
         AnnotationView.selectedElement = null;
         
-        if(refresh){            
-            this.save();
+        if(refresh){
+            this.setState({unsavedData: true}, () =>
+                this.props.onAnnotationChange(AnnotationView.refAnnotation.current.innerHTML)
+            );
         }
         else{
             this.cancelDataChange();
         }
     }
 
-    async refresh(){
-       // this.initTooltips();
+    refresh(){
+        if(AnnotationView.refAnnotation.current === null){ return;}
+
+        // this.initTooltips();
         this.updateCounters();
+
+        // Gérer le clic sur le texte surligné
+        let elements = AnnotationView.refAnnotation.current.querySelectorAll(`[data-criterion]`);
+        for(let el of elements){
+            el.removeEventListener('click', this.onClick);
+            el.addEventListener('click', this.onClick);  
+        }
     }
 
-    updateCounters(){
+    async updateCounters(){
         let counter = this.state.counter;
         let criteriaList = this.props.criteriaList;
         
@@ -258,7 +253,7 @@ export class AnnotationView extends Component {
             counter[item.name] = elements.length;
         }
 
-        this.setState({counter: counter, updatedCounters: true});
+        this.setState({counter: counter});
 
         return counter;
     }   
@@ -321,21 +316,19 @@ export class AnnotationView extends Component {
         let callback = function(result){
             if(!result.success){
                 $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
-                return;
             }
             else{
+                //that.props.data.id = result.data;
                 $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
-                let data = that.state.data;
-                data.id = result.data;          
-                that.setState({data: data});
-                return; 
             }
         } 
-        
-        await this.refresh(); 
+
+        // set flag here to avoid waiting for it and a new call could be triggered
+        this.setState({unsavedData: false});
+
+        await this.updateCounters();
         let data = {};
-        Object.assign(data, this.state.data);
-        data.annotation = AnnotationView.refAnnotation.current.innerHTML;
+        Object.assign(data, this.props.data);
         data.occurrences = {}; // force new object
         Object.assign(data.occurrences, this.state.counter);
 
@@ -350,8 +343,8 @@ export class AnnotationView extends Component {
                 stack.redo.shift(); // Remove the oldest state
             }
             stack.redo.push(AnnotationView.refAnnotation.current.innerHTML);
-            this.setAnnotationText(stack.undo.pop());
-            this.setState({stack: stack}, this.save);
+            this.props.onAnnotationChange(stack.undo.pop());
+            this.setState({stack: stack, unsavedData: true});
         }
     }
 
@@ -362,8 +355,8 @@ export class AnnotationView extends Component {
                 stack.undo.shift(); // Remove the oldest state
             }
             stack.undo.push(AnnotationView.refAnnotation.current.innerHTML);
-            this.setAnnotationText(stack.redo.pop());
-            this.setState({stack: stack}, this.save);
+            this.props.onAnnotationChange(stack.redo.pop());
+            this.setState({stack: stack, unsavedData: true});
         }
     }
 
@@ -371,15 +364,14 @@ export class AnnotationView extends Component {
         let that = this;
         let onApply = function(){
             that.beforeDataChange();
-            $glVars.webApi.deleteAnnotation(that.state.data.id, $glVars.moodleData.assignment, (result) => {
+            $glVars.webApi.deleteAnnotation(that.props.data.id, $glVars.moodleData.assignment, (result) => {
                 if(!result.success){
                     $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
                     return;
                 }
                 else{
                     $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
-                    that.setState({data: null, dataReady: false});
-                    that.props.refreshData();
+                    that.props.refresh();
                     return; 
                 }
             });
@@ -387,26 +379,32 @@ export class AnnotationView extends Component {
         DlgConfirm.render($glVars.i18n.pluginname, `Souhaitez-vous vraiment réinitialiser l’annotation ?\n\nCette action supprimera toutes les annotations que vous avez ajoutées.`, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
-    createNewAnnotation(el, criterionName, explanation, suggestion = '', strategy = '', aiFeedback = false){
+    createNewAnnotation(el, criterionName, explanation, suggestion = '', strategy = '', aiFeedback = false, currentRange = null){
         if(el === null){
             el = document.createElement('span');
 
-            try {
-                AnnotationView.currentRange.surroundContents(el);
-                el.addEventListener('click', this.onClick);  // Gérer le clic sur le texte surligné
-            }catch (error) {
-                let msg = $glVars.i18n.msg_error_highlighting;
-                $glVars.feedback.showError($glVars.i18n.pluginname, msg);
-                console.log(error);
+            if(currentRange){
+                try {
+                    currentRange.surroundContents(el);
+                }catch (error) {
+                    $glVars.feedback.showError($glVars.i18n.pluginname, $glVars.i18n.msg_error_highlighting);
+                    console.log(error);
+                }
             }
         }
-                
+
         let criterion = JsNx.getItem(this.props.criteriaList, 'name', criterionName, null);
 
         if(criterion === null){
-            throw new Error(`The criterion "${criterionName}" was not found.`);
+            let msg = `The criterion "${criterionName}" was not found.`;
+            $glVars.feedback.showError($glVars.i18n.pluginname, msg);
+            throw new Error(msg);
         }
         
+        // Gérer le clic sur le texte surligné
+        el.removeEventListener("click", this.onClick)
+        el.addEventListener('click', this.onClick);  
+
         el.dataset.toggle = "tooltip";
         el.dataset.criterion = criterionName;
         el.dataset.explanation = explanation;
@@ -623,7 +621,7 @@ class QuickAnnotateForm extends Component{
         if(this.state.data.comment.length === 0){ return; }
 
         let el = (this.state.isNewNote ? null : AnnotationView.selectedElement);
-        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false);
+        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false, AnnotationView.currentRange);
 
         this.onClose(true);
     }
@@ -789,7 +787,7 @@ class ModalAnnotateForm extends Component{
         }
 
         let el = (this.state.isNewNote ? null : AnnotationView.selectedElement);
-        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false);
+        this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false, AnnotationView.currentRange);
 
         this.onClose(true);
     }

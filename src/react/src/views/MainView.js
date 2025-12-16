@@ -14,7 +14,8 @@ export class MainView extends Component {
 
         this.onChangeView = this.onChangeView.bind(this);
         this.getData = this.getData.bind(this);
-        this.refreshData = this.refreshData.bind(this);
+        this.refresh = this.refresh.bind(this);
+        this.onAnnotationChange = this.onAnnotationChange.bind(this);
         
         this.state = {
             view: 'annotation', // annotation, settings
@@ -33,6 +34,7 @@ export class MainView extends Component {
     }
 
     componentDidUpdate(){
+        // Make sure to retrieve the data only once after the application is mounted
         if(this.state.annotation === null){
             this.getData();
         }
@@ -70,13 +72,17 @@ export class MainView extends Component {
                 commentList: result.data.commentList
             }
 
+            if(result.data.annotation.annotation.length === 0){
+                result.data.annotation.annotation = "<span class='text-muted'>Le travail remis par l’élève s’affichera ici.</span>";
+            }
+
             that.setState({dropdownList: dropdownList, annotation: result.data.annotation, promptAi: result.data.promptAi});         
         }
             
         $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.attemptnumber, $glVars.moodleData.userid, callback);
     }
 
-    refreshData(){
+    refresh(){
         this.getData();
     }
 
@@ -86,14 +92,23 @@ export class MainView extends Component {
         <>
             {this.state.view === 'settings' && 
                 <SettingsView onChangeView={this.onChangeView} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
-                        commentList={this.state.dropdownList.commentList} refresh={this.getData} />
+                        commentList={this.state.dropdownList.commentList} refresh={this.refresh} />
             }
 
-            <AnnotationView  className={(this.state.view === 'annotation' ? '' : 'd-none')} refreshData={this.refreshData} onChangeView={this.onChangeView} data={this.state.annotation} promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
-                        commentList={this.state.dropdownList.commentList} />
+            <AnnotationView  className={(this.state.view === 'annotation' ? '' : 'd-none')} 
+                    refresh={this.refresh} onChangeView={this.onChangeView} data={this.state.annotation} 
+                    promptAi={this.state.promptAi} criteriaList={this.state.dropdownList.criteriaList}
+                    commentList={this.state.dropdownList.commentList} onAnnotationChange={this.onAnnotationChange}/>
         </>
 
         return main;
+    }
+
+    onAnnotationChange(value){
+        let annotation = {};
+        Object.assign(annotation, this.state.annotation);
+        annotation.annotation = value;
+        this.setState({annotation: annotation});
     }
 
     onChangeView(view){

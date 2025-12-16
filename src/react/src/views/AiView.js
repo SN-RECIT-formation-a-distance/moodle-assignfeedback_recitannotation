@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import { ToggleButtons} from '../libs/components/Components';
 import { $glVars } from '../common/common';
-import { JsNx, UtilsString } from '../libs/utils/Utils';
+import Utils, { JsNx, UtilsString } from '../libs/utils/Utils';
 import { AnnotationView } from './AnnotationView';
 
 export class ModalAskAi extends Component{
@@ -14,7 +14,8 @@ export class ModalAskAi extends Component{
         promptAi: null,      
         onClose: null,
         criteriaList: [],
-        createNewAnnotation: null
+        createNewAnnotation: null,
+        onAnnotationChange: null
     };
 
     constructor(props){
@@ -114,15 +115,16 @@ export class ModalAskAi extends Component{
         return main;
     }
 
-    onReviewPrompt(){
+    onReviewPrompt(){     
         if(this.state.data.criteriaList.length === 0){
             $glVars.feedback.showWarning($glVars.i18n.pluginname, 'Liste de critères', 3);
             return;
-        }
+        } 
 
         let data = this.state.data;
 
-        data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerText);
+        // do not replace student text here to avoid loosing HTML tags
+        // data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerText);
 
         let criteriaList = [];
         for(let item of this.state.data.criteriaList){
@@ -152,9 +154,11 @@ export class ModalAskAi extends Component{
             return;
         }
         
+        let prompt = this.state.data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerHTML);
+
         let payload = {
             messages: [
-                { role: "user", content: this.state.data.prompt }
+                { role: "user", content: prompt }
             ],
             temperature: 0.7,
             max_tokens: 5000,
@@ -167,7 +171,7 @@ export class ModalAskAi extends Component{
                         properties: {
                             annotatedText: { 
                                 type: "string",
-                                description: "Le texte complet où chaque erreur est entourée ainsi : [[id:mot_fautif]].  Il est crucial de laisser la faute de l'élève entre les crochets. Exemple : 'Il a [[e1:manjé]]' (et non 'mangé')" 
+                                description: "Le texte complet où chaque erreur est entourée ainsi : [[id:mot_fautif]].  Il est crucial de laisser la faute de l'élève entre les crochets. Exemple : 'Il a [[e1:manjé]]' (et non 'mangé'). Il est également crucial de retourner le texte de l'élève avec les balises HTML d'origine." 
                             },
                             generalFeedback: { 
                                 type: "string",
@@ -250,108 +254,22 @@ export class ModalAskAi extends Component{
         }
     }
 
-    getRangeByIndex(startIndex, length) {
-        const container = AnnotationView.refAnnotation.current;
-        const endIndex = startIndex + length;
-
-        let currentIndex = 0;
-
-        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-        let node;
-
-        let range = null;
-        while ((node = walker.nextNode())) {
-            const nodeTextLength = node.textContent.length;
-
-            if (currentIndex + nodeTextLength >= startIndex) {
-                range = document.createRange();
-
-                const startOffset = startIndex - currentIndex;
-                const endOffset = Math.min(nodeTextLength, endIndex - currentIndex);
-
-                range.setStart(node, startOffset);
-                range.setEnd(node, endOffset);
-
-                break;
-            }
-
-            currentIndex += nodeTextLength;
-        }
-
-        return range;
-    }
-
     onApply(){
         let data = this.state.data.result;
-       /* let data = {
-            "annotatedText": "Les enfants [[e1:joue]] dans le jardin et ils courent vite. La mère et le père [[e2:prépare]] le dîner pendant que les voisins [[e3:arrive]]. Tout le monde se réjouit, mais les oiseaux [[e4:chante]] trop fort.",
-            "generalFeedback": "Bravo pour votre effort dans l'écriture de ce texte. Quelques ajustements mineurs sur les accords et les conjugaisons amélioreront encore sa qualité.",
-            "corrections": [
-            {
-            "id": "e1",
-            "suggestion": "jouent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'Les enfants'.",
-            "strategy": "Souvenez-vous que les sujets pluriels entraînent une terminaison en '-ent' pour les verbes.",
-            "criterion": "orthographegrammaticale"
-            },
-            {
-            "id": "e2",
-            "suggestion": "préparent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'La mère et le père'.",
-            "strategy": "Identifiez tous les éléments du sujet pour choisir la bonne terminaison.",
-            "criterion": "orthographegrammaticale"
-            },
-            {
-            "id": "e3",
-            "suggestion": "arrivent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'les voisins'.",
-            "strategy": "Vérifiez si le sujet est pluriel ou singulier pour accorder le verbe.",
-            "criterion": "orthographegrammaticale"
-            },
-            {
-            "id": "e4",
-            "suggestion": "chantent",
-            "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'les oiseaux'.",
-            "strategy": "Ajoutez '-ent' aux verbes dont le sujet est pluriel.",
-            "criterion": "orthographegrammaticale"
-            }
-            ]
-        }*/
-        // set innerHTML here to be allow creating nodes and have selectable ranges
-        AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
 
-        let corrections = [];
         for(let item of data.corrections){
             const regex = new RegExp(`\\[\\[${item.id}:([^\\]]*)\\]\\]`);
-            // perform match on text not HTML dom
-            const match = data.annotatedText.match(regex);
 
-            if(match){
-                corrections.push({
-                    suggestion: item.suggestion,
-                    explanation: item.explanation,
-                    strategy: item.strategy,
-                    criterion: item.criterion,
-                    start:  match.index,
-                    offset: match[0].length,
-                    innerText: match[1]
-                });
-            }
+             data.annotatedText = data.annotatedText.replace(regex, (match, group1) => {
+                let el = this.props.createNewAnnotation(null, item.criterion, item.explanation, item.suggestion, item.strategy, true);
+                el.innerHTML = group1;
+                return el.outerHTML;
+            });
         }
 
-        for(let item of corrections){
-            let range = this.getRangeByIndex(item.start, item.offset);
-            
-            if(range !== null){
-                AnnotationView.currentRange = range;
-                item.el = this.props.createNewAnnotation(null, item.criterion, item.explanation, item.suggestion, item.strategy, true);
-            }
-        }
-
-        for(let item of corrections){
-            // replace the [[e1:abc]] with the old word
-            item.el.innerHTML = item.innerText; 
-        }
+        // avoir set directly innerHTML to prevent issues with React
+        // AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
+        this.props.onAnnotationChange(data.annotatedText);
 
         this.onClose(true);
     }
@@ -377,7 +295,7 @@ export class PromptAiView extends Component{
     }
 
     render(){
-        let promptAi = (this.props.data ? this.props.data.prompt_ai.replace(/\n/g, "<br>") : "");
+        let promptAi = (this.props.data ? Utils.nl2html(this.props.data.prompt_ai) : "");
 
         let style = {
             fontFamily: "Fira Code, Courier New, monospace",   

@@ -280,6 +280,38 @@ export default class Utils{
         }
         return false;
     }
+
+    static nl2html(text) {
+        return text
+            // normalize newlines first
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+
+            // paragraph: two or more newlines → </p><p>
+            .replace(/\n{2,}/g, '</p><p>')
+
+            // line break: single newline → <br>
+            .replace(/\n/g, '<br>')
+
+            // wrap whole in <p>
+            .replace(/^/, '<p>')
+            .replace(/$/, '</p>');
+    }
+
+    static html2nl(html) {
+        return html
+            // normalize <p> forms
+            .replace(/<\/p>\s*<p>/gi, '\n\n') // paragraph break
+            .replace(/<p[^>]*>/gi, '')        // remove <p>
+            .replace(/<\/p>/gi, '\n\n')       // remaining </p> → paragraph break
+            
+            // normalize <br> forms
+            .replace(/<br\s*\/?>/gi, '\n')
+
+            // clean excessive newlines
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }
 }
 
 export class UtilsMoodle

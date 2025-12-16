@@ -61537,7 +61537,7 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"../package.json":[function(require,module,exports) {
 module.exports = {
   "name": "recitannotation",
-  "version": "1.1.2-beta",
+  "version": "1.1.3-beta",
   "description": "RÉCIT Annotation",
   "main": "index.js",
   "scripts": {
@@ -61561,7 +61561,7 @@ module.exports = {
     "react-select": "5.6.0"
   },
   "devDependencies": {
-    "babel-core": "4.7.16",
+    "babel-core": "^6.26.3",
     "babel-plugin-transform-class-properties": "6.10.2",
     "babel-preset-env": "0.0.0",
     "babel-preset-react": "6.24.1",
@@ -73629,7 +73629,7 @@ var _reactFontawesome = require("@fortawesome/react-fontawesome");
 var _InputTextArea = require("../libs/components/InputTextArea");
 var _Components = require("../libs/components/Components");
 var _common = require("../common/common");
-var _Utils = require("../libs/utils/Utils");
+var _Utils = _interopRequireWildcard(require("../libs/utils/Utils"));
 var _AnnotationView = require("./AnnotationView");
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
@@ -73794,7 +73794,10 @@ var ModalAskAi = exports.ModalAskAi = /*#__PURE__*/function (_Component) {
         return;
       }
       var data = this.state.data;
-      data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", _AnnotationView.AnnotationView.refAnnotation.current.innerText);
+
+      // do not replace student text here to avoid loosing HTML tags
+      // data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerText);
+
       var criteriaList = [];
       var _iterator3 = _createForOfIteratorHelper(this.state.data.criteriaList),
         _step3;
@@ -73835,10 +73838,11 @@ var ModalAskAi = exports.ModalAskAi = /*#__PURE__*/function (_Component) {
         _common.$glVars.feedback.showWarning(_common.$glVars.i18n.pluginname, _Utils.UtilsString.sprintf(_common.$glVars.i18n.msg_required_field, _common.$glVars.i18n.prompt), 3);
         return;
       }
+      var prompt = this.state.data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", _AnnotationView.AnnotationView.refAnnotation.current.innerHTML);
       var payload = {
         messages: [{
           role: "user",
-          content: this.state.data.prompt
+          content: prompt
         }],
         temperature: 0.7,
         max_tokens: 5000,
@@ -73851,7 +73855,7 @@ var ModalAskAi = exports.ModalAskAi = /*#__PURE__*/function (_Component) {
               properties: {
                 annotatedText: {
                   type: "string",
-                  description: "Le texte complet où chaque erreur est entourée ainsi : [[id:mot_fautif]].  Il est crucial de laisser la faute de l'élève entre les crochets. Exemple : 'Il a [[e1:manjé]]' (et non 'mangé')"
+                  description: "Le texte complet où chaque erreur est entourée ainsi : [[id:mot_fautif]].  Il est crucial de laisser la faute de l'élève entre les crochets. Exemple : 'Il a [[e1:manjé]]' (et non 'mangé'). Il est également crucial de retourner le texte de l'élève avec les balises HTML d'origine."
                 },
                 generalFeedback: {
                   type: "string",
@@ -73936,107 +73940,34 @@ var ModalAskAi = exports.ModalAskAi = /*#__PURE__*/function (_Component) {
       }
     }
   }, {
-    key: "getRangeByIndex",
-    value: function getRangeByIndex(startIndex, length) {
-      var container = _AnnotationView.AnnotationView.refAnnotation.current;
-      var endIndex = startIndex + length;
-      var currentIndex = 0;
-      var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-      var node;
-      var range = null;
-      while (node = walker.nextNode()) {
-        var nodeTextLength = node.textContent.length;
-        if (currentIndex + nodeTextLength >= startIndex) {
-          range = document.createRange();
-          var startOffset = startIndex - currentIndex;
-          var endOffset = Math.min(nodeTextLength, endIndex - currentIndex);
-          range.setStart(node, startOffset);
-          range.setEnd(node, endOffset);
-          break;
-        }
-        currentIndex += nodeTextLength;
-      }
-      return range;
-    }
-  }, {
     key: "onApply",
     value: function onApply() {
+      var _this3 = this;
       var data = this.state.data.result;
-      /* let data = {
-           "annotatedText": "Les enfants [[e1:joue]] dans le jardin et ils courent vite. La mère et le père [[e2:prépare]] le dîner pendant que les voisins [[e3:arrive]]. Tout le monde se réjouit, mais les oiseaux [[e4:chante]] trop fort.",
-           "generalFeedback": "Bravo pour votre effort dans l'écriture de ce texte. Quelques ajustements mineurs sur les accords et les conjugaisons amélioreront encore sa qualité.",
-           "corrections": [
-           {
-           "id": "e1",
-           "suggestion": "jouent",
-           "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'Les enfants'.",
-           "strategy": "Souvenez-vous que les sujets pluriels entraînent une terminaison en '-ent' pour les verbes.",
-           "criterion": "orthographegrammaticale"
-           },
-           {
-           "id": "e2",
-           "suggestion": "préparent",
-           "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'La mère et le père'.",
-           "strategy": "Identifiez tous les éléments du sujet pour choisir la bonne terminaison.",
-           "criterion": "orthographegrammaticale"
-           },
-           {
-           "id": "e3",
-           "suggestion": "arrivent",
-           "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'les voisins'.",
-           "strategy": "Vérifiez si le sujet est pluriel ou singulier pour accorder le verbe.",
-           "criterion": "orthographegrammaticale"
-           },
-           {
-           "id": "e4",
-           "suggestion": "chantent",
-           "explanation": "Le verbe doit s'accorder en nombre avec le sujet pluriel 'les oiseaux'.",
-           "strategy": "Ajoutez '-ent' aux verbes dont le sujet est pluriel.",
-           "criterion": "orthographegrammaticale"
-           }
-           ]
-       }*/
-      // set innerHTML here to be allow creating nodes and have selectable ranges
-      _AnnotationView.AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
-      var corrections = [];
       var _iterator4 = _createForOfIteratorHelper(data.corrections),
         _step4;
       try {
+        var _loop = function _loop() {
+          var item = _step4.value;
+          var regex = new RegExp("\\[\\[".concat(item.id, ":([^\\]]*)\\]\\]"));
+          data.annotatedText = data.annotatedText.replace(regex, function (match, group1) {
+            var el = _this3.props.createNewAnnotation(null, item.criterion, item.explanation, item.suggestion, item.strategy, true);
+            el.innerHTML = group1;
+            return el.outerHTML;
+          });
+        };
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var _item3 = _step4.value;
-          var regex = new RegExp("\\[\\[".concat(_item3.id, ":([^\\]]*)\\]\\]"));
-          // perform match on text not HTML dom
-          var match = data.annotatedText.match(regex);
-          if (match) {
-            corrections.push({
-              suggestion: _item3.suggestion,
-              explanation: _item3.explanation,
-              strategy: _item3.strategy,
-              criterion: _item3.criterion,
-              start: match.index,
-              offset: match[0].length,
-              innerText: match[1]
-            });
-          }
+          _loop();
         }
+
+        // avoir set directly innerHTML to prevent issues with React
+        // AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
       } catch (err) {
         _iterator4.e(err);
       } finally {
         _iterator4.f();
       }
-      for (var _i = 0, _corrections = corrections; _i < _corrections.length; _i++) {
-        var item = _corrections[_i];
-        var range = this.getRangeByIndex(item.start, item.offset);
-        if (range !== null) {
-          _AnnotationView.AnnotationView.currentRange = range;
-          item.el = this.props.createNewAnnotation(null, item.criterion, item.explanation, item.suggestion, item.strategy, true);
-        }
-      }
-      for (var _i2 = 0, _corrections2 = corrections; _i2 < _corrections2.length; _i2++) {
-        var _item2 = _corrections2[_i2];
-        // replace the [[e1:abc]] with the old word
-        _item2.el.innerHTML = _item2.innerText;
-      }
+      this.props.onAnnotationChange(data.annotatedText);
       this.onClose(true);
     }
   }, {
@@ -74050,25 +73981,26 @@ _defineProperty(ModalAskAi, "defaultProps", {
   promptAi: null,
   onClose: null,
   criteriaList: [],
-  createNewAnnotation: null
+  createNewAnnotation: null,
+  onAnnotationChange: null
 });
 var PromptAiView = exports.PromptAiView = /*#__PURE__*/function (_Component2) {
   function PromptAiView(props) {
-    var _this3;
+    var _this4;
     _classCallCheck(this, PromptAiView);
-    _this3 = _callSuper(this, PromptAiView, [props]);
-    _this3.onEdit = _this3.onEdit.bind(_this3);
-    _this3.onClose = _this3.onClose.bind(_this3);
-    _this3.state = {
+    _this4 = _callSuper(this, PromptAiView, [props]);
+    _this4.onEdit = _this4.onEdit.bind(_this4);
+    _this4.onClose = _this4.onClose.bind(_this4);
+    _this4.state = {
       showModal: false
     };
-    return _this3;
+    return _this4;
   }
   _inherits(PromptAiView, _Component2);
   return _createClass(PromptAiView, [{
     key: "render",
     value: function render() {
-      var promptAi = this.props.data ? this.props.data.prompt_ai.replace(/\n/g, "<br>") : "";
+      var promptAi = this.props.data ? _Utils.default.nl2html(this.props.data.prompt_ai) : "";
       var style = {
         fontFamily: "Fira Code, Courier New, monospace",
         fontSize: "14px",
@@ -74123,20 +74055,20 @@ _defineProperty(PromptAiView, "defaultProps", {
 });
 var ModalPromptAiForm = /*#__PURE__*/function (_Component3) {
   function ModalPromptAiForm(props) {
-    var _this4;
+    var _this5;
     _classCallCheck(this, ModalPromptAiForm);
-    _this4 = _callSuper(this, ModalPromptAiForm, [props]);
-    _this4.onDataChange = _this4.onDataChange.bind(_this4);
-    _this4.onSave = _this4.onSave.bind(_this4);
-    _this4.onClose = _this4.onClose.bind(_this4);
-    _this4.onKeyDown = _this4.onKeyDown.bind(_this4);
-    _this4.state = {
+    _this5 = _callSuper(this, ModalPromptAiForm, [props]);
+    _this5.onDataChange = _this5.onDataChange.bind(_this5);
+    _this5.onSave = _this5.onSave.bind(_this5);
+    _this5.onClose = _this5.onClose.bind(_this5);
+    _this5.onKeyDown = _this5.onKeyDown.bind(_this5);
+    _this5.state = {
       data: props.data
     };
-    if (_this4.state.data.id === 0) {
-      _this4.state.data.assignment = _common.$glVars.moodleData.assignment;
+    if (_this5.state.data.id === 0) {
+      _this5.state.data.assignment = _common.$glVars.moodleData.assignment;
     }
-    return _this4;
+    return _this5;
   }
   _inherits(ModalPromptAiForm, _Component3);
   return _createClass(ModalPromptAiForm, [{
@@ -74149,7 +74081,7 @@ var ModalPromptAiForm = /*#__PURE__*/function (_Component3) {
   }, {
     key: "render",
     value: function render() {
-      var _this5 = this;
+      var _this6 = this;
       var body = /*#__PURE__*/_react.default.createElement(_reactBootstrap.Form, {
         onSubmit: this.onSubmit,
         onKeyDown: this.onKeyDown
@@ -74165,7 +74097,7 @@ var ModalPromptAiForm = /*#__PURE__*/function (_Component3) {
       var main = /*#__PURE__*/_react.default.createElement(_reactBootstrap.Modal, {
         show: true,
         onHide: function onHide() {
-          return _this5.onClose(false);
+          return _this6.onClose(false);
         },
         size: "md",
         backdrop: "static",
@@ -74175,7 +74107,7 @@ var ModalPromptAiForm = /*#__PURE__*/function (_Component3) {
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Modal.Title, null, "Ajouter/Modifier le Prompt à l'IA")), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Modal.Body, null, body), /*#__PURE__*/_react.default.createElement(_reactBootstrap.Modal.Footer, null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonToolbar, null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonGroup, null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "secondary",
         onClick: function onClick() {
-          return _this5.onClose(false);
+          return _this6.onClose(false);
         }
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
         icon: _freeSolidSvgIcons.faTimes
@@ -74241,7 +74173,6 @@ require("bootstrap/dist/js/bootstrap.bundle.min");
 var _DlgConfirm = require("../libs/components/DlgConfirm");
 var _AiView = require("./AiView");
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { if (r) i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n;else { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } o("next", 0), o("throw", 1), o("return", 2); } }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
@@ -74249,6 +74180,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -74275,7 +74207,6 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
     _this.onClose = _this.onClose.bind(_this);
     _this.updateCounters = _this.updateCounters.bind(_this);
     _this.save = _this.save.bind(_this);
-    _this.setAnnotationText = _this.setAnnotationText.bind(_this);
     _this.createNewAnnotation = _this.createNewAnnotation.bind(_this);
     _this.onUndo = _this.onUndo.bind(_this);
     _this.onRedo = _this.onRedo.bind(_this);
@@ -74286,10 +74217,8 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
     _this.state = {
       showModalAnnotate: false,
       showModalAskIA: false,
-      data: props.data,
-      dataReady: false,
       counter: {},
-      updatedCounters: false,
+      unsavedData: false,
       stack: {
         undo: [],
         redo: []
@@ -74309,54 +74238,27 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
           event.preventDefault(); // blocks the browser’s default context menu. 
         }
       });
-      if (this.state.data !== null && !this.state.dataReady) {
-        this.setAnnotationText(this.state.data.annotation);
-      }
+      this.refresh();
     }
   }, {
     key: "componentDidUpdate",
-    value: function componentDidUpdate(prevProps) {
-      if (prevProps.criteriaList.length !== this.props.criteriaList.length || !this.state.updatedCounters) {
-        this.updateCounters();
-      }
-      if (this.props.data !== null && this.state.data === null) {
-        this.setState({
-          data: this.props.data
-        });
-      }
-      if (!this.state.dataReady && this.state.data !== null) {
-        this.setAnnotationText(this.state.data.annotation);
-      }
-    }
-  }, {
-    key: "setAnnotationText",
-    value: function setAnnotationText(value) {
-      if (AnnotationView.refAnnotation.current === null) {
+    value: function componentDidUpdate(prevProps, prevState) {
+      if (this.props.data === null) {
         return;
       }
-      if (value.length === 0) {
-        value = "<span class='text-muted'>Le travail remis par l’élève s’affichera ici.</span>";
-      }
-      AnnotationView.refAnnotation.current.innerHTML = value;
 
-      // Gérer le clic sur le texte surligné
-      var elements = AnnotationView.refAnnotation.current.querySelectorAll("[data-criterion]");
-      var _iterator = _createForOfIteratorHelper(elements),
-        _step;
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var el = _step.value;
-          el.addEventListener('click', this.onClick);
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+      // first time it passed here
+      if (prevProps.data === null && _typeof(this.props.data) === "object") {
+        this.refresh();
       }
-      this.refresh();
-      this.setState({
-        dataReady: true
-      });
+      // when annotation has changed by user, undo, redo, or AskAI
+      else if (prevProps.data.annotation !== this.props.data.annotation) {
+        this.refresh();
+      }
+      // after set annotation.innerHTML, or updatedCounter, then it triggers saveData.
+      else if (this.state.unsavedData) {
+        this.save();
+      }
     }
   }, {
     key: "render",
@@ -74365,7 +74267,7 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
       var criteriaList = this.props.criteriaList;
       var commentList = this.props.commentList;
       var main = /*#__PURE__*/_react.default.createElement("div", {
-        className: "container-fluid"
+        className: this.props.className + " container-fluid"
       }, /*#__PURE__*/_react.default.createElement("div", {
         className: " annotation-view"
       }, /*#__PURE__*/_react.default.createElement("div", {
@@ -74449,11 +74351,14 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Col, {
         className: "p-2",
         md: 8
-      }, /*#__PURE__*/_react.default.createElement("div", {
+      }, this.props.data !== null && /*#__PURE__*/_react.default.createElement("div", {
         className: "p-3 border rounded",
         ref: AnnotationView.refAnnotation,
         onMouseUp: this.onSelectionChange,
-        onTouchEnd: this.onSelectionChange
+        onTouchEnd: this.onSelectionChange,
+        dangerouslySetInnerHTML: {
+          __html: this.props.data.annotation
+        }
       }), /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonGroup, {
         ref: this.refFloatingMenu,
         className: "floating-menu"
@@ -74495,7 +74400,8 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
         promptAi: this.props.promptAi,
         onClose: this.onClose,
         criteriaList: criteriaList,
-        createNewAnnotation: this.createNewAnnotation
+        createNewAnnotation: this.createNewAnnotation,
+        onAnnotationChange: this.props.onAnnotationChange
       })));
       return main;
     }
@@ -74540,6 +74446,7 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
   }, {
     key: "onClose",
     value: function onClose(refresh) {
+      var _this3 = this;
       this.positionFloatingButton(null);
       this.setState({
         showModalAnnotate: false,
@@ -74548,55 +74455,75 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
       AnnotationView.currentRange = null;
       AnnotationView.selectedElement = null;
       if (refresh) {
-        this.save();
+        this.setState({
+          unsavedData: true
+        }, function () {
+          return _this3.props.onAnnotationChange(AnnotationView.refAnnotation.current.innerHTML);
+        });
       } else {
         this.cancelDataChange();
       }
     }
   }, {
     key: "refresh",
+    value: function refresh() {
+      if (AnnotationView.refAnnotation.current === null) {
+        return;
+      }
+
+      // this.initTooltips();
+      this.updateCounters();
+
+      // Gérer le clic sur le texte surligné
+      var elements = AnnotationView.refAnnotation.current.querySelectorAll("[data-criterion]");
+      var _iterator = _createForOfIteratorHelper(elements),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var el = _step.value;
+          el.removeEventListener('click', this.onClick);
+          el.addEventListener('click', this.onClick);
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+    }
+  }, {
+    key: "updateCounters",
     value: function () {
-      var _refresh = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      var _updateCounters = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+        var counter, criteriaList, _iterator2, _step2, item, elements;
         return _regenerator().w(function (_context) {
           while (1) switch (_context.n) {
             case 0:
-              // this.initTooltips();
-              this.updateCounters();
-            case 1:
-              return _context.a(2);
+              counter = this.state.counter;
+              criteriaList = this.props.criteriaList;
+              _iterator2 = _createForOfIteratorHelper(criteriaList);
+              try {
+                for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                  item = _step2.value;
+                  elements = window.document.querySelectorAll("[data-criterion=\"".concat(item.name, "\"]"));
+                  counter[item.name] = elements.length;
+                }
+              } catch (err) {
+                _iterator2.e(err);
+              } finally {
+                _iterator2.f();
+              }
+              this.setState({
+                counter: counter
+              });
+              return _context.a(2, counter);
           }
         }, _callee, this);
       }));
-      function refresh() {
-        return _refresh.apply(this, arguments);
+      function updateCounters() {
+        return _updateCounters.apply(this, arguments);
       }
-      return refresh;
+      return updateCounters;
     }()
-  }, {
-    key: "updateCounters",
-    value: function updateCounters() {
-      var counter = this.state.counter;
-      var criteriaList = this.props.criteriaList;
-      var _iterator2 = _createForOfIteratorHelper(criteriaList),
-        _step2;
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var item = _step2.value;
-          var elements = window.document.querySelectorAll("[data-criterion=\"".concat(item.name, "\"]"));
-          counter[item.name] = elements.length;
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-      this.setState({
-        counter: counter,
-        updatedCounters: true
-      });
-      return counter;
-    }
-
     /*initTooltips() {
         // This ensures only one tooltip instance exists.
         $('[data-toggle="tooltip"]').each(function () {
@@ -74670,23 +74597,19 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
               callback = function callback(result) {
                 if (!result.success) {
                   _common.$glVars.feedback.showError(_common.$glVars.i18n.pluginname, result.msg);
-                  return;
                 } else {
+                  //that.props.data.id = result.data;
                   _common.$glVars.feedback.showInfo(_common.$glVars.i18n.pluginname, _common.$glVars.i18n.msg_action_completed, 2);
-                  var _data = that.state.data;
-                  _data.id = result.data;
-                  that.setState({
-                    data: _data
-                  });
-                  return;
                 }
-              };
+              }; // set flag here to avoid waiting for it and a new call could be triggered
+              this.setState({
+                unsavedData: false
+              });
               _context2.n = 1;
-              return this.refresh();
+              return this.updateCounters();
             case 1:
               data = {};
-              Object.assign(data, this.state.data);
-              data.annotation = AnnotationView.refAnnotation.current.innerHTML;
+              Object.assign(data, this.props.data);
               data.occurrences = {}; // force new object
               Object.assign(data.occurrences, this.state.counter);
               _common.$glVars.webApi.saveAnnotation(data, _common.$glVars.moodleData.assignment, callback);
@@ -74709,10 +74632,11 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
           stack.redo.shift(); // Remove the oldest state
         }
         stack.redo.push(AnnotationView.refAnnotation.current.innerHTML);
-        this.setAnnotationText(stack.undo.pop());
+        this.props.onAnnotationChange(stack.undo.pop());
         this.setState({
-          stack: stack
-        }, this.save);
+          stack: stack,
+          unsavedData: true
+        });
       }
     }
   }, {
@@ -74724,10 +74648,11 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
           stack.undo.shift(); // Remove the oldest state
         }
         stack.undo.push(AnnotationView.refAnnotation.current.innerHTML);
-        this.setAnnotationText(stack.redo.pop());
+        this.props.onAnnotationChange(stack.redo.pop());
         this.setState({
-          stack: stack
-        }, this.save);
+          stack: stack,
+          unsavedData: true
+        });
       }
     }
   }, {
@@ -74736,17 +74661,13 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
       var that = this;
       var onApply = function onApply() {
         that.beforeDataChange();
-        _common.$glVars.webApi.deleteAnnotation(that.state.data.id, _common.$glVars.moodleData.assignment, function (result) {
+        _common.$glVars.webApi.deleteAnnotation(that.props.data.id, _common.$glVars.moodleData.assignment, function (result) {
           if (!result.success) {
             _common.$glVars.feedback.showError(_common.$glVars.i18n.pluginname, result.msg);
             return;
           } else {
             _common.$glVars.feedback.showInfo(_common.$glVars.i18n.pluginname, _common.$glVars.i18n.msg_action_completed, 2);
-            that.setState({
-              data: null,
-              dataReady: false
-            });
-            that.props.refreshData();
+            that.props.refresh();
             return;
           }
         });
@@ -74759,21 +74680,28 @@ var AnnotationView = exports.AnnotationView = /*#__PURE__*/function (_Component)
       var suggestion = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
       var strategy = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
       var aiFeedback = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+      var currentRange = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : null;
       if (el === null) {
         el = document.createElement('span');
-        try {
-          AnnotationView.currentRange.surroundContents(el);
-          el.addEventListener('click', this.onClick); // Gérer le clic sur le texte surligné
-        } catch (error) {
-          var msg = _common.$glVars.i18n.msg_error_highlighting;
-          _common.$glVars.feedback.showError(_common.$glVars.i18n.pluginname, msg);
-          console.log(error);
+        if (currentRange) {
+          try {
+            currentRange.surroundContents(el);
+          } catch (error) {
+            _common.$glVars.feedback.showError(_common.$glVars.i18n.pluginname, _common.$glVars.i18n.msg_error_highlighting);
+            console.log(error);
+          }
         }
       }
       var criterion = _Utils.JsNx.getItem(this.props.criteriaList, 'name', criterionName, null);
       if (criterion === null) {
-        throw new Error("The criterion \"".concat(criterionName, "\" was not found."));
+        var msg = "The criterion \"".concat(criterionName, "\" was not found.");
+        _common.$glVars.feedback.showError(_common.$glVars.i18n.pluginname, msg);
+        throw new Error(msg);
       }
+
+      // Gérer le clic sur le texte surligné
+      el.removeEventListener("click", this.onClick);
+      el.addEventListener('click', this.onClick);
       el.dataset.toggle = "tooltip";
       el.dataset.criterion = criterionName;
       el.dataset.explanation = explanation;
@@ -74807,23 +74735,25 @@ _defineProperty(AnnotationView, "defaultProps", {
   onChangeView: null,
   criteriaList: [],
   commentList: [],
-  refreshData: null
+  refresh: null,
+  className: "",
+  onAnnotationChange: null
 });
 _defineProperty(AnnotationView, "currentRange", null);
 _defineProperty(AnnotationView, "selectedElement", null);
 _defineProperty(AnnotationView, "refAnnotation", null);
 var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
   function QuickAnnotateForm(props) {
-    var _this3;
+    var _this4;
     _classCallCheck(this, QuickAnnotateForm);
-    _this3 = _callSuper(this, QuickAnnotateForm, [props]);
-    _this3.onDelete = _this3.onDelete.bind(_this3);
-    _this3.onClose = _this3.onClose.bind(_this3);
-    _this3.onDataChange = _this3.onDataChange.bind(_this3);
-    _this3.onSave = _this3.onSave.bind(_this3);
-    _this3.onKeyDown = _this3.onKeyDown.bind(_this3);
-    _this3.onDocumentClick = _this3.onDocumentClick.bind(_this3);
-    _this3.state = {
+    _this4 = _callSuper(this, QuickAnnotateForm, [props]);
+    _this4.onDelete = _this4.onDelete.bind(_this4);
+    _this4.onClose = _this4.onClose.bind(_this4);
+    _this4.onDataChange = _this4.onDataChange.bind(_this4);
+    _this4.onSave = _this4.onSave.bind(_this4);
+    _this4.onKeyDown = _this4.onKeyDown.bind(_this4);
+    _this4.onDocumentClick = _this4.onDocumentClick.bind(_this4);
+    _this4.state = {
       data: {},
       dataChanged: false,
       dropdownList: {
@@ -74831,21 +74761,21 @@ var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
       },
       isNewNote: true
     };
-    _this3.ref = _react.default.createRef();
-    _this3.refComboBox = _react.default.createRef();
-    _this3.originalData = {
+    _this4.ref = _react.default.createRef();
+    _this4.refComboBox = _react.default.createRef();
+    _this4.originalData = {
       criterion: "",
       comment: "",
       suggestion: "",
       strategy: ""
     };
-    Object.assign(_this3.state.data, _this3.originalData);
+    Object.assign(_this4.state.data, _this4.originalData);
     var _iterator3 = _createForOfIteratorHelper(props.commentList),
       _step3;
     try {
       for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
         var item = _step3.value;
-        _this3.state.dropdownList.commentList.push({
+        _this4.state.dropdownList.commentList.push({
           value: item.comment,
           label: item.comment,
           data: item
@@ -74856,13 +74786,13 @@ var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
     } finally {
       _iterator3.f();
     }
-    return _this3;
+    return _this4;
   }
   _inherits(QuickAnnotateForm, _Component2);
   return _createClass(QuickAnnotateForm, [{
     key: "componentDidMount",
     value: function componentDidMount() {
-      var _this4 = this;
+      var _this5 = this;
       if (AnnotationView.selectedElement && AnnotationView.selectedElement.dataset.criterion !== null) {
         var comment = "";
         if (AnnotationView.selectedElement.hasAttribute('data-explanation')) {
@@ -74884,7 +74814,7 @@ var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
         });
       }
       setTimeout(function () {
-        window.document.addEventListener("click", _this4.onDocumentClick);
+        window.document.addEventListener("click", _this5.onDocumentClick);
       }, 500);
       this.positionFloatingInput();
     }
@@ -74944,7 +74874,7 @@ var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
   }, {
     key: "render",
     value: function render() {
-      var _this5 = this;
+      var _this6 = this;
       var commentList = this.state.dropdownList.commentList;
       this.positionFloatingInput();
       var main = /*#__PURE__*/_react.default.createElement("div", {
@@ -74966,7 +74896,7 @@ var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
         size: "sm",
         variant: "danger",
         onClick: function onClick() {
-          return _this5.onDelete(true);
+          return _this6.onDelete(true);
         }
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
         icon: _freeSolidSvgIcons.faTrash
@@ -75008,7 +74938,7 @@ var QuickAnnotateForm = /*#__PURE__*/function (_Component2) {
         return;
       }
       var el = this.state.isNewNote ? null : AnnotationView.selectedElement;
-      this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false);
+      this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false, AnnotationView.currentRange);
       this.onClose(true);
     }
   }, {
@@ -75031,35 +74961,35 @@ _defineProperty(QuickAnnotateForm, "defaultProps", {
 });
 var ModalAnnotateForm = /*#__PURE__*/function (_Component3) {
   function ModalAnnotateForm(props) {
-    var _this6;
+    var _this7;
     _classCallCheck(this, ModalAnnotateForm);
-    _this6 = _callSuper(this, ModalAnnotateForm, [props]);
-    _this6.onDelete = _this6.onDelete.bind(_this6);
-    _this6.onClose = _this6.onClose.bind(_this6);
-    _this6.onDataChange = _this6.onDataChange.bind(_this6);
-    _this6.onSubmit = _this6.onSubmit.bind(_this6);
-    _this6.onKeyDown = _this6.onKeyDown.bind(_this6);
-    _this6.state = {
+    _this7 = _callSuper(this, ModalAnnotateForm, [props]);
+    _this7.onDelete = _this7.onDelete.bind(_this7);
+    _this7.onClose = _this7.onClose.bind(_this7);
+    _this7.onDataChange = _this7.onDataChange.bind(_this7);
+    _this7.onSubmit = _this7.onSubmit.bind(_this7);
+    _this7.onKeyDown = _this7.onKeyDown.bind(_this7);
+    _this7.state = {
       data: {},
       dropdownList: {
         criteriaList: []
       },
       isNewNote: true
     };
-    _this6.originalData = {
+    _this7.originalData = {
       criterion: "",
       comment: "",
       suggestion: "",
       strategy: "",
       search: null
     };
-    Object.assign(_this6.state.data, _this6.originalData);
+    Object.assign(_this7.state.data, _this7.originalData);
     var _iterator4 = _createForOfIteratorHelper(props.criteriaList),
       _step4;
     try {
       for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
         var item = _step4.value;
-        _this6.state.dropdownList.criteriaList.push({
+        _this7.state.dropdownList.criteriaList.push({
           value: item.name,
           label: item.description
         });
@@ -75069,7 +74999,7 @@ var ModalAnnotateForm = /*#__PURE__*/function (_Component3) {
     } finally {
       _iterator4.f();
     }
-    return _this6;
+    return _this7;
   }
   _inherits(ModalAnnotateForm, _Component3);
   return _createClass(ModalAnnotateForm, [{
@@ -75106,7 +75036,7 @@ var ModalAnnotateForm = /*#__PURE__*/function (_Component3) {
   }, {
     key: "render",
     value: function render() {
-      var _this7 = this;
+      var _this8 = this;
       var commentList = [];
       var _iterator5 = _createForOfIteratorHelper(this.props.commentList),
         _step5;
@@ -75128,7 +75058,7 @@ var ModalAnnotateForm = /*#__PURE__*/function (_Component3) {
       var main = /*#__PURE__*/_react.default.createElement(_reactBootstrap.Modal, {
         show: true,
         onHide: function onHide() {
-          return _this7.onClose(false);
+          return _this8.onClose(false);
         },
         size: "md",
         backdrop: "static",
@@ -75166,14 +75096,14 @@ var ModalAnnotateForm = /*#__PURE__*/function (_Component3) {
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonGroup, null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "danger",
         onClick: function onClick() {
-          return _this7.onDelete(true);
+          return _this8.onDelete(true);
         }
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
         icon: _freeSolidSvgIcons.faTrash
       }), " ".concat(_common.$glVars.i18n.delete))), /*#__PURE__*/_react.default.createElement(_reactBootstrap.ButtonGroup, null, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "secondary",
         onClick: function onClick() {
-          return _this7.onClose(false);
+          return _this8.onClose(false);
         }
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
         icon: _freeSolidSvgIcons.faTimes
@@ -75224,7 +75154,7 @@ var ModalAnnotateForm = /*#__PURE__*/function (_Component3) {
         return;
       }
       var el = this.state.isNewNote ? null : AnnotationView.selectedElement;
-      this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false);
+      this.props.createNewAnnotation(el, this.state.data.criterion, this.state.data.comment, this.state.data.suggestion, this.state.data.strategy, false, AnnotationView.currentRange);
       this.onClose(true);
     }
   }, {
@@ -75301,7 +75231,9 @@ var SettingsView = exports.SettingsView = /*#__PURE__*/function (_Component) {
         className: "p-2"
       }, /*#__PURE__*/_react.default.createElement(_reactBootstrap.Button, {
         variant: "link",
-        onClick: this.props.onChangeView,
+        onClick: function onClick() {
+          return _this2.props.onChangeView('annotation');
+        },
         className: "mb-5"
       }, /*#__PURE__*/_react.default.createElement(_reactFontawesome.FontAwesomeIcon, {
         icon: _freeSolidSvgIcons.faArrowLeft
@@ -76134,9 +76066,11 @@ var MainView = exports.MainView = /*#__PURE__*/function (_Component) {
     _this = _callSuper(this, MainView, [props]);
     _this.onChangeView = _this.onChangeView.bind(_this);
     _this.getData = _this.getData.bind(_this);
-    _this.refreshData = _this.refreshData.bind(_this);
+    _this.refresh = _this.refresh.bind(_this);
+    _this.onAnnotationChange = _this.onAnnotationChange.bind(_this);
     _this.state = {
-      view: '',
+      view: 'annotation',
+      // annotation, settings
       annotation: null,
       dropdownList: {
         criteriaList: [],
@@ -76156,6 +76090,7 @@ var MainView = exports.MainView = /*#__PURE__*/function (_Component) {
   }, {
     key: "componentDidUpdate",
     value: function componentDidUpdate() {
+      // Make sure to retrieve the data only once after the application is mounted
       if (this.state.annotation === null) {
         this.getData();
       }
@@ -76192,6 +76127,9 @@ var MainView = exports.MainView = /*#__PURE__*/function (_Component) {
           criteriaList: result.data.criteriaList,
           commentList: result.data.commentList
         };
+        if (result.data.annotation.annotation.length === 0) {
+          result.data.annotation.annotation = "<span class='text-muted'>Le travail remis par l’élève s’affichera ici.</span>";
+        }
         that.setState({
           dropdownList: dropdownList,
           annotation: result.data.annotation,
@@ -76201,36 +76139,41 @@ var MainView = exports.MainView = /*#__PURE__*/function (_Component) {
       _common.$glVars.webApi.getAnnotationFormKit(_common.$glVars.moodleData.assignment, _common.$glVars.moodleData.attemptnumber, _common.$glVars.moodleData.userid, callback);
     }
   }, {
-    key: "refreshData",
-    value: function refreshData() {
+    key: "refresh",
+    value: function refresh() {
       this.getData();
     }
   }, {
     key: "render",
     value: function render() {
-      var main = null;
-      switch (this.state.view) {
-        case 'settings':
-          main = /*#__PURE__*/_react.default.createElement(_SettingsView.SettingsView, {
-            onChangeView: this.onChangeView,
-            promptAi: this.state.promptAi,
-            criteriaList: this.state.dropdownList.criteriaList,
-            commentList: this.state.dropdownList.commentList,
-            refresh: this.getData
-          });
-          break;
-        default:
-          main = /*#__PURE__*/_react.default.createElement(_AnnotationView.AnnotationView, {
-            refreshData: this.refreshData,
-            onChangeView: this.onChangeView,
-            data: this.state.annotation,
-            promptAi: this.state.promptAi,
-            criteriaList: this.state.dropdownList.criteriaList,
-            commentList: this.state.dropdownList.commentList
-          });
-          break;
-      }
+      // do not unmount AnnotationView because it uses references direct in the DOM and unmouting it causes problems with React
+      var main = /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, this.state.view === 'settings' && /*#__PURE__*/_react.default.createElement(_SettingsView.SettingsView, {
+        onChangeView: this.onChangeView,
+        promptAi: this.state.promptAi,
+        criteriaList: this.state.dropdownList.criteriaList,
+        commentList: this.state.dropdownList.commentList,
+        refresh: this.refresh
+      }), /*#__PURE__*/_react.default.createElement(_AnnotationView.AnnotationView, {
+        className: this.state.view === 'annotation' ? '' : 'd-none',
+        refresh: this.refresh,
+        onChangeView: this.onChangeView,
+        data: this.state.annotation,
+        promptAi: this.state.promptAi,
+        criteriaList: this.state.dropdownList.criteriaList,
+        commentList: this.state.dropdownList.commentList,
+        onAnnotationChange: this.onAnnotationChange
+      }));
       return main;
+    }
+  }, {
+    key: "onAnnotationChange",
+    value: function onAnnotationChange(value) {
+      var annotation = {};
+      Object.assign(annotation, this.state.annotation);
+      annotation.annotation = value;
+      this.setState({
+        annotation: annotation
+      });
     }
   }, {
     key: "onChangeView",
@@ -76603,7 +76546,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53363" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53938" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
