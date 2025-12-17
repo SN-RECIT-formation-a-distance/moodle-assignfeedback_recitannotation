@@ -42,7 +42,7 @@ export class MainView extends Component {
 
     integrateAppReactWithMoodle(){
         let panelGrade = window.document.querySelector("[data-region='grade-panel']");
-        let recitAnnotation = window.document.getElementById("recitannotation_appreact_placeholder");    
+        let recitAnnotation = window.document.getElementById("assignfeedback_recitannotation");    
 
         if(recitAnnotation.isEqualNode(panelGrade.firstChild)){
             return;

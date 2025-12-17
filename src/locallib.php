@@ -92,7 +92,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
  
         $data = $persistCtrl->getAnnotation($grade->assignment, $userid, $grade->attemptnumber);
         
-        $group[] = $mform->createElement('static', '', '', "<div id='recitannotation_appreact_placeholder' style='position: sticky; top: 0;' class='bg-white rounded'></div>");
+        $group[] = $mform->createElement('static', '', '', "<div id='assignfeedback_recitannotation' style='position: sticky; top: 0;' class='bg-white rounded'></div>");
         
         $html = html_writer::script('', "{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.js");
         $html .= "<link href='{$CFG->wwwroot}/mod/assign/feedback/recitannotation/react/build/index.css' rel='stylesheet'></link>";
@@ -150,36 +150,12 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
         $data = $persistCtrl->getAnnotation($grade->assignment, $grade->userid, $grade->attemptnumber);
         $criteriaList = $persistCtrl->getCriteriaList($grade->assignment);
 
-        $html = "<div class='bg-white p-2'>";
+        $html = "<div id='assignfeedback_recitannotation' class='bg-white p-2'>";
 
-        $html .= "<style>";
-        $svgAiIcon = 'data:image/svg+xml;utf8,<svg fill="currentColor" aria-hidden="true" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 2c.28 0 .5.22.5.5V3h.5a.5.5 0 0 1 0 1H17v.5a.5.5 0 0 1-1 0V4h-.5a.5.5 0 0 1 0-1h.5v-.5c0-.28.22-.5.5-.5Zm-13 13c.28 0 .5.22.5.5v.5h.5a.5.5 0 0 1 0 1H4v.5a.5.5 0 0 1-1 0V17h-.5a.5.5 0 0 1 0-1H3v-.5c0-.28.22-.5.5-.5Zm4-13c-.65 0-1.12.51-1.24 1.06-.11.55-.4 1.37-1.11 2.09-.72.71-1.54 1-2.09 1.11C2.51 6.37 2 6.86 2 7.5c0 .65.52 1.13 1.06 1.24.55.11 1.37.4 2.09 1.11.71.72 1 1.54 1.11 2.1.12.54.59 1.05 1.24 1.05s1.13-.51 1.24-1.06c.11-.55.4-1.37 1.11-2.09.72-.71 1.54-1 2.1-1.11.54-.11 1.05-.59 1.05-1.24s-.51-1.13-1.06-1.24a4.14 4.14 0 0 1-2.09-1.11c-.71-.72-1-1.54-1.11-2.1C8.63 2.52 8.15 2 7.5 2ZM7 15v-1.06a2.13 2.13 0 0 0 1 0V15c0 1.1.9 2 2 2h5a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-1.06a2.13 2.13 0 0 0 0-1H15a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3Zm3-1.5c0-.28.22-.5.5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm.5-2.5a.5.5 0 0 0 0 1H15a.5.5 0 0 0 0-1h-4.5Z" fill="currentColor"></path></svg>';
-        $html .= "
-            span[data-ai-feedback]::after {
-                content: '';
-                display: inline-block;
-                width: 1em;
-                height: 1em;
-                margin-left: 0.3em;
-                vertical-align: top;
-                background: #6c757d; 
-                pointer-events: none;
-                opacity: 0.8;
-                -webkit-mask: url('$svgAiIcon') no-repeat center / contain;
-                mask: url('$svgAiIcon') no-repeat center / contain;
-        }";
-        $html .= "</style>";
         $html .= "<div class='mb-3 p-2'>$data->annotation</div>";
 
         $data->occurrences = json_decode($data->occurrences);
-        $html .= "<table class='w-50 table table-striped table-bordered bordered table-sm'>";
-        $html .= "<thead>";
-        $html .= "<tr>";
-        $html .= "<th>Critère</th>";
-        $html .= "<th>Nombre</th>";
-        $html .= "</tr>";            
-        $html .= "</thead>";
-        $html .= "<tbody>";       
+        $html .= "<div class='d-flex flex-wrap'>";
 
         foreach($criteriaList as $criterion){
             $attr = $criterion->name;
@@ -187,16 +163,14 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                 continue;
             }
 
-            $html .= "<tr>";
-            $html .= "<td style='background-color: {$criterion->backgroundcolor} '>{$criterion->description}</td>";
-            $html .= "<td>". $data->occurrences->$attr."</td>";
-            $html .= "</tr>";    
+            $html .= "<span class='badge-criterion' style='background-color: {$criterion->backgroundcolor}; border-color: {$criterion->backgroundcolor};'>";
+            $html .= "<span class='badge-criterion-name'>{$criterion->description}</span>";
+            $html .= "<span class='badge-criterion-counter'>". $data->occurrences->$attr ."</span>";
+            $html .= "</span>";
         }
         
+        $html .= "</div>";
 
-        $html .= "</tbody>";
-        $html .= "</table>";
-        
         $html .= "</div>";
 
         return $html;        

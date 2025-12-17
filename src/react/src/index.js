@@ -62,7 +62,7 @@ window.loadRecitAnnotationReactApp = function(moodleData, i18n){
     $glVars.webApi = new AppWebApi();
     $glVars.feedback = new FeedbackCtrl();
 
-    const domContainer = document.getElementById('recitannotation_appreact_placeholder');
+    const domContainer = document.getElementById('assignfeedback_recitannotation');
     const root = createRoot(domContainer);
     root.render(<App />);
     return root;
