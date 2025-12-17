@@ -76,14 +76,36 @@ export class MainView extends Component {
                 result.data.annotation.annotation = "<span class='text-muted'>Le travail remis par l’élève s’affichera ici.</span>";
             }
 
+            if(parseInt(result.data.promptAi.id) === 0){
+                result.data.promptAi.prompt_ai = `Agis comme un assistant pédagogique bienveillant.
+Voici un texte écrit par un élève :
+<<<
+PLACEHOLDER_STUDENT_TEXT
+>>>
+
+Ton objectif est d'identifier les erreurs pour aider l'élève à progresser.
+Analyse le texte en vérifiant STRICTEMENT les 2 critères suivantes :
+
+<<<
+PLACEHOLDER_CRITERIA_LIST
+>>>
+
+Format de réponse attendu est un objet JSON et son structure est passé comme paramètre dans la requête.`;
+            }
+
             that.setState({dropdownList: dropdownList, annotation: result.data.annotation, promptAi: result.data.promptAi});         
         }
             
         $glVars.webApi.getAnnotationFormKit($glVars.moodleData.assignment, $glVars.moodleData.attemptnumber, $glVars.moodleData.userid, callback);
     }
 
-    refresh(){
-        this.getData();
+    refresh(annotationData = null){
+        if(annotationData){
+            this.setState({annotation: annotationData});
+        }
+        else{
+            this.getData();
+        }
     }
 
     render(){

@@ -260,12 +260,19 @@ export class ModalAskAi extends Component{
         for(let item of data.corrections){
             const regex = new RegExp(`\\[\\[${item.id}:([^\\]]*)\\]\\]`);
 
-             data.annotatedText = data.annotatedText.replace(regex, (match, group1) => {
+            data.annotatedText = data.annotatedText.replace(regex, (match, group1) => {
                 let el = this.props.createNewAnnotation(null, item.criterion, item.explanation, item.suggestion, item.strategy, true);
                 el.innerHTML = group1;
                 return el.outerHTML;
             });
         }
+
+        // Remove the [[id:]] that the AI ​​has not replaced
+        const regex = new RegExp(`\\[\\[e\\d+:([^\\]]*)\\]\\]`, "g");
+
+        data.annotatedText = data.annotatedText.replaceAll(regex, (match, group1, groupe2) => {
+            return group1;
+        });
 
         // avoir set directly innerHTML to prevent issues with React
         // AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;

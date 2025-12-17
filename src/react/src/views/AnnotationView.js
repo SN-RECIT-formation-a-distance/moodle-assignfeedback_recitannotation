@@ -147,12 +147,7 @@ export class AnnotationView extends Component {
                         </Col>
                         <Col className='p-2' md={4} >
                             {criteriaList.map((item, index) => {
-                                let badge = 
-                                    <span key={index} className='d-flex justify-between align-items-center p-2 m-1 rounded' style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}>
-                                        <span className='text-white mr-2'>{item.description}</span>
-                                        <span className="bg-white text-dark small rounded-pill  ml-auto" style={{padding: ".2rem .5rem"}}>{(this.state.counter.hasOwnProperty(item.name) ? this.state.counter[item.name] : 0)}</span>
-                                    </span>
-                                return badge;
+                                return <BadgeCriterion key={index} data={item} counter={this.state.counter} onFilter={this.onCriterionFilter}/>;
                             })}
                         </Col>
                     </div>
@@ -176,6 +171,14 @@ export class AnnotationView extends Component {
 
         return (main);
     }  
+
+    onCriterionFilter(data, selected){
+        let elements = AnnotationView.refAnnotation.current.querySelectorAll(`[data-criterion=${data.name}]`);
+
+        for(let el of elements){
+            el.classList.toggle('criterion-not-selected', !selected);
+        }
+    }
 
     onSelectionChange(event){                     
         const selection = window.getSelection();
@@ -318,7 +321,10 @@ export class AnnotationView extends Component {
                 $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
             }
             else{
-                //that.props.data.id = result.data;
+                let newData = {};
+                Object.assign(newData, that.props.data);
+                newData.id = result.data;
+                that.props.refresh(newData);
                 $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 2);
             }
         } 
@@ -446,6 +452,53 @@ export class AnnotationView extends Component {
         el.dataset.originalTitle += `</div>`;   
         
         return el;
+    }
+}
+
+class BadgeCriterion extends Component{
+    static defaultProps = {        
+        data: null,
+        counter: null,
+        onFilter: null
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onFilter = this.onFilter.bind(this);
+
+        this.state = {selected: true};
+    }
+
+    componentDidMount(){
+        const elements = document.querySelectorAll(".criterion-not-selected");
+
+        for(let item of elements){
+            if(item.dataset.criterion === this.props.data.name){
+                this.setState({selected: false});
+            }
+        }
+    }
+
+    render(){
+        let item = this.props.data;
+
+        let notSelected = (this.state.selected ? '' : "badge-criterion-not-selected");
+        let badge = 
+                <span className={`badge-criterion ${notSelected}`} 
+                    style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}
+                    onClick={this.onFilter}>
+                    <span className='badge-criterion-name'>{item.description}</span>
+                    <span className="badge-criterion-counter">{(this.props.counter.hasOwnProperty(item.name) ? this.props.counter[item.name] : 0)}</span>
+                </span>;
+
+        return badge;
+    }
+
+    onFilter(){
+        this.setState({selected: !this.state.selected}, 
+                () => this.props.onFilter(this.props.data, this.state.selected)
+        );
     }
 }
 

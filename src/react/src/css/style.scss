@@ -57,6 +57,26 @@ $svg-ai-icon: 'data:image/svg+xml;utf8,<svg fill="currentColor" aria-hidden="tru
         content: '';
         @extend .ai-icon;
     }
+
+    .badge-criterion{
+        cursor: pointer; opacity: 1; padding: .5rem; margin: .25rem;
+        display: flex; align-items: center; border-radius: .5rem;
+        .badge-criterion-name{
+            color: #fff; margin-right: .5rem;
+        }
+        .badge-criterion-counter{
+            padding: .2rem .5rem; border-radius: 50rem; color: #343a40;
+            margin-left: auto; background-color: #fff; font-size: .875em;
+            font-weight: 400;
+        }
+        &.badge-criterion-not-selected{
+            opacity: .5!important; 
+        }
+    }
+
+    .criterion-not-selected{
+        border-width: 0!important;
+    }
 }
 /*
  // Target all Bootstrap tooltips 
