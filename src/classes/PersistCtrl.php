@@ -251,6 +251,27 @@ class PersistCtrl extends MoodlePersistCtrl
         }
     }
 
+    public function deleteAllCriteria($assignment){
+        try{
+            $criteriaList = $this->getCriteriaList($assignment);
+
+            $ids = array();
+            foreach($criteriaList as $item){
+                $ids[] = $item->id;
+            }
+
+            list($sql, $params) = $this->mysqlConn->get_in_or_equal($ids);
+            $this->mysqlConn->delete_records_select('assignfeedback_recitannot_comment', "criterionid $sql", $params);
+
+            $this->mysqlConn->delete_records("assignfeedback_recitannot_crit", ['assignment' => $assignment]);
+
+            return true;
+        }
+        catch(Exception $ex){
+            throw $ex;
+        }
+    }
+
     public function getCommentList($assignment){
         $query = "SELECT t1.id, t1.criterionid, t2.name,  t2.description, t1.comment 
                     FROM {assignfeedback_recitannot_comment} as t1

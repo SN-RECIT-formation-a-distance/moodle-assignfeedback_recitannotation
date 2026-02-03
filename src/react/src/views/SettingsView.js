@@ -68,6 +68,7 @@ class CriterionView extends Component{
         this.onSelectFile = this.onSelectFile.bind(this);
         this.onImport = this.onImport.bind(this);
         this.changeCriterionSortOrder = this.changeCriterionSortOrder.bind(this);
+        this.onDeleteAll = this.onDeleteAll.bind(this);
 
         this.state = {
             showModal: false,
@@ -89,6 +90,7 @@ class CriterionView extends Component{
                     <a className='btn btn-link' href={`${Options.getGateway(true)}&service=exportCriteriaList&assignment=${$glVars.moodleData.assignment}`} target='_blank'>
                         <FontAwesomeIcon icon={faDownload}/>{` ${$glVars.i18n.export_criteria}`}
                     </a>
+                    <Button variant='link' className='text-danger' onClick={this.onDeleteAll}><FontAwesomeIcon icon={faTrash}/>{` Supprimer tous`}</Button>
                 </ButtonGroup>
                 <input  ref={this.fileRef} type="file" accept=".xml"  className='invisible' onChange={this.onFileChange} />
                 <Table striped bordered size='sm'>
@@ -144,6 +146,27 @@ class CriterionView extends Component{
 
         let onApply = function(){
             $glVars.webApi.deleteCriterion(id, $glVars.moodleData.assignment, callback);
+        }
+
+        let msg = `${$glVars.i18n.msg_confirm_deletion}<br/><br/>${$glVars.i18n.delete_criterion}`;
+        DlgConfirm.render($glVars.i18n.pluginname, msg, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
+    }
+
+    onDeleteAll(){
+        let that = this;
+        let callback = function(result){
+            if(!result.success){
+                $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
+                return;
+            }
+            else{
+                $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
+                that.props.refresh();
+            }        
+        }
+
+        let onApply = function(){
+            $glVars.webApi.deleteAllCriteria($glVars.moodleData.assignment, callback);
         }
 
         let msg = `${$glVars.i18n.msg_confirm_deletion}<br/><br/>${$glVars.i18n.delete_criterion}`;

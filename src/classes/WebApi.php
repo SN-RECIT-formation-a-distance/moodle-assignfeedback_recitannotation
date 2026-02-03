@@ -139,6 +139,21 @@ class WebApi extends MoodleApi
         }
     }
 
+    public function deleteAllCriteria($request){
+        try{
+            $assignment = clean_param($request['assignment'], PARAM_INT);
+
+            $this->canUserAccess('a', $assignment);
+
+            $this->ctrl->deleteAllCriteria($assignment);
+            return new WebApiResult(true);
+        }
+        catch(Exception $ex){
+            return new WebApiResult(false, false, $ex->GetMessage());
+        }
+    }
+
+
     public function saveAnnotation($request){
         try{            
             $data = json_decode(json_encode($request['data']), FALSE);

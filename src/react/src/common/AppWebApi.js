@@ -69,6 +69,11 @@ export class AppWebApi extends WebApi
         this.post(this.gateway, data, onSuccess);
     }
 
+    deleteAllCriteria(assignment, onSuccess){
+        let data = {assignment: assignment, service: "deleteAllCriteria"};
+        this.post(this.gateway, data, onSuccess);
+    }
+
     importCriteriaList(data, onSuccess){
         data = {data: data, service: "importCriteriaList"};
         this.post(this.gateway, data, onSuccess); 
