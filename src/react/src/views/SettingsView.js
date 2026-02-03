@@ -278,8 +278,8 @@ class ModalCriterionForm extends Component{
                 sortorder: props.nbItems + 1,
                 instruction_ai: ""
             },
-            colorList: ["#dc3545", "#0d6efd", "#6c757d", "#198754", "#d63384",
-                        "#6610f2", "#fd7e14", "#20c997", "#795548", "#c2185b"
+            colorList: ["#15803D", "#B91C1C", "#4B5563", "#7E22CE", "#854D0E",
+                        "#0E7490", "#1D4ED8", "#9D174D"
             ]
         };
 
@@ -310,17 +310,17 @@ class ModalCriterionForm extends Component{
                 </Form.Group>
                 <Form.Group >
                     <Form.Label>{$glVars.i18n.color}</Form.Label>
-                    <div>
+                    <div className='d-flex flex-wrap'>
                         {this.state.colorList.map((item, index) => {
                             let color = 
-                                <Button key={index} variant='link' className='btn-color-picker' style={{backgroundColor: item}} 
+                                <Button key={index} variant='link' className='m-2' style={{backgroundColor: item}} 
                                     onClick={() => this.onDataChange({target:{name: 'backgroundcolor', value: item}})}>
                                     {this.state.data.backgroundcolor === item && <FontAwesomeIcon icon={faCheckCircle} className='text-white'/>}
                                 </Button>
                             return color;
                         })}
                         
-                        <InputColor showRemoveFormat={false} className="m-2" name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
+                        <InputColor style={{minWidth: "33px"}} showRemoveFormat={false} className="m-2" name='backgroundcolor' value={this.state.data.backgroundcolor} onChange={this.onDataChange} />
                     </div>
                     
                 </Form.Group>

@@ -37,9 +37,9 @@
   font-size: 0.875em;
   font-weight: 400;
 }
-#assignfeedback_recitannotation .badge-criterion.badge-criterion-not-selected {
+#assignfeedback_recitannotation .badge-criterion.badge-criterion-hidden {
   opacity: 0.5 !important;
 }
-#assignfeedback_recitannotation .criterion-not-selected {
+#assignfeedback_recitannotation .criterion-hidden {
   border-width: 0 !important;
 }

@@ -25,7 +25,17 @@ export class AnnotationView extends Component {
 
     static currentRange = null;
     static selectedElement = null;
-    static refAnnotation = null
+    static refAnnotation = null;
+    
+    static getHtml(){
+          // clean up
+        const elements = AnnotationView.refAnnotation.current.querySelectorAll(".criterion-hidden");
+        for(let el of elements){
+            el.classList.toggle('criterion-hidden', false);
+        }
+
+        return AnnotationView.refAnnotation.current.innerHTML;
+    }
 
     constructor(props) {
         super(props);
@@ -146,9 +156,7 @@ export class AnnotationView extends Component {
                             </ButtonGroup>                        
                         </Col>
                         <Col className='p-2' md={4} >
-                            {criteriaList.map((item, index) => {
-                                return <BadgeCriterion key={index} data={item} counter={this.state.counter} onFilter={this.onCriterionFilter}/>;
-                            })}
+                           <CriteriaList criteriaList={criteriaList} counter={this.state.counter} resetFilter={this.state.showModalAnnotate || this.state.showModalAskIA} />
                         </Col>
                     </div>
                     
@@ -171,14 +179,6 @@ export class AnnotationView extends Component {
 
         return (main);
     }  
-
-    onCriterionFilter(data, selected){
-        let elements = AnnotationView.refAnnotation.current.querySelectorAll(`[data-criterion=${data.name}]`);
-
-        for(let el of elements){
-            el.classList.toggle('criterion-not-selected', !selected);
-        }
-    }
 
     onSelectionChange(event){                     
         const selection = window.getSelection();
@@ -225,7 +225,7 @@ export class AnnotationView extends Component {
         
         if(refresh){
             this.setState({unsavedData: true}, () =>
-                this.props.onAnnotationChange(AnnotationView.refAnnotation.current.innerHTML)
+                this.props.onAnnotationChange(AnnotationView.getHtml())
             );
         }
         else{
@@ -303,7 +303,7 @@ export class AnnotationView extends Component {
 
     beforeDataChange(){
         let stack = this.state.stack;
-        stack.undo.push(AnnotationView.refAnnotation.current.innerHTML);
+        stack.undo.push(AnnotationView.getHtml());
         stack.redo = []; // Clear redo stack on new input
         this.setState({stack: stack});
     }
@@ -332,7 +332,8 @@ export class AnnotationView extends Component {
         // set flag here to avoid waiting for it and a new call could be triggered
         this.setState({unsavedData: false});
 
-        await this.updateCounters();
+        await this.updateCounters();      
+
         let data = {};
         Object.assign(data, this.props.data);
         data.occurrences = {}; // force new object
@@ -348,7 +349,7 @@ export class AnnotationView extends Component {
             if (stack.redo.length > 25) {
                 stack.redo.shift(); // Remove the oldest state
             }
-            stack.redo.push(AnnotationView.refAnnotation.current.innerHTML);
+            stack.redo.push(AnnotationView.getHtml());
             this.props.onAnnotationChange(stack.undo.pop());
             this.setState({stack: stack, unsavedData: true});
         }
@@ -360,7 +361,7 @@ export class AnnotationView extends Component {
             if (stack.undo.length > 25) {
                 stack.undo.shift(); // Remove the oldest state
             }
-            stack.undo.push(AnnotationView.refAnnotation.current.innerHTML);
+            stack.undo.push(AnnotationView.getHtml());
             this.props.onAnnotationChange(stack.redo.pop());
             this.setState({stack: stack, unsavedData: true});
         }
@@ -455,11 +456,11 @@ export class AnnotationView extends Component {
     }
 }
 
-class BadgeCriterion extends Component{
+class CriteriaList extends Component{
     static defaultProps = {        
-        data: null,
+        criteriaList: [],
         counter: null,
-        onFilter: null
+        resetFilter: false
     };
 
     constructor(props){
@@ -467,38 +468,86 @@ class BadgeCriterion extends Component{
 
         this.onFilter = this.onFilter.bind(this);
 
-        this.state = {selected: true};
+        this.state = {selectedElement: null};
     }
 
-    componentDidMount(){
-        const elements = document.querySelectorAll(".criterion-not-selected");
-
-        for(let item of elements){
-            if(item.dataset.criterion === this.props.data.name){
-                this.setState({selected: false});
-            }
+    componentDidUpdate(prevProps, prevState){
+        if((this.props.resetFilter) && (this.state.selectedElement)){
+            this.setState({selectedElement: null});
         }
     }
+    
+    render(){
+        let main = 
+        <>
+            {this.props.criteriaList.map((item, index) => {
+                let selected = 0;
+                if(this.state.selectedElement === null){
+                    selected = 0;
+                }
+                else if(item.name === this.state.selectedElement.name){
+                    selected = 1;
+                }
+                else{
+                    selected = 2;
+                }
+
+                return <BadgeCriterion key={index} data={item} counter={this.props.counter} onFilter={this.onFilter} selected={selected}/>;
+            })}
+            <div className='text-muted text-center font-italic'>Cliquer pour filtrer</div>
+        </>;
+
+        return main;
+    }
+
+    onFilter(data){
+        let removeFilter = false;
+        if(this.state.selectedElement !== null && data.name === this.state.selectedElement.name){
+            removeFilter = true;
+            data = null;
+        }
+
+        let elements = AnnotationView.refAnnotation.current.querySelectorAll(`[data-criterion]`);
+        for(let el of elements){
+            if(removeFilter){
+                el.classList.toggle('criterion-hidden', false);
+            }
+            else{
+                let hide = (data.name !== el.dataset.criterion);
+                el.classList.toggle('criterion-hidden', hide);
+            }
+        }
+
+        this.setState({selectedElement: data});
+    }
+}
+
+class BadgeCriterion extends Component{
+    static defaultProps = {        
+        data: null,
+        counter: null,
+        onFilter: null,
+        selected: 0
+    };  
 
     render(){
         let item = this.props.data;
 
-        let notSelected = (this.state.selected ? '' : "badge-criterion-not-selected");
+        let className = `badge-criterion`;
+
+        if(this.props.selected === 2){
+            className += ' badge-criterion-hidden';
+        } 
+
         let badge = 
-                <span className={`badge-criterion ${notSelected}`} 
-                    style={{backgroundColor: item.backgroundcolor, borderColor: item.backgroundcolor}}
-                    onClick={this.onFilter}>
+                <span className={className} 
+                    style={{backgroundColor: item.backgroundcolor}}
+                    onClick={() => this.props.onFilter(this.props.data)}>
                     <span className='badge-criterion-name'>{item.description}</span>
                     <span className="badge-criterion-counter">{(this.props.counter.hasOwnProperty(item.name) ? this.props.counter[item.name] : 0)}</span>
                 </span>;
 
         return badge;
-    }
-
-    onFilter(){
-        this.setState({selected: !this.state.selected}, 
-                () => this.props.onFilter(this.props.data, this.state.selected)
-        );
     }
 }
 

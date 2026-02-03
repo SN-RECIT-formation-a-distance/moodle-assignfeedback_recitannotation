@@ -34,7 +34,8 @@ export class InputColor extends Component {
         disabled: false,
         size: "",
         className: "",
-        showRemoveFormat: true
+        showRemoveFormat: true,
+        style: null
     };
     
     constructor(props){
@@ -99,8 +100,8 @@ export class InputColor extends Component {
         let value = this.RGBToHex(this.state.value);
 
         let main = 
-            <div className={this.props.className}>
-                <Form.Control className='w-100' size={this.props.size} name={this.props.name} type="color" value={value} 
+            <div className={this.props.className} style={this.props.style}>
+                <Form.Control style={{padding: "5px"}} className='w-100' size={this.props.size} name={this.props.name} type="color" value={value} 
                                 onChange={this.onChange} onBlur={this.onBlur} disabled={this.props.disabled} />
                 {this.props.showRemoveFormat && <Button className="ml-1" size='sm' variant={'link'} onClick={this.onReset} title={"Enlever format"}><FontAwesomeIcon icon={faRemoveFormat}/></Button>}
             </div>
