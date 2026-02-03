@@ -329,13 +329,18 @@ class PersistCtrl extends MoodlePersistCtrl
                     $msg .= "\t" . $error->message;
                 }
 
-                throw new Exception($msg);
+                throw new Exception("Error on reading XML file: $msg");
             }
 
             $sortOrderObj = $this->getLastSortOrder($data->assignment);
 
+            $prompt_ai = new TablePromptAi();
+            $prompt_ai->assignment = (int) $data->assignment;
+            $prompt_ai->prompt_ai = (string) $xml->prompt_ai->payload;
+            $this->savePromptAi($prompt_ai);
+
             // Loop through each criterion
-            foreach ($xml->criterion as $item) {
+            foreach ($xml->criteria->criterion as $item) {
                 $criterion = new TableCriterion();
                 $criterion->assignment = (int) $data->assignment;
                 $criterion->name = (string) $item->name;
@@ -417,17 +422,15 @@ class PersistCtrl extends MoodlePersistCtrl
 
     public function savePromptAi($data){
         try{	
-            $record = new TablePromptAi();
-            $record->assignment = $data->assignment;
-            $record->prompt_ai = $data->prompt_ai;
+            $record = $this->getPromptAi($data->assignment);
 
-            if($data->id == 0){
-                if (!$this->mysqlConn->record_exists('assignfeedback_recitannot_promptai', ['assignment' => $record->assignment])) {
-                    $this->mysqlConn->insert_record("assignfeedback_recitannot_promptai", $record);
-                }
+            if($record->id == 0){
+                $record->assignment = $data->assignment;
+                $record->prompt_ai = $data->prompt_ai;
+                $this->mysqlConn->insert_record("assignfeedback_recitannot_promptai", $record);
             }
             else{
-                $record->id = $data->id;
+                $record->prompt_ai = $data->prompt_ai;
                 $this->mysqlConn->update_record("assignfeedback_recitannot_promptai", $record);
             }
 

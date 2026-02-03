@@ -92,23 +92,6 @@ class WebApi extends MoodleApi
         }
     }
 
-   /* public function getCriteriaList($request){
-        try{            
-            $assignment = clean_param($request['assignment'], PARAM_INT);
-
-            $this->canUserAccess('a', $assignment);
-
-            $result = new stdClass();
-            $result->criteriaList = $this->ctrl->getCriteriaList($assignment);
-            $result->commentList = $this->ctrl->getCommentList($assignment);
-            $this->prepareJson($result);
-            return new WebApiResult(true, $result);
-        }
-        catch(Exception $ex){
-            return new WebApiResult(false, false, $ex->GetMessage());
-        }
-    }*/
-
     public function saveCriterion($request){
         try{            
             $data = json_decode(json_encode($request['data']), FALSE);
@@ -152,7 +135,6 @@ class WebApi extends MoodleApi
             return new WebApiResult(false, false, $ex->GetMessage());
         }
     }
-
 
     public function saveAnnotation($request){
         try{            
@@ -208,12 +190,22 @@ class WebApi extends MoodleApi
 
             $criteriaList = $this->ctrl->getCriteriaList($assignment);
             $commentList = $this->ctrl->getCommentList($assignment);
+            $promptAiList = $this->ctrl->getPromptAi($assignment);
 
             $doc = new \DOMDocument('1.0', 'UTF-8');
             $doc->formatOutput = true;
 
-            $root = $doc->createElement('criteria');
+            $root = $doc->createElement('root');
             $doc->appendChild($root);
+
+            $promptAi = $doc->createElement('prompt_ai');
+            $root->appendChild($promptAi);
+            $payload = $doc->createElement('payload');
+            $payload->appendChild($doc->createCDATASection($promptAiList->prompt_ai));
+            $promptAi->appendChild($payload);
+
+            $criteria = $doc->createElement('criteria');
+            $root->appendChild($criteria);
 
             foreach($criteriaList as $criterionData){
                 $criterion = $doc->createElement('criterion');
@@ -222,7 +214,7 @@ class WebApi extends MoodleApi
                 $criterion->appendChild($doc->createElement('backgroundcolor', $criterionData->backgroundcolor));
                 $criterion->appendChild($doc->createElement('sortorder', $criterionData->sortorder));
                 $criterion->appendChild($doc->createElement('instruction_ai', $criterionData->instruction_ai));
-                $root->appendChild($criterion);
+                $criteria->appendChild($criterion);
 
                 $comments = $doc->createElement('comments');
                 $criterion->appendChild($comments);
