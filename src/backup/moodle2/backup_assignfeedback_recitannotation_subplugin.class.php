@@ -51,12 +51,17 @@ class backup_assignfeedback_recitannotation_subplugin extends backup_subplugin {
 
             $crits = new backup_nested_element('feedback_recitannot_crits'); // container
             $crit = new backup_nested_element('recitannot_crit', ['id'], [
-                'assignment', 'name', 'description', 'backgroundcolor', 'sortorder'
+                'assignment', 'name', 'description', 'backgroundcolor', 'sortorder', 'instruction_ai'
             ]);
 
             $comments = new backup_nested_element('feedback_recitannot_comments'); // container
             $comment = new backup_nested_element('recitannot_comment', ['id'], [
                 'criterionid', 'comment'
+            ]);
+
+            $promptsAi = new backup_nested_element('feedback_recitannot_promptsai'); // container
+            $promptAi = new backup_nested_element('recitannot_promptai', ['id'], [
+                'assignment', 'prompt_ai'
             ]);
 
             // Build the XML structure
@@ -66,6 +71,8 @@ class backup_assignfeedback_recitannotation_subplugin extends backup_subplugin {
             $crits->add_child($crit); // actual data
             $crit->add_child($comments); // container
             $comments->add_child($comment); // actual data
+            $wrapper->add_child($promptsAi); // container
+            $promptsAi->add_child($promptAi); // actual data
 
             // Set data sources
             //if($userinfo){
@@ -76,7 +83,7 @@ class backup_assignfeedback_recitannotation_subplugin extends backup_subplugin {
             //}
             
 
-            $crit->set_source_sql('SELECT t1.id, t1.assignment, t1.name, t1.description, t1.backgroundcolor, t1.sortorder 
+            $crit->set_source_sql('SELECT t1.id, t1.assignment, t1.name, t1.description, t1.backgroundcolor, t1.sortorder, t1.instruction_ai 
                             from {assignfeedback_recitannot_crit} t1 
                             where t1.assignment = (SELECT assignment FROM {assign_grades} WHERE id = :gradeid)', 
                             array('gradeid' => backup::VAR_PARENTID));
@@ -84,6 +91,11 @@ class backup_assignfeedback_recitannotation_subplugin extends backup_subplugin {
             $comment->set_source_table('assignfeedback_recitannot_comment', [
                 'criterionid' => backup::VAR_PARENTID
             ]);
+
+            $promptAi->set_source_sql('SELECT t1.id, t1.assignment, t1.prompt_ai
+                            from {assignfeedback_recitannot_promptai} t1 
+                            where t1.assignment = (SELECT assignment FROM {assign_grades} WHERE id = :gradeid)', 
+                            array('gradeid' => backup::VAR_PARENTID));
 
             return $subplugin;
         }

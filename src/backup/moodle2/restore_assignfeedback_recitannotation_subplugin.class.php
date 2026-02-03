@@ -53,6 +53,10 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
         $elementpath = $this->get_pathfor('/feedback_recitannot_crits/recitannot_crit/feedback_recitannot_comments/recitannot_comment');
         $paths[] = new restore_path_element($elementname, $elementpath);
 
+        $elementname = $this->get_namefor('promptai');
+        $elementpath = $this->get_pathfor('/feedback_recitannot_promptsai/recitannot_promptai');
+        $paths[] = new restore_path_element($elementname, $elementpath);
+
         return $paths;
     }
 
@@ -72,13 +76,22 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
             }
             
             $assignment = $this->get_new_parentid('assign');
-            $submission = $DB->get_record('assign_submission', ['assignment' => $assignment, 'userid' => $data->userid], 'id', MUST_EXIST);
+
+            $sql = "assignment = :assignment AND userid = :userid"; 
+            $params = ['assignment' => $assignment, 'userid' => $data->userid]; 
+            // get the first (latest) to avoid error "Multiple records were found, whereas only one record was expected."
+            $submission = $DB->get_records_select('assign_submission', $sql, $params, 'attemptnumber DESC', '*', 0, 1);
+            $submission = reset($submission); 
             $data->submission = $submission->id;
 
             // debugging('assignfeedback_recitannotation: ' . print_r($data, true), DEBUG_DEVELOPER);
 
             // Insert new record
-            $DB->insert_record('assignfeedback_recitannotation', $data);
+             if (!$DB->record_exists('assignfeedback_recitannotation', [
+                'submission' => $data->submission
+            ])) {
+                $DB->insert_record('assignfeedback_recitannotation', $data);
+            }
         }
         catch(Exception $ex){
             debugging('Error on assignfeedback_recitannotation: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
@@ -146,6 +159,36 @@ class restore_assignfeedback_recitannotation_subplugin extends restore_subplugin
             debugging('Error on assignfeedback_recitannot_comment: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
         }
         
+    }
+
+    /**
+     * @param mixed $data
+     */
+    public function process_assignfeedback_recitannotation_promptai($data) {
+        global $DB;
+
+        try{
+            $data = (object)$data;
+            $oldid = $data->id;
+            unset($data->id);
+            
+            $data->assignment = $this->get_new_parentid('assign');
+
+            // debugging('assignfeedback_recitannot_crit: ' . print_r($data, true), DEBUG_DEVELOPER);
+
+            // Example: check if a record already exists.
+            if (!$DB->record_exists('assignfeedback_recitannot_promptai', [
+                'assignment' => $data->assignment
+            ])) {
+                $newitemid = $DB->insert_record('assignfeedback_recitannot_promptai', $data);
+
+                // Save mapping for child table
+                $this->set_mapping('promptai', $oldid, $newitemid);
+            }
+        }
+        catch(Exception $ex){
+            debugging('Error on process_assignfeedback_recitannotation_promptai: ' . $ex->GetMessage(), DEBUG_DEVELOPER);
+        }
     }
 
 }
