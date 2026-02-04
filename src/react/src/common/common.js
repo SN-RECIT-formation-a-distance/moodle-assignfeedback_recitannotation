@@ -32,7 +32,8 @@ export const $glVars = {
         userid: 0,
         sesskey: "",
         wwwroot: "",
-        aiApi: false
+        aiApi: false,
+        documentationUrl: ""
     },
     i18n: {}
 }

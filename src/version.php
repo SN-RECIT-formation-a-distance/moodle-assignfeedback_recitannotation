@@ -22,7 +22,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026020400;
+$plugin->version   = 2026020401;
 $plugin->requires  = 2023100912.00; // Moodle 4.3.0
 $plugin->supported = [403, 405];
 $plugin->component = 'assignfeedback_recitannotation';

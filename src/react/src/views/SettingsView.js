@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Badge, Button, ButtonGroup, ButtonToolbar, Form, Modal, Tab, Table, Tabs} from 'react-bootstrap';
-import { faArrowDown, faArrowLeft,  faArrowUp,  faCheckCircle,  faDownload,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowLeft,  faArrowUp,  faCheckCircle,  faDownload,  faInfoCircle,  faPencilAlt, faPlus, faSave, faTimes, faTrash, faUpload} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ComboBoxPlus, DlgConfirm, InputColor, InputTextArea} from '../libs/components/Components';
 import { $glVars, Options } from '../common/common';
@@ -30,9 +30,16 @@ export class SettingsView extends Component{
 
         let main =         
         <div className='p-2'>
-            <Button variant='link' onClick={() => this.props.onChangeView('annotation')} className='mb-5'>
-                <FontAwesomeIcon icon={faArrowLeft}/>{` ${$glVars.i18n.back_annotation_view}`}
-            </Button>
+            <ButtonToolbar className='justify-content-between align-items-start'>
+                <Button variant='link' onClick={() => this.props.onChangeView('annotation')} className='mb-5'>
+                    <FontAwesomeIcon icon={faArrowLeft}/>{` ${$glVars.i18n.back_annotation_view}`}
+                </Button>
+                <a className='btn  btn-primary ml-1' target="_blank" href={$glVars.moodleData.documentationUrl}>
+                    <FontAwesomeIcon icon={faInfoCircle}/>
+                    <span>{" Documentation et téléchargement des critères"}</span>
+                </a>
+            </ButtonToolbar>
+            
 
             <Tabs activeKey={this.state.tab} onSelect={(tab) => this.setState({tab: tab})}>
                 <Tab eventKey="0" title={$glVars.i18n.criteria_list} className='p-3'>

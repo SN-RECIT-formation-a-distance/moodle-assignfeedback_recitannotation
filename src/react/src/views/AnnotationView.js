@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ButtonToolbar, Col, Form, Modal, Row, Table} from 'react-bootstrap';
-import {  faBroom, faChalkboard, faCog, faComment, faPrint, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
+import {  faBroom, faChalkboard, faCog, faComment, faInfo, faInfoCircle, faPrint, faRedo, faSave, faTimes, faTrash, faUndo} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { InputTextArea } from '../libs/components/InputTextArea';
 import {ComboBoxPlus} from '../libs/components/Components';
@@ -140,6 +140,10 @@ export class AnnotationView extends Component {
                             <Button  variant='link' className='ml-1 ' onClick={() => this.props.onChangeView('settings')}>
                                 <FontAwesomeIcon icon={faCog}/>
                             </Button>
+
+                            <a className='btn  btn-link ml-1' target="_blank" href={$glVars.moodleData.documentationUrl}>
+                                <FontAwesomeIcon icon={faInfoCircle}/>
+                            </a>
                         </span>
                         
                     </div>

@@ -39,3 +39,10 @@ $description = get_string('ai_api_key_desc', 'assignfeedback_recitannotation');
 $default = '';
 $setting = new admin_setting_configtext($name, $title, $description, $default);
 $settings->add($setting);
+
+$name = 'assignfeedback_recitannotation/url_documentation';
+$title = get_string('url_documentation', 'assignfeedback_recitannotation');
+$description = get_string('url_documentation_desc', 'assignfeedback_recitannotation');
+$default = '';
+$setting = new admin_setting_configtext($name, $title, $description, $default);
+$settings->add($setting);

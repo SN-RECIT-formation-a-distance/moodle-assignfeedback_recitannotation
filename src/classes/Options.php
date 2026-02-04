@@ -32,6 +32,10 @@ class Options
         return get_config('assignfeedback_recitannotation', 'ai_api_key');
     }
 
+    static function getUrlDocumentation(){ 
+        return get_config('assignfeedback_recitannotation', 'url_documentation');
+    }
+
     static function isAiApiActive(){
         $endpoint = Options::getAiApiEndpoint();
         $api_key = Options::getAiApiKey();
