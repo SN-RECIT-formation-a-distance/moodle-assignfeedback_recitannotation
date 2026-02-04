@@ -59,7 +59,7 @@ export class AnnotationView extends Component {
 
         this.state = {
             showModalAnnotate: false,
-            showModalAskIA: false,
+            showModalAskIA: '0',
             counter: {},
             unsavedData: false,
             stack: {
@@ -156,7 +156,7 @@ export class AnnotationView extends Component {
                             </ButtonGroup>                        
                         </Col>
                         <Col className='p-2' md={4} >
-                           <CriteriaList criteriaList={criteriaList} counter={this.state.counter} resetFilter={this.state.showModalAnnotate || this.state.showModalAskIA} />
+                           <CriteriaList criteriaList={criteriaList} counter={this.state.counter} resetFilter={this.state.showModalAnnotate || (this.state.showModalAskIA !== '0')} />
                         </Col>
                     </div>
                     
@@ -170,8 +170,8 @@ export class AnnotationView extends Component {
                                 commentList={commentList} />
                     }   
 
-                    {this.state.showModalAskIA && 
-                                <ModalAskAi promptAi={this.props.promptAi} 
+                    {this.state.showModalAskIA !== '0' && 
+                                <ModalAskAi promptAi={this.props.promptAi} mode={this.state.showModalAskIA}
                                     onClose={this.onClose} criteriaList={criteriaList} 
                                     createNewAnnotation={this.createNewAnnotation} onAnnotationChange={this.props.onAnnotationChange}/>}
                 </div>
@@ -213,12 +213,18 @@ export class AnnotationView extends Component {
     }
 
     onAskIA(event){
-        this.setState({showModalAskIA: true});
+        
+        if(event.shiftKey && event.ctrlKey){
+            this.setState({showModalAskIA: '2'});
+        }
+        else{
+            this.setState({showModalAskIA: '1'});
+        }
     }
 
     onClose(refresh){
         this.positionFloatingButton(null);
-        this.setState({showModalAnnotate: false, showModalAskIA: false});
+        this.setState({showModalAnnotate: false, showModalAskIA: '0'});
 
         AnnotationView.currentRange = null;
         AnnotationView.selectedElement = null;
@@ -405,7 +411,7 @@ export class AnnotationView extends Component {
         if(criterion === null){
             let msg = `The criterion "${criterionName}" was not found.`;
             $glVars.feedback.showError($glVars.i18n.pluginname, msg);
-            throw new Error(msg);
+            //throw new Error(msg);
         }
         
         // Gérer le clic sur le texte surligné

@@ -12,6 +12,7 @@ import { AnnotationView } from './AnnotationView';
 export class ModalAskAi extends Component{
     static defaultProps = {  
         promptAi: null,      
+        mode: '1', // 1 = user, 2 = technician
         onClose: null,
         criteriaList: [],
         createNewAnnotation: null,
@@ -22,139 +23,64 @@ export class ModalAskAi extends Component{
         super(props);
 
         this.onClose = this.onClose.bind(this);
-        this.onDataChange = this.onDataChange.bind(this);
-        this.onCallIA = this.onCallIA.bind(this);
-        this.onReply = this.onReply.bind(this);
+        this.onCallAI = this.onCallAI.bind(this);
+        this.onCallAiResult = this.onCallAiResult.bind(this);
         this.onApply = this.onApply.bind(this);
         this.onReviewPrompt = this.onReviewPrompt.bind(this);
 
         this.state = {
-            data: {
-                criteriaList: [],
-                result: '',
-                prompt: props.promptAi.prompt_ai
-            },
             dropdownList: {
                 criteriaList: []
-            },
-            waiting: false,
-            tab: '0'
+            }
         };
 
         for(let item of props.criteriaList){
-            this.state.dropdownList.criteriaList.push({value: item.id.toString(), text: item.description});
-        }
-
-        for(let item of props.criteriaList){
-            if(item.instruction_ai.length > 0){
-                this.state.data.criteriaList.push(item.id.toString());
-            }
+            this.state.dropdownList.criteriaList.push({value: item.id.toString(), text: item.description, data: item});
         }
     }
 
     render(){
-        let body = 
-        <Tabs activeKey={this.state.tab} onSelect={(tab) => this.setState({tab: tab})}>
-            <Tab eventKey="0" title={'Sélectionnez vos critères'}  className=' p-3' disabled>
-                <Form>
-                    <Form.Group >
-                        <Form.Label>{'Liste de critères'}</Form.Label>
-                        <ToggleButtons name="criteriaList" onChange={this.onDataChange} type="checkbox" value={this.state.data.criteriaList} options={this.state.dropdownList.criteriaList}/>
-                    </Form.Group>                    
-                </Form>
-            </Tab>
-            <Tab eventKey="1" title={'Réviser le prompt'} className=' p-3' disabled>
-                <Form >
-                    <Form.Group className='mb-3'>
-                        <Form.Label>{$glVars.i18n.prompt}</Form.Label>
-                        <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={15} />
-                    </Form.Group>
-                </Form>
-            </Tab>
-            <Tab eventKey="2" title={$glVars.i18n.result} className=' p-3' disabled>
-                <Form >
-                    <Form.Group className='mb-3'>
-                        <div id="placeholderReplyAi"></div>                    
-                    </Form.Group>
-                </Form>
-            </Tab>
-        </Tabs>;
-
-        let main = 
-            <Modal show={true} onHide={() => this.onClose(false)} size="xl" backdrop='static' tabIndex="-1">
-                <Modal.Header closeButton>
-                    <Modal.Title>{$glVars.i18n.ask_ai}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>{body}</Modal.Body>
-                <Modal.Footer>
-                    <ButtonToolbar>
-                        <ButtonGroup >
-                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
-                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
-                            </Button>
-                            {this.state.tab === '0' && 
-                                <Button variant='primary' onClick={this.onReviewPrompt}>
-                                    <FontAwesomeIcon icon={faArrowRight}/>{` Générer le prompt`}
-                                </Button>
-                            }
-                            {this.state.tab === '1' &&  
-                                <Button disabled={this.state.waiting}  variant='primary' onClick={this.onCallIA}>
-                                    <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask_ai}`}
-                                </Button>
-                            }
-                            {this.state.tab === '2' &&
-                                <Button variant='primary' onClick={this.onApply}>
-                                    <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.apply}`}
-                                </Button>
-                            }
-                        </ButtonGroup>
-                    </ButtonToolbar>
-                </Modal.Footer>
-            </Modal>;
- 
-        return main;
+        
+        if(this.props.mode === '1'){
+            return  <ModalAskAiUserView criteriaList={this.state.dropdownList.criteriaList} onClose={this.onClose}
+                            onReviewPrompt={this.onReviewPrompt} onCallAI={this.onCallAI} onApply={this.onApply}/>;
+        }
+        else if(this.props.mode === '2'){
+            return  <ModalAskAiTechView criteriaList={this.state.dropdownList.criteriaList} promptAi={this.props.promptAi} 
+                        onClose={this.onClose} onReviewPrompt={this.onReviewPrompt} onCallAI={this.onCallAI} onApply={this.onApply}/>;
+        }
+        else{
+            return null;
+        }
     }
 
-    onReviewPrompt(){     
-        if(this.state.data.criteriaList.length === 0){
+    onReviewPrompt(criteriaList){     
+        if(criteriaList.length === 0){
             $glVars.feedback.showWarning($glVars.i18n.pluginname, 'Liste de critères', 3);
-            return;
+            return "";
         } 
-
-        let data = this.state.data;
 
         // do not replace student text here to avoid loosing HTML tags
         // data.prompt = data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerText);
 
-        let criteriaList = [];
-        for(let item of this.state.data.criteriaList){
+        let tmp = [];
+        for(let item of criteriaList){
             let crit = JsNx.getItem(this.props.criteriaList, 'id', item, null);
             if(crit){
-                criteriaList.push(`${criteriaList.length + 1}. ${crit.description} (ID=${crit.name}): ${crit.instruction_ai}`);
+                tmp.push(`${tmp.length + 1}. ${crit.description} (ID=${crit.name}): ${crit.instruction_ai}`);
             }
         }
 
-        data.prompt = data.prompt.replace("PLACEHOLDER_CRITERIA_LIST", criteriaList.join("\n"));
-
-        this.setState({data: data, tab: '1'})
+        return this.props.promptAi.prompt_ai.replace("PLACEHOLDER_CRITERIA_LIST", tmp.join("\n"));
     }
 
-    onDataChange(event){
-        let data = this.state.data;
-        data[event.target.name] = event.target.value;
-        this.setState({data: data});
-    }
-
-    onCallIA(event){
-        event.preventDefault();
-        event.stopPropagation();
-
-        if(this.state.data.prompt.length === 0){
+    onCallAI(prompt, callback){
+        if(prompt.length === 0){
             $glVars.feedback.showWarning($glVars.i18n.pluginname, UtilsString.sprintf($glVars.i18n.msg_required_field, $glVars.i18n.prompt), 3);
             return;
         }
         
-        let prompt = this.state.data.prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.refAnnotation.current.innerHTML);
+        prompt = prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.getHtml());
 
         let payload = {
             messages: [
@@ -216,13 +142,10 @@ export class ModalAskAi extends Component{
             }
         };
         
-        $glVars.webApi.callAzureAI(payload, $glVars.moodleData.assignment, this.onReply, 120000);
-        this.setState({waiting: true});
+        $glVars.webApi.callAzureAI(payload, $glVars.moodleData.assignment, (result) => this.onCallAiResult(result, callback), 120000);
     }
 
-    onReply(result){
-        this.setState({waiting: false});
-
+    onCallAiResult(result, callback = null){
         if(!result.success){
             $glVars.feedback.showError($glVars.i18n.pluginname, result.msg);
             return;
@@ -241,10 +164,10 @@ export class ModalAskAi extends Component{
         }
         
         try{
-            let data= this.state.data;
-            data.result = JSON.parse(result.data.choices.pop().message.content);
-            document.getElementById("placeholderReplyAi").innerText = JSON.stringify(data.result, null, 2); // 2 = indent size;
-            this.setState({data: data, tab: '2'});
+            let dataAI = JSON.parse(result.data.choices.pop().message.content);
+            if(callback){
+                callback(dataAI);
+            }
             $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
         }
         catch(error){
@@ -254,13 +177,11 @@ export class ModalAskAi extends Component{
         }
     }
 
-    onApply(){
-        let data = this.state.data.result;
-
-        for(let item of data.corrections){
+    onApply(dataAI){
+        for(let item of dataAI.corrections){
             const regex = new RegExp(`\\[\\[${item.id}:([^\\]]*)\\]\\]`);
 
-            data.annotatedText = data.annotatedText.replace(regex, (match, group1) => {
+            dataAI.annotatedText = dataAI.annotatedText.replace(regex, (match, group1) => {
                 let el = this.props.createNewAnnotation(null, item.criterion, item.explanation, item.suggestion, item.strategy, true);
                 el.innerHTML = group1;
                 return el.outerHTML;
@@ -270,15 +191,234 @@ export class ModalAskAi extends Component{
         // Remove the [[id:]] that the AI ​​has not replaced
         const regex = new RegExp(`\\[\\[e\\d+:([^\\]]*)\\]\\]`, "g");
 
-        data.annotatedText = data.annotatedText.replaceAll(regex, (match, group1, groupe2) => {
+        dataAI.annotatedText = dataAI.annotatedText.replaceAll(regex, (match, group1, groupe2) => {
             return group1;
         });
 
         // avoir set directly innerHTML to prevent issues with React
-        // AnnotationView.refAnnotation.current.innerHTML = data.annotatedText;
-        this.props.onAnnotationChange(data.annotatedText);
+        // AnnotationView.refAnnotation.current.innerHTML = dataAI.annotatedText;
+        this.props.onAnnotationChange(dataAI.annotatedText);
 
         this.onClose(true);
+    }
+
+    onClose(refresh){
+        this.props.onClose(refresh);
+    }
+}
+
+export class ModalAskAiUserView extends Component{
+    static defaultProps = {  
+        onClose: null,
+        criteriaList: [],
+        onReviewPrompt: null,
+        onCallAI: null,
+        onApply: null
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onDataChange = this.onDataChange.bind(this);
+        this.onCallAI = this.onCallAI.bind(this);
+
+        this.state = {
+            data: {
+                criteriaList: []
+            }
+        };
+
+        for(let item of props.criteriaList){
+            if(item.data.instruction_ai.length > 0){
+                this.state.data.criteriaList.push(item.data.id.toString());
+            }
+        }
+    }
+
+    render(){
+        let body = 
+        <div>
+            <Form>
+                <Form.Group >
+                    <Form.Label>{'Liste de critères'}</Form.Label>
+                    <ToggleButtons name="criteriaList" onChange={this.onDataChange} type="checkbox" value={this.state.data.criteriaList} options={this.props.criteriaList}/>
+                </Form.Group>                    
+            </Form>
+        </div>;
+
+        let main = 
+            <Modal show={true} onHide={() => this.props.onClose(false)} size="lg" backdrop='static' tabIndex="-1">
+                <Modal.Header closeButton>
+                    <Modal.Title>{$glVars.i18n.ask_ai}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{body}</Modal.Body>
+                <Modal.Footer>
+                    <ButtonToolbar>
+                        <ButtonGroup >
+                            <Button variant='secondary'  onClick={() => this.props.onClose(false)}>
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
+                            </Button>
+                            <Button variant='primary' onClick={this.onCallAI}>
+                                <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask_ai}`}
+                            </Button>
+                        </ButtonGroup>
+                    </ButtonToolbar>
+                </Modal.Footer>
+            </Modal>;
+ 
+        return main;
+    }
+
+    onDataChange(event){
+        let data = this.state.data;
+        data[event.target.name] = event.target.value;
+        this.setState({data: data});
+    }
+
+    onCallAI(event){
+        event.preventDefault();
+        event.stopPropagation();
+
+        let prompt = this.props.onReviewPrompt(this.state.data.criteriaList);
+        this.props.onCallAI(prompt, this.props.onApply);
+        this.props.onClose();
+    }
+}
+
+export class ModalAskAiTechView extends Component{
+    static defaultProps = {  
+        promptAi: null,      
+        onClose: null,
+        criteriaList: [],
+        onReviewPrompt: null,
+        onCallAI: null,
+        onApply: null
+    };
+
+    constructor(props){
+        super(props);
+
+        this.onClose = this.onClose.bind(this);
+        this.onDataChange = this.onDataChange.bind(this);
+        this.onCallAI = this.onCallAI.bind(this);
+        this.onCallAiResult = this.onCallAiResult.bind(this);
+        this.onApply = this.onApply.bind(this);
+        this.onReviewPrompt = this.onReviewPrompt.bind(this);
+
+        this.state = {
+            data: {
+                criteriaList: [],
+                result: '',
+                prompt: props.promptAi.prompt_ai
+            },
+            waiting: false,
+            tab: '0'
+        };
+
+        for(let item of props.criteriaList){
+            if(item.data.instruction_ai.length > 0){
+                this.state.data.criteriaList.push(item.data.id.toString());
+            }
+        }
+    }
+
+    render(){
+        let body = 
+        <Tabs activeKey={this.state.tab} onSelect={(tab) => this.setState({tab: tab})}>
+            <Tab eventKey="0" title={'Sélectionnez vos critères'}  className=' p-3' disabled>
+                <Form>
+                    <Form.Group >
+                        <Form.Label>{'Liste de critères'}</Form.Label>
+                        <ToggleButtons name="criteriaList" onChange={this.onDataChange} type="checkbox" value={this.state.data.criteriaList} options={this.props.criteriaList}/>
+                    </Form.Group>                    
+                </Form>
+            </Tab>
+            <Tab eventKey="1" title={'Réviser le prompt'} className=' p-3' disabled>
+                <Form >
+                    <Form.Group className='mb-3'>
+                        <Form.Label>{$glVars.i18n.prompt}</Form.Label>
+                        <InputTextArea placeholder={$glVars.i18n.ask_question} name="prompt" as="textarea" value={this.state.data.prompt} onChange={this.onDataChange} rows={15} />
+                    </Form.Group>
+                </Form>
+            </Tab>
+            <Tab eventKey="2" title={$glVars.i18n.result} className=' p-3' disabled>
+                <Form >
+                    <Form.Group className='mb-3'>
+                        <div id="placeholderReplyAi"></div>                    
+                    </Form.Group>
+                </Form>
+            </Tab>
+        </Tabs>;
+
+        let main = 
+            <Modal show={true} onHide={() => this.onClose(false)} size="xl" backdrop='static' tabIndex="-1">
+                <Modal.Header closeButton>
+                    <Modal.Title>{$glVars.i18n.ask_ai}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{body}</Modal.Body>
+                <Modal.Footer>
+                    <ButtonToolbar>
+                        <ButtonGroup >
+                            <Button variant='secondary'  onClick={() => this.onClose(false)}>
+                                 <FontAwesomeIcon icon={faTimes}/>{` ${$glVars.i18n.cancel}`}
+                            </Button>
+                            {this.state.tab === '0' && 
+                                <Button variant='primary' onClick={this.onReviewPrompt}>
+                                    <FontAwesomeIcon icon={faArrowRight}/>{` Générer le prompt`}
+                                </Button>
+                            }
+                            {this.state.tab === '1' &&  
+                                <Button disabled={this.state.waiting}  variant='primary' onClick={this.onCallAI}>
+                                    <FontAwesomeIcon icon={faArrowRight}/>{` ${$glVars.i18n.ask_ai}`}
+                                </Button>
+                            }
+                            {this.state.tab === '2' &&
+                                <Button variant='primary' onClick={this.onApply}>
+                                    <FontAwesomeIcon icon={faSave}/>{` ${$glVars.i18n.apply}`}
+                                </Button>
+                            }
+                        </ButtonGroup>
+                    </ButtonToolbar>
+                </Modal.Footer>
+            </Modal>;
+ 
+        return main;
+    }
+
+    onReviewPrompt(){   
+        let data = this.state.data;
+        data.prompt = this.props.onReviewPrompt(this.state.data.criteriaList);
+        this.setState({data: data, tab: '1'})
+    }
+
+    onDataChange(event){
+        let data = this.state.data;
+        data[event.target.name] = event.target.value;
+        this.setState({data: data});
+    }
+
+    onCallAI(event){
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.props.onCallAI(this.state.data.prompt, this.onCallAiResult);
+        
+        this.setState({waiting: true});
+    }
+
+    onCallAiResult(aiData){
+        this.setState({waiting: false});        
+        let data = this.state.data; 
+        data.result = aiData;
+
+        document.getElementById("placeholderReplyAi").innerText = JSON.stringify(data.result, null, 2); // 2 = indent size;
+        this.setState({data: data, tab: '2'});
+
+        $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
+    }
+
+    onApply(){
+        this.props.onApply(this.state.data.result);
     }
 
     onClose(refresh){

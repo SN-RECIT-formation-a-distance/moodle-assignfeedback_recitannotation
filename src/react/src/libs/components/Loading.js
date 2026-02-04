@@ -61,7 +61,12 @@ export class Loading extends Component{
             <div ref={this.domRef} className="Loading">
                 {this.renderChildren()}
                 
-                {this.state.timeout > 0 && <div className='text-white m-3'>Timeout: {this.state.elapsedTime} / {this.state.timeout}</div>}
+                {this.state.timeout > 0 && 
+                    <div className='text-dark m-3 text-center'>
+                        <span><strong>Analyse en cours</strong></span>
+                        <br/>
+                        <span className='text-muted' style={{fontSize: '12px'}}>(Temps écoulé: {this.state.elapsedTime} / {this.state.timeout})</span>
+                    </div>}
             </div>
 
         return main;
