@@ -112,21 +112,24 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
             $strings[$key] = get_string($key, 'assignfeedback_recitannotation');
         }
 
-        $html .= html_writer::script("
-            require(['recitannotation'], function () {
-                if (window.loadRecitAnnotationReactApp) {
-                    window.loadRecitAnnotationReactApp({
-                        assignment: " . json_encode($grade->assignment) . ",
-                        submission: " . json_encode($data->submission) . ",
-                        attemptnumber: " . json_encode($grade->attemptnumber) . ",
-                        userid: " . json_encode($userid) . ",
-                        aiApi: ". json_encode(\recitannotation\Options::isAiApiActive()) .",
-                        documentationUrl: ".json_encode(\recitannotation\Options::getUrlDocumentation()) ."
-                    },
-                    ". json_encode($strings) .");
-                }
-            });            
-        ");
+        $script = "if (window.loadRecitAnnotationReactApp) {
+                        window.loadRecitAnnotationReactApp({
+                            assignment: " . json_encode($grade->assignment) . ",
+                            submission: " . json_encode($data->submission) . ",
+                            attemptnumber: " . json_encode($grade->attemptnumber) . ",
+                            userid: " . json_encode($userid) . ",
+                            aiApi: ". json_encode(\recitannotation\Options::isAiApiActive()) .",
+                            documentationUrl: ".json_encode(\recitannotation\Options::getUrlDocumentation()) ."
+                        },
+                        ". json_encode($strings) .");
+                    }";
+
+        // if it is in debug mode, then avoid require() to load app React in dev mode
+        if(!in_array($_SERVER['HTTP_HOST'], array("localhost", "devserver"))){
+            $script = "require(['recitannotation'], function () { $script });";
+        }
+        
+        $html .= html_writer::script($script);
 
         $group[] = $mform->createElement('static', '', '', $html);
 

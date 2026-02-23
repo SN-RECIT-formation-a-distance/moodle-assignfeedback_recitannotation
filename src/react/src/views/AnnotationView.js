@@ -217,13 +217,20 @@ export class AnnotationView extends Component {
     }
 
     onAskIA(event){
-        
-        if(event.shiftKey && event.ctrlKey){
-            this.setState({showModalAskIA: '2'});
+        let that = this;
+
+        let onApply = function(){
+            that.beforeDataChange();
+
+            if(event.shiftKey && event.ctrlKey){
+                that.setState({showModalAskIA: '2'});
+            }
+            else{
+                that.setState({showModalAskIA: '1'});
+            }
         }
-        else{
-            this.setState({showModalAskIA: '1'});
-        }
+
+        DlgConfirm.render($glVars.i18n.pluginname, `<p>Cette action demandera à l’IA de corriger le texte, et toutes vos annotations actuelles seront perdues.</p><p><strong>Souhaitez-vous continuer?</strong></p>`, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
     onClose(refresh){
@@ -393,7 +400,7 @@ export class AnnotationView extends Component {
                 }
             });
         }
-        DlgConfirm.render($glVars.i18n.pluginname, `Souhaitez-vous vraiment réinitialiser l’annotation ?\n\nCette action supprimera toutes les annotations que vous avez ajoutées.`, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
+        DlgConfirm.render($glVars.i18n.pluginname, `<p><strong>Souhaitez-vous vraiment réinitialiser l’annotation ?</strong></p><p>Cette action supprimera toutes les annotations que vous avez ajoutées.</p>`, $glVars.i18n.cancel, $glVars.i18n.ok, null, onApply);
     }
 
     createNewAnnotation(el, criterionName, explanation, suggestion = '', strategy = '', aiFeedback = false, currentRange = null){
@@ -504,7 +511,7 @@ class CriteriaList extends Component{
 
                 return <BadgeCriterion key={index} data={item} counter={this.props.counter} onFilter={this.onFilter} selected={selected}/>;
             })}
-            <div className='text-muted text-center font-italic'>Cliquer pour filtrer</div>
+            {this.props.criteriaList.length > 0 && <div className='text-muted text-center font-italic'>Cliquer pour filtrer</div>}
         </>;
 
         return main;

@@ -20,7 +20,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'RÉCIT rétroaction par annotation';
+$string['pluginname'] = 'RÉCIT Rétroaction par annotation';
 $string['pluginname2'] = 'Annotation de texte';
 $string['default'] = 'Activé par défaut';
 $string['default_help'] = 'Si cette option est définie, cette méthode de rétroaction sera activée par défaut pour toutes les nouvelles affectations.';
