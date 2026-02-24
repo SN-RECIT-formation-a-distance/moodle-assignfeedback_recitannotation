@@ -1,4 +1,7 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
+import { Button } from 'react-bootstrap';
+import { $glVars } from '../../common/common';
 
 export class Loading extends Component{
     static defaultProps = {
@@ -8,6 +11,8 @@ export class Loading extends Component{
 
     constructor(props){
         super(props);
+
+        this.onAbort = this.onAbort.bind(this);
 
         this.domRef = React.createRef();
 
@@ -59,16 +64,25 @@ export class Loading extends Component{
     render(){
         let main =
             <div ref={this.domRef} className="Loading">
-                {this.renderChildren()}
+                <div className='overlay'></div>
+                <div className='content'>
+                    {this.renderChildren()}
                 
-                {this.state.timeout > 0 && 
-                    <div className='text-dark m-3 text-center'>
-                        <span><strong>Analyse en cours</strong></span>
-                        <br/>
-                        <span className='text-muted' style={{fontSize: '12px'}}>(Temps écoulé: {this.state.elapsedTime} / {this.state.timeout})</span>
-                    </div>}
-            </div>
+                    {this.state.timeout > 0 && 
+                        <div className='text-dark m-3 text-center'>
+                            <span><strong>Analyse en cours</strong></span>
+                            <br/>
+                            <span className='text-muted' style={{fontSize: '12px'}}>(Temps écoulé: {this.state.elapsedTime} / {this.state.timeout})</span>
+                            <br/>
+                            <Button variant="link"  style={{fontSize: '12px'}} onClick={this.onAbort}>Annuler la requête</Button>                            
+                        </div>}
+                </div>
+            </div>;
 
-        return main;
+        return ReactDOM.createPortal(main, document.body);
+    }
+
+    onAbort(){
+        $glVars.webApi.abort();
     }
 }

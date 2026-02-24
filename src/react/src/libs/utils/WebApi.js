@@ -20,12 +20,14 @@ export class HttpRequest
         this.onError = this.onError.bind(this);
         this.onLoadEnd = this.onLoadEnd.bind(this);
         this.onTimeOut = this.onTimeOut.bind(this);
+        this.onReadyStateChange = this.onReadyStateChange.bind(this);
 
         this.xhr = new XMLHttpRequest();
         this.xhr.onload = this.onLoad;
         this.xhr.onerror = this.onError;
         this.xhr.onloadend = this.onLoadEnd;
         this.xhr.ontimeout = this.onTimeOut;
+        this.xhr.onreadystatechange = this.onReadyStateChange;
 
         this.clientOnLoad = null;
         this.clientOnError = null;
@@ -99,6 +101,20 @@ export class HttpRequest
         }
     }
 
+    onReadyStateChange(event){
+        if(this.readyState === 4) { 
+            switch(this.status){
+                case 0:
+                    console.log("Request was cancelled"); 
+                    break;
+                /*case 200:
+                    console.log("Response:", this.responseText); 
+                    break;*/
+                
+            } 
+        }
+    }
+
     onError(event){
         if(this.clientOnError !== null){
             this.clientOnError.call(this, event.target, event.target.statusText);
@@ -118,6 +134,10 @@ export class HttpRequest
     onTimeOut(event){
         alert("The request was canceled for timeout. Please try again.");
         console.log(event);
+    }
+
+    abort(){
+        this.xhr.abort();
     }
 };
 
@@ -153,6 +173,10 @@ export class WebApi
         this.http.send("post", url, data, callbackSuccess, callbackError, this.onComplete, HttpRequest.contentType.json, HttpRequest.responseType.json, timeout);
     }
 
+    abort(){
+        this.http.abort();
+    }
+
     onComplete(){
         this.hideLoadingFeedback();
     }
@@ -160,8 +184,7 @@ export class WebApi
     showLoadingFeedback(timeout){
         if(this.domVisualFeedback === null){ return; }
         this.domVisualFeedback.style.display = "flex";
-        this.domVisualFeedback.dataset.timeout = timeout / 1000;
-        document.body.appendChild(this.domVisualFeedback);
+        this.domVisualFeedback.dataset.timeout = timeout / 1000;        
     }
 
     hideLoadingFeedback(){
