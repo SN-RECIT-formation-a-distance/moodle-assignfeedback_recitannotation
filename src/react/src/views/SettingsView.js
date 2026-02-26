@@ -105,7 +105,7 @@ class CriterionView extends Component{
                         <tr>
                             <th>{$glVars.i18n.name}</th>
                             <th  style={{width: 100}}>{$glVars.i18n.color}</th>
-                            <th>{"Instruction à l'IA"}</th>
+                            <th>{"Instructions à l'IA"}</th>
                             <th style={{width: 80}}></th>
                         </tr>
                     </thead>
@@ -332,7 +332,7 @@ class ModalCriterionForm extends Component{
                     
                 </Form.Group>
                 <Form.Group className='mb-3' >
-                    <Form.Label>{"Instruction à l'IA"}</Form.Label>
+                    <Form.Label>{"Instructions à l'IA"}</Form.Label>
                     <InputTextArea name="instruction_ai" as="textarea" value={this.state.data.instruction_ai} onChange={this.onDataChange} rows={5} />
                 </Form.Group>
             </Form>;
