@@ -80,18 +80,23 @@ export class ModalAskAi extends Component{
             return;
         }
         
-        prompt = prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.getHtml());
+        //prompt = prompt.replace("PLACEHOLDER_STUDENT_TEXT", AnnotationView.getHtml());
+
+        let studentText = `Analyse ce texte d'élève et génère le JSON selon le schéma : \n Texte : \n ${AnnotationView.getHtml()}`;
 
         let payload = {
-            messages: [
-                { role: "user", content: prompt }
+            model: $glVars.moodleData.aiModel,    
+            input: [
+                { type: "message", role: "system", content: prompt },
+                { type: "message", role: "user", content: studentText }
             ],
             temperature: 0.7,
-            max_tokens: 5000,
-            response_format: {
-                type: "json_schema",
-                json_schema: {
+            max_output_tokens: 5000,
+            text: {
+                format:{
+                    type: "json_schema",                    
                     name: "AnnotatedTextObject",
+                    strict: true,
                     schema: {
                         type: "object",
                         properties: {
@@ -136,10 +141,9 @@ export class ModalAskAi extends Component{
                         },
                         required: ["annotatedText", "generalFeedback", "corrections"],
                         additionalProperties: false
-                    },
-                    strict: true
+                    }                       
                 }
-            }
+            }  
         };
         
         $glVars.webApi.callAzureAI(payload, $glVars.moodleData.assignment, (result) => this.onCallAiResult(result, callback), 120000);
@@ -151,29 +155,48 @@ export class ModalAskAi extends Component{
             return;
         }
 
-        if(result.data.hasOwnProperty('error')){
+        if(result.data.hasOwnProperty('error') && result.data.error !== null){
             $glVars.feedback.showError($glVars.i18n.pluginname, result.data.error.message);
             console.log(result.data);
             return;
         }
 
-        if(!(result.data.hasOwnProperty('choices')) || !(Array.isArray(result.data.choices))){
-            $glVars.feedback.showError($glVars.i18n.pluginname, "Une erreur est survenue.");
-            console.log(result.data);
+        // 1. Find the primary assistant message
+        const message = result.data.output.find(m => m.role === "assistant");
+
+        if (!message) {
+            $glVars.feedback.showError($glVars.i18n.pluginname, "Aucune réponse de l'IA.");
             return;
         }
-        
-        try{
-            let dataAI = JSON.parse(result.data.choices.pop().message.content);
-            if(callback){
-                callback(dataAI);
-            }
+
+        // 2. CHECK FOR REFUSAL (Safety filters)
+        // Some models use a 'refusal' property; others just send the "I'm sorry" text.
+        if (message.status === "incomplete" && message.content[0].text.includes("I'm sorry")) {
+            $glVars.feedback.showError($glVars.i18n.pluginname, "L'IA a refusé de traiter cette demande pour des raisons de sécurité ou de politique.");
+            console.warn("Refusal detected:", message.content[0].text);
+            return;
+        }
+
+        // 3. CHECK FOR TOKEN LIMIT (Incomplete JSON)
+        if (message.status === "incomplete") {
+            $glVars.feedback.showError($glVars.i18n.pluginname, "La réponse est trop longue et a été coupée. Essayez de réduire le texte à corriger.");
+            console.warn("Cut-off detected. Status is incomplete.");
+            return;
+        }
+
+        // 4. PROCEED TO PARSING IF COMPLETED
+        try {
+            let rawText = message.content[0].text;
+            // Strip potential markdown backticks
+            let jsonString = rawText.replace(/```json\n?|```/g, "").trim();
+            let dataAI = JSON.parse(jsonString);
+
+            if (callback) callback(dataAI);
             $glVars.feedback.showInfo($glVars.i18n.pluginname, $glVars.i18n.msg_action_completed, 3);
-        }
-        catch(error){
-            $glVars.feedback.showError($glVars.i18n.pluginname, error);
-            console.log(error);
-            return;
+        } 
+        catch (error) {
+            $glVars.feedback.showError($glVars.i18n.pluginname, "Erreur de formatage : l'IA n'a pas renvoyé un JSON valide.");
+            console.error("Parsing error:", error, "Raw text:", message.content[0].text);
         }
     }
 
@@ -195,7 +218,7 @@ export class ModalAskAi extends Component{
             return group1;
         });
 
-        // avoir set directly innerHTML to prevent issues with React
+        // avoid set directly innerHTML to prevent issues with React
         // AnnotationView.refAnnotation.current.innerHTML = dataAI.annotatedText;
         this.props.onAnnotationChange(dataAI.annotatedText);
 

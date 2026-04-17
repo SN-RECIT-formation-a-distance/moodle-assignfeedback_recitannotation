@@ -65,16 +65,16 @@ export class Loading extends Component{
         let main =
             <div ref={this.domRef} className="Loading">
                 <div className='overlay'></div>
-                <div className='content'>
+                <div className='content p-2 rounded'>
                     {this.renderChildren()}
                 
                     {this.state.timeout > 0 && 
-                        <div className='text-dark m-3 text-center'>
-                            <span><strong>Analyse en cours</strong></span>
+                        <div className='text-white m-3 text-center'>
+                            <span className='text-white'><strong>Analyse en cours</strong></span>
                             <br/>
-                            <span className='text-muted' style={{fontSize: '12px'}}>(Temps écoulé: {this.state.elapsedTime} / {this.state.timeout})</span>
+                            <span className='text-white' style={{fontSize: '12px'}}>(Temps écoulé: {this.state.elapsedTime} / {this.state.timeout})</span>
                             <br/>
-                            <Button variant="link"  style={{fontSize: '12px'}} onClick={this.onAbort}>Annuler la requête</Button>                            
+                            <Button variant="link" className='text-white' style={{fontSize: '12px'}} onClick={this.onAbort}>Annuler la requête</Button>                            
                         </div>}
                 </div>
             </div>;

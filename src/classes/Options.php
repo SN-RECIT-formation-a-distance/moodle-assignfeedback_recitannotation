@@ -28,6 +28,10 @@ class Options
         return get_config('assignfeedback_recitannotation', 'ai_api_endpoint');
     }
 
+    static function getAiModel(){ 
+        return get_config('assignfeedback_recitannotation', 'ai_model');
+    }
+
     static function getAiApiKey(){ 
         return get_config('assignfeedback_recitannotation', 'ai_api_key');
     }

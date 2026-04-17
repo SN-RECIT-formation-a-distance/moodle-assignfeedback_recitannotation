@@ -119,6 +119,7 @@ class assign_feedback_recitannotation extends assign_feedback_plugin {
                             attemptnumber: " . json_encode($grade->attemptnumber) . ",
                             userid: " . json_encode($userid) . ",
                             aiApi: ". json_encode(\recitannotation\Options::isAiApiActive()) .",
+                            aiModel: ". json_encode(\recitannotation\Options::getAiModel()) .",
                             documentationUrl: ".json_encode(\recitannotation\Options::getUrlDocumentation()) ."
                         },
                         ". json_encode($strings) .");

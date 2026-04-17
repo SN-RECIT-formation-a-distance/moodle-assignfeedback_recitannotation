@@ -42,7 +42,7 @@ class App extends Component {
         let main =
             <div>
                 <MainView appMounted={this.state.appMounted}/>                
-                <Loading webApi={$glVars.webApi}><FontAwesomeIcon icon={faSpinner} spin/></Loading>
+                <Loading webApi={$glVars.webApi}><FontAwesomeIcon style={{color: '#FFF'}} icon={faSpinner} spin/></Loading>
             </div>
 
         return (main);

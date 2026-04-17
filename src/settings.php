@@ -33,6 +33,13 @@ $default = '';
 $setting = new admin_setting_configtext($name, $title, $description, $default);
 $settings->add($setting);
 
+$name = 'assignfeedback_recitannotation/ai_model';
+$title = get_string('ai_model', 'assignfeedback_recitannotation');
+$description = get_string('ai_model_desc', 'assignfeedback_recitannotation');
+$default = '';
+$setting = new admin_setting_configtext($name, $title, $description, $default);
+$settings->add($setting);
+
 $name = 'assignfeedback_recitannotation/ai_api_key';
 $title = get_string('ai_api_key', 'assignfeedback_recitannotation');
 $description = get_string('ai_api_key_desc', 'assignfeedback_recitannotation');
